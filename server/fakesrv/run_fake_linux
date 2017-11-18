@@ -1,0 +1,4 @@
+nohup ./router Router.1 ./config/system.json & > router.out
+nohup ./gate MobileTrade.Gate ./config/system.json & > mobiletrade.gate.out
+nohup ./gate B2.ApiGate ./config/system.json & > b2game.gate.out
+nohup ./fakesrv MobileTradeSrv.1 ./config/system.json ./scenario.json & > fakesrv.out

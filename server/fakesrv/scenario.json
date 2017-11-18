@@ -1,0 +1,128 @@
+{
+    "Steps":[
+            {
+                "Api":"Sell",
+                "Response": {
+                    "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3B"
+                }
+            },
+            {
+                "ReqSpn":"B2.Game",
+                "IsNoti":"true",
+                "Api":"NotifyDeliver",
+                "Request": {
+                    "AppGroupCode":"b2",
+                    "GameAccountId":"GameAccountId001"
+                }
+            },
+            {
+                "Api":"Sell",
+                "Nerr": {
+                    "Code":"123",
+                    "Text":"Duplicated",
+                    "Issue":"FakeSrv.1"
+                },
+                "Response": {
+                    "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3B"
+                }
+            },
+            {
+                "Api":"CheckSale",
+                "Response": {
+                    "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3B"
+                }
+            },
+            {
+                "Api":"CancelSale",
+                "Response": {
+                }
+            },
+            {
+                "Api":"PageItems",
+                "Response": {
+                    "TotalCount":"2",
+                    "Sales": [
+                        {
+                            "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3B",
+                            "GameItemKey":"aaa1",
+                            "GameItemQuantity":"2",
+                            "PurchaseCurrencyItemKeyType":"1",
+                            "PurchaseCurrencyItemKey":"333",
+                            "SaleAmount":"100",
+                            "EffectiveTo":"2016-08-29 15:04:05.999"
+                        },
+                        {
+                            "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8FCC",
+                            "GameItemKey":"aaa1",
+                            "GameItemQuantity":"2",
+                            "PurchaseCurrencyItemKeyType":"1",
+                            "PurchaseCurrencyItemKey":"333",
+                            "SaleAmount":"100",
+                            "EffectiveTo":"2016-08-29 15:04:05.999"
+                        }
+                    ]
+                }
+            },
+            {
+                "Api":"Reserve",
+                "Response": {
+                        "PurchaseCurrencyItemKeyType":"1",
+                        "PurchaseCurrencyItemKey":"333",
+                        "SaleAmount":"100"
+                }
+            },
+            {
+                "Api":"Release",
+                "Response": {
+                }
+            },
+            {
+                "Api":"Purchase",
+                "Response": {
+                    "PurchaseId":"EE46DBF7-4E39-42ED-A512-EA29B26F8FAA"
+                }
+            },
+            {
+                "Api":"CheckPurchase",
+                "Response": {
+                    "PurchaseId":"EE46DBF7-4E39-42ED-A512-EA29B26F8FAA"
+                }
+            },
+            {
+                "Api":"PageDeliveries",
+                "Response": {
+                    "TotalCount":"2",
+                    "Deliveries":[
+                        {
+                            "DeliveryId":"DE46DBF7-4E39-42ED-A512-EA29B26F8FAA",
+                            "AppGroupCode":"b2",
+                            "GameAccountId":"gameaccount01",
+                            "DeliveryEscrowType":"1",
+                            "ItemKeyType":"1",
+                            "ItemKey":"ItemKey01",
+                            "GameItemInstanceKey":"xxxxxxxxxxxxxxx",
+                            "GameItemData":"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY",
+                            "SaleEscrowKey":"EscrowKey01",
+                            "DeliveryQuantity":"1",
+                            "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3B",
+                            "PurchaseId":"EE46DBF7-4E39-42ED-A512-EA29B26F8F3A"
+                        },
+                        {
+                            "DeliveryId":"FE46DBF7-4E39-42ED-A512-EA29B26F8FAA",
+                            "AppGroupCode":"b2",
+                            "GameAccountId":"gameaccount01",
+                            "DeliveryEscrowType":"1",
+                            "ItemKeyType":"1",
+                            "ItemKey":"ItemKey01",
+                            "GameItemInstanceKey":"xxxxxxxxxxxxxxx",
+                            "GameItemData":"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY111",
+                            "SaleEscrowKey":"EscrowKey02",
+                            "DeliveryQuantity":"1",
+                            "SaleId":"EE46DBF7-4E39-42ED-A512-EA29B26F8FAB",
+                            "PurchaseId":"EE46DBF7-4E39-42ED-A512-EA29B26F8A3A"
+                        }
+                    ]
+                }
+            }
+    ]
+}

@@ -5,6 +5,16 @@
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
+/********************************************************************************/
+/* Pasque Protocol
+*
+*  example
+*  /C00022{"Eid":"B2.GameSrv.1"}0000000017{"Spn":"B2.Game"}
+*  /[Command][Header Length][Header JSON][Body Length][Body JSON]
+*  Header Length는 5문자 고정
+*  Body Length는 10문자 고정
+ */
+
 package core
 
 import "net"

@@ -56,7 +56,7 @@ func InitApp(eid string, spn string, workPath string) {
 	}
 	initLog(logpath)
 
-	initDbConfig(cfgpath + "/db.json")
+	//initDbConfig(cfgpath + "/db.json")
 	DebugLog("Application Initialized. ok!")
 
 	App.Remotes = make(map[string]RemoteInfo)

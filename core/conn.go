@@ -9,8 +9,8 @@ package core
 
 import (
 	"errors"
-	"pasque/app"
 	"net"
+	"pasque/app"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -137,60 +137,55 @@ InitRead:
 	// [len]{} 형태의 데이타(header, body)를 파싱한다. 이는 sdata로 담는다.
 	modeHeader := true
 	var n int
-	totoff := 0
+	offset := 1
+	lenlen := 5
 
 	for {
-		sdata := data[totoff+1:]
+		sdata := data[offset : offset+lenlen]
 		l := 0
-		offset := 0
 
-		for ; ; offset++ {
-			n, err = c.rwc.Read(sdata[offset : offset+1])
-			if err != nil {
+		for i := 0; i < lenlen; {
+			if n, err = c.rwc.Read(sdata); err != nil {
 				c.Close()
+				app.PacketLog("<-%s\r\n", string(data[:offset]))
 				return msgType, nil, nil, err
 			}
-
-			if offset > 0 && (sdata[offset] < '0' || '9' < sdata[offset]) {
-				break
-			}
+			i += n
+			offset += n
 		}
 
-		//이미 한 바이트를 읽었기 때문에..
-		totoff += offset
-		if offset > 0 {
-			if l, err = strconv.Atoi(string(sdata[:offset])); err != nil {
-				app.PacketLog("<-%s\r\n", string(data[:totoff+1]))
-				return msgType, nil, nil, err
-			}
+		if l, err = strconv.Atoi(string(sdata)); err != nil {
+			app.PacketLog("<-%s\r\n", string(data[:offset]))
+			return msgType, nil, nil, err
 		}
 
 		if l <= 0 {
 			app.DebugLog("read packet length is zero")
 		}
 
-		sdata = data[totoff+1:]
-		for i := 1; i < l; {
-			if n, err = c.rwc.Read(sdata[i:l]); err != nil {
+		sdata = data[offset : offset+l]
+		for i := 0; i < l; {
+			if n, err = c.rwc.Read(sdata); err != nil {
 				c.Close()
-				app.PacketLog("<-%s\r\n", string(data[:totoff+i]))
+				app.PacketLog("<-%s\r\n", string(data[:offset]))
 				return msgType, nil, nil, err
 			}
 			i += n
+			offset += n
 		}
 
-		totoff += l
 		if !modeHeader {
-			app.PacketLog("<-%s\r\n", string(data[:totoff+1]))
-			return msgType, header, sdata[:l], nil
+			app.PacketLog("<-%s\r\n", string(data[:offset]))
+			return msgType, header, sdata, nil
 		}
 
 		if msgType == msgTypePing {
-			//app.PacketLog("<-%s\r\n", string(data[:totoff+1]))
+			//app.PacketLog("<-%s\r\n", string(data[:offset+1]))
 			return msgType, sdata[:l], nil, nil
 		}
 
-		header = sdata[:l]
+		header = sdata
 		modeHeader = false
+		lenlen = 10
 	}
 }

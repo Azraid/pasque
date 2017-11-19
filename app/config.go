@@ -164,7 +164,7 @@ func (cfg globalConfig) findGateGroup(spn string) (GateGroup, bool) {
 
 	for _, v := range cfg.GameNodes {
 		if v.Spn == spn {
-			return v, true
+	 	return v, true
 		}
 	}
 

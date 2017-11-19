@@ -153,11 +153,11 @@ func (out *msgPack) build() error {
 		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
 	}
 
-	out.buffer = []byte(fmt.Sprintf("/%c%d", out.msgType, len(out.header)))
+	out.buffer = []byte(fmt.Sprintf("/%c%05d", out.msgType, len(out.header)))
 	out.buffer = append(out.buffer, out.header...)
 
 	if out.msgType != msgTypePing {
-		out.buffer = append(out.buffer, []byte(fmt.Sprintf("%d", len(out.body)))...)
+		out.buffer = append(out.buffer, []byte(fmt.Sprintf("%010d", len(out.body)))...)
 		if len(out.body) > 0 {
 			out.buffer = append(out.buffer, out.body...)
 		}

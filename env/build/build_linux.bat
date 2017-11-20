@@ -15,7 +15,6 @@ go build -o %gopath%\bin\pasque\linux\svcgate %gopath%\src\pasque\server\svcgate
 go build -o %gopath%\bin\pasque\linux\apigate %gopath%\src\pasque\server\apigate\main.go %gopath%\src\pasque\server\apigate\gate.go
 
 copy %gopath%\src\pasque\env\config\system_linux.json %gopath%\bin\pasque\linux\config
-copy %gopath%\src\pasque\env\config\db.json %gopath%\bin\pasque\linux\config
 copy %gopath%\src\pasque\env\run\run_linux %gopath%\bin\pasque\linux\run
 cd %gopath%\bin\pasque\linux\config
 del system.json 

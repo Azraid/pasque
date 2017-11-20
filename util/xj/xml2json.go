@@ -1,7 +1,5 @@
 /*
 *
-* 이 코드는 우선 github.com/basgys/goxml2json를 사용한다.
-* 향후에 수정하기로 하고..
  */
 
 package xj
@@ -31,18 +29,6 @@ func (e *element) addChild(s string, c *node) {
 
 	e.n.Children[s] = append(e.n.Children[s], c)
 }
-
-// // addChild appends a node to the list of children
-// func (n *node) addChild(s string, c *node) {
-// 	// Lazy lazy
-// 	if n.Children == nil {
-// 		n.Children = map[string]nodes{}
-// 	}
-
-// 	n.Children[s] = append(n.Children[s], c)
-// 	if len(n.Children[s]) > 1 {
-// 	}
-// }
 
 // isComplex returns whether it is a complex type (has children)
 func (n *node) isComplex() bool {

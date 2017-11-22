@@ -9,9 +9,10 @@
             "remotePath": "",
             "port": 2345,
             "host": "127.0.0.1",
-            "program": "${workspaceRoot}",
+
+            "program": "${fileDirname}",
             "env": {},
-            "args": ["HelloGame.ApiGate.1", "${gopath}/bin/pasque/windows"],
+            "args": ["HelloGame.1", "HelloGame", "$GOPATH/bin/pasque/linux"],
             "showLog": true
         }
     ]

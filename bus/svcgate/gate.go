@@ -10,23 +10,24 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"pasque/app"
-	. "pasque/core"
-	"pasque/util"
+
+	"github.com/Azraid/pasque/app"
+	co "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type gate struct {
-	Server
-	gblock  *GridBlock
-	fedapi  *FederatedApi
-	remoter Proxy
+	co.Server
+	gblock  *co.GridBlock
+	fedapi  *co.FederatedApi
+	remoter co.Proxy
 }
 
 //NewGate
 func newGate(eid string) *gate {
-	srv := &gate{gblock: NewGridBlock(), fedapi: NewFederatedApi()}
+	srv := &gate{gblock: co.NewGridBlock(), fedapi: co.NewFederatedApi()}
 	srv.Server.Init(app.Config.MyNode.ListenAddr, srv, srv)
-	srv.remoter = NewProxy(app.Config.Global.Routers, srv)
+	srv.remoter = co.NewProxy(app.Config.Global.Routers, srv)
 
 	if svcgrp, ok := app.Config.Global.FindSvcGateGroup(app.Config.Spn); ok {
 		for _, prov := range svcgrp.Providers {
@@ -43,12 +44,12 @@ func newGate(eid string) *gate {
 }
 
 func (srv *gate) ListenAndServe() error {
-	toplgy := Topology{Spn: app.Config.Spn}
+	toplgy := co.Topology{Spn: app.Config.Spn}
 	srv.remoter.Dial(toplgy)
 	return srv.Server.ListenAndServe()
 }
 
-func (srv *gate) adjustKey(header *ReqHeader, body []byte) bool {
+func (srv *gate) adjustKey(header *co.ReqHeader, body []byte) bool {
 	if ok := srv.fedapi.Find(header.Api); !ok {
 		return false
 	}
@@ -75,12 +76,12 @@ func (srv *gate) adjustKey(header *ReqHeader, body []byte) bool {
 }
 
 //Router로 보내는 메세지
-func (srv *gate) RouteRequest(header *ReqHeader, msg MsgPack) error {
+func (srv *gate) RouteRequest(header *co.ReqHeader, msg co.MsgPack) error {
 	return srv.remoter.Send(msg)
 }
 
 //Local Provider로 요청을 보낸다.
-func (srv *gate) LocalRequest(header *ReqHeader, msg MsgPack) error {
+func (srv *gate) LocalRequest(header *co.ReqHeader, msg co.MsgPack) error {
 
 	if len(header.Spn) > 0 {
 		if isLocal := util.StrCmpI(header.Spn, app.Config.Spn); !isLocal {
@@ -109,15 +110,15 @@ func (srv *gate) LocalRequest(header *ReqHeader, msg MsgPack) error {
 	return srv.SendDirect(eid, msg)
 }
 
-func (srv *gate) RouteResponse(header *ResHeader, msg MsgPack) error {
+func (srv *gate) RouteResponse(header *co.ResHeader, msg co.MsgPack) error {
 	return srv.remoter.Send(msg)
 }
 
-func (srv *gate) LocalResponse(header *ResHeader, msg MsgPack) error {
-	return srv.SendDirect(PeekFromEids(header.ToEids), msg)
+func (srv *gate) LocalResponse(header *co.ResHeader, msg co.MsgPack) error {
+	return srv.SendDirect(co.PeekFromEids(header.ToEids), msg)
 }
 
-func (srv *gate) OnAccept(eid string, toplgy *Topology) error {
+func (srv *gate) OnAccept(eid string, toplgy *co.Topology) error {
 	if _, spn, ok := app.Config.Global.Find(eid); !ok {
 		return fmt.Errorf("%s unknown server", eid)
 	} else if !util.StrCmpI(spn, toplgy.Spn) {

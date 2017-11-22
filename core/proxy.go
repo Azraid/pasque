@@ -7,7 +7,7 @@
 
 package core
 
-import "pasque/app"
+import "github.com/Azraid/pasque/app"
 import "fmt"
 
 //proxy는 proxy 인터페이스를 구현한 객체이다.
@@ -17,7 +17,7 @@ type proxy struct {
 	toplgy Topology
 }
 
-func NewProxy(remotes []app.ExNode, dlver Deliverer) Proxy {
+func NewProxy(remotes []app.Node, dlver Deliverer) Proxy {
 	prx := &proxy{dlver: dlver}
 	prx.muxio = newMultiplexerIO(app.App.Eid, remotes, &prx.toplgy, prx)
 

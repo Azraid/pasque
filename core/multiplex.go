@@ -9,7 +9,7 @@ package core
 
 import (
 	"fmt"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"sync"
 )
 
@@ -86,7 +86,7 @@ func (muxio *multiplexerIO) Dial() {
 	}
 }
 
-func newMultiplexerIO(eid string, remotes []app.ExNode, toplgy *Topology, disp Dispatcher) *multiplexerIO {
+func newMultiplexerIO(eid string, remotes []app.Node, toplgy *Topology, disp Dispatcher) *multiplexerIO {
 	muxio := &multiplexerIO{disp: disp}
 	muxio.msgC = make(chan MsgPack)
 	muxio.lock = new(sync.RWMutex)
@@ -100,7 +100,7 @@ func newMultiplexerIO(eid string, remotes []app.ExNode, toplgy *Topology, disp D
 	return muxio
 }
 
-func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.ExNode) *netIO {
+func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node) *netIO {
 	nio := &netIO{index: index, rw: newConn()}
 	nio.dial = NewDialer(nio.rw, rnode.ListenAddr,
 		func() error { //onConnected

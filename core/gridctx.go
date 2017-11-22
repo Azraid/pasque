@@ -9,7 +9,7 @@
 package core
 
 import (
-	"pasque/util"
+	"github.com/Azraid/pasque/util"
 	"runtime"
 	"sync"
 	"sync/atomic"

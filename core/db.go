@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"strings"
 	"time"
 

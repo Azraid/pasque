@@ -10,7 +10,7 @@ package core
 import (
 	"errors"
 	"net"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"strconv"
 	"sync"
 	"sync/atomic"

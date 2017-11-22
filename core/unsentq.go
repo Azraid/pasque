@@ -9,7 +9,7 @@ package core
 
 import (
 	"container/list"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"sync"
 	"time"
 )

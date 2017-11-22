@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	_ "net/http/pprof"
 	"os"
 )

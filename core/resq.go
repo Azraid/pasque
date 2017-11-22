@@ -9,7 +9,7 @@ package core
 
 import (
 	"fmt"
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"runtime"
 	"sync"
 	"time"

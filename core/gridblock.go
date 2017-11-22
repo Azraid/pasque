@@ -9,7 +9,7 @@ package core
 
 import (
 	"fmt"
-	"pasque/util"
+	"github.com/Azraid/pasque/util"
 	"math/rand"
 	"sync"
 )

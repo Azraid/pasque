@@ -8,7 +8,7 @@
 package core
 
 import (
-	"pasque/app"
+	"github.com/Azraid/pasque/app"
 	"net"
 	"sync/atomic"
 	"time"

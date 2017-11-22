@@ -33,7 +33,7 @@
             }
     ],
         
-    "GameNodes" : [
+    "ApiNodes" : [
             {   "Spn" : "HelloGame", 
                 "Gates" : [
                     {   "Eid" : "HelloGame.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    },

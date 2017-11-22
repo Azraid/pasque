@@ -9,8 +9,8 @@ package core
 
 import (
 	"fmt"
-	"pasque/app"
-	"pasque/util"
+	"github.com/Azraid/pasque/app"
+	"github.com/Azraid/pasque/util"
 	"net"
 	"strings"
 	"sync"

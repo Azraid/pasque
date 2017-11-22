@@ -45,22 +45,9 @@ type Node struct {
 	ConsolePort string
 }
 
-type NpInfo struct {
-	ConnType   uint32
-	Program    uint32
-	Build      uint32
-	Address    string
-	TimeoutSec uint32
-}
-
-type ExNode struct {
-	Node
-	Np NpInfo
-}
-
 type GateGroup struct {
 	Spn   string
-	Gates []ExNode
+	Gates []Node
 }
 
 type SvcGateGroup struct {
@@ -73,10 +60,9 @@ type globalConfig struct {
 	UseStdOut    bool
 	LogDAddr     string
 	Log          LogInfo
-	Routers      []ExNode
+	Routers      []Node
 	SvcNodes     []SvcGateGroup
-	GameNodes    []GateGroup
-	NPNode       GateGroup
+	ApiNodes     []GateGroup
 	GoRoutineMax int
 }
 
@@ -120,14 +106,14 @@ func (pa *portAssigner) Clear() {
 func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 	for _, v := range cfg.Routers {
 		if v.Eid == eid {
-			return v.Node, SpnNameRouter, true
+			return v, SpnNameRouter, true
 		}
 	}
 
 	for _, v := range cfg.SvcNodes {
 		for _, vv := range v.Gates {
 			if vv.Eid == eid {
-				return vv.Node, v.Spn, true
+				return vv, v.Spn, true
 			}
 		}
 
@@ -138,17 +124,11 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 		}
 	}
 
-	for _, v := range cfg.GameNodes {
+	for _, v := range cfg.ApiNodes {
 		for _, vv := range v.Gates {
 			if vv.Eid == eid {
-				return vv.Node, v.Spn, true
+				return vv, v.Spn, true
 			}
-		}
-	}
-
-	for _, vv := range cfg.NPNode.Gates {
-		if vv.Eid == eid {
-			return vv.Node, cfg.NPNode.Spn, true
 		}
 	}
 
@@ -162,14 +142,10 @@ func (cfg globalConfig) findGateGroup(spn string) (GateGroup, bool) {
 		}
 	}
 
-	for _, v := range cfg.GameNodes {
+	for _, v := range cfg.ApiNodes {
 		if v.Spn == spn {
-	 	return v, true
+			return v, true
 		}
-	}
-
-	if cfg.NPNode.Spn == spn {
-		return cfg.NPNode, true
 	}
 
 	return GateGroup{}, false
@@ -183,17 +159,6 @@ func (cfg globalConfig) FindSvcGateGroup(spn string) (SvcGateGroup, bool) {
 	}
 
 	return SvcGateGroup{}, false
-}
-
-func (cfg globalConfig) FindNpInfo(eid string) (NpInfo, bool) {
-
-	for _, v := range cfg.NPNode.Gates {
-		if v.Eid == eid {
-			return v.Np, true
-		}
-	}
-
-	return NpInfo{}, false
 }
 
 func LoadConfig(fn string, eid string, spn string) error {
@@ -263,13 +228,13 @@ func LoadConfig(fn string, eid string, spn string) error {
 		}
 	}
 
-	for i, v := range cfg.Global.GameNodes {
+	for i, v := range cfg.Global.ApiNodes {
 		for si, sv := range v.Gates {
-			cfg.Global.GameNodes[i].Gates[si].Type = AppApiGate
-			cfg.Global.GameNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
+			cfg.Global.ApiNodes[i].Gates[si].Type = AppApiGate
+			cfg.Global.ApiNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
 
 			if sv.ConsolePort == "auto" {
-				cfg.Global.GameNodes[i].Gates[si].ConsolePort = connPorts.Next()
+				cfg.Global.ApiNodes[i].Gates[si].ConsolePort = connPorts.Next()
 			}
 		}
 	}

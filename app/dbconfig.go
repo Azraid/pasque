@@ -3,7 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"pasque/util"
+	"github.com/Azraid/pasque/util"
 	"io/ioutil"
 )
 

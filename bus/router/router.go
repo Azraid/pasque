@@ -10,9 +10,9 @@ package main
 import (
 	"fmt"
 
-	"pasque/app"
-	. "pasque/core"
-	"pasque/util"
+	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type router struct {

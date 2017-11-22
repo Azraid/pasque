@@ -4,14 +4,14 @@ import (
 	"fmt"
 	_ "net/http/pprof"
 	"os"
-	"pasque/app"
+
+	app "github.com/Azraid/pasque/app"
 )
 
 func main() {
-	
 
 	if len(os.Args) < 2 {
-		fmt.Println("ex) gamegate.exe [eid]")
+		fmt.Println("ex) router.exe [eid]")
 		os.Exit(1)
 	}
 
@@ -24,7 +24,7 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	srv := newGate(eid)
+	srv := newRouter(eid)
 	if err := srv.ListenAndServe(); err != nil {
 		app.ErrorLog("%v", err)
 		return

@@ -1,0 +1,54 @@
+{
+    "UseStdIn":true,
+    "UseStdOut":true,
+    "LogDAddr" : "127.0.0.1:10001",
+    "ListenPortRange":  "16600-16699",
+    "ConsolePortRange":  "26600-26699",
+    
+    "Log": {
+        "Path":"./log",
+        "Immediate" : true,
+        "Error":true,
+        "Info":true,
+        "Debug":true,
+        "Packet":true
+    },
+
+    "Routers" : [
+                    {   "Eid" : "Router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     },
+                    {   "Eid" : "Router.2",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
+    ],
+        
+    "SvcNodes" : [   
+            {   "Spn" : "ChatUser", 
+                "Gates" : [
+                    {   "Eid" : "ChatUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "ChatUser.1",              "ConsolePort":"auto"                                            }
+                ]
+            }
+    ],
+
+    "SvcNodes" : [   
+            {   "Spn" : "ChatRoom", 
+                "Gates" : [
+                    {   "Eid" : "ChatRoom.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "ChatRoom.1",              "ConsolePort":"auto"                                            }
+                ]
+            }
+    ],
+ 
+        
+    "ApiNodes" : [
+            {   "Spn" : "ApiGate", 
+                "Gates" : [
+                    {   "Eid" : "ChatCli.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
+                ]
+            }
+    ]
+}

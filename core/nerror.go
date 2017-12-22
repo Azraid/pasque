@@ -21,8 +21,8 @@ const (
 	NetErrorTooLargeSize    = 5
 	NetErrorUnknownMsgType  = 6
 	NetErrorInternal        = 7
-	NetErrorTimeout         = 42
-	NetErrorInvalidparams   = 43
+	NetErrorTimeout         = 8
+	NetErrorInvalidparams   = 9
 )
 
 type NetError struct {

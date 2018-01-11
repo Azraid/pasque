@@ -1,4 +1,4 @@
-package chatroom
+package main
 
 import (
 	"encoding/json"

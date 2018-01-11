@@ -1,4 +1,4 @@
-package chatroom
+package main
 
 import "time"
 
@@ -7,16 +7,13 @@ type RoomMember struct {
 }
 
 type GridData struct {
-	RoomID  string
 	Members map[string]RoomMember //key = UserID
 }
 
 func getGridData(key string, gridData interface{}) *GridData {
 	if gridData == nil {
-		return &GridData{RoomID: key}
-	} else if gd := gridData.(*GridData); gd.RoomID == key {
-		return gd
+		return &GridData{Members: make(map[string]RoomMember)}
 	}
 
-	return nil
+	return gridData.(*GridData)
 }

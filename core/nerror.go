@@ -23,6 +23,7 @@ const (
 	NetErrorInternal        = 7
 	NetErrorTimeout         = 8
 	NetErrorInvalidparams   = 9
+	NetErrorNoPermission    = 10
 )
 
 type NetError struct {

@@ -1,4 +1,4 @@
-package chatuser
+package main
 
 import (
 	"encoding/json"
@@ -48,7 +48,8 @@ func doSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return nil
 	}
 
-	gd := getGridData(req.Header.Key, gridData)
+	userID := req.Header.Key
+	gd := getGridData(userID, gridData)
 
 	if v, ok := gd.Rooms[body.RoomID]; !ok {
 		app.ErrorLog("RoomID[%s] not found", body.RoomID)
@@ -58,7 +59,7 @@ func doSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		v.Lasted = time.Now()
 	}
 
-	chatroomReq := proto.SendChatMsg{UserID: gd.UserID, RoomID: body.RoomID, ChatType: 1, Msg: body.Msg}
+	chatroomReq := proto.SendChatMsg{UserID: userID, RoomID: body.RoomID, ChatType: 1, Msg: body.Msg}
 
 	res, err := cli.SendReq("chatroom", "SendChat", chatroomReq)
 	if err != nil {
@@ -84,7 +85,8 @@ func doRecvChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return nil
 	}
 
-	gd := getGridData(req.Header.Key, gridData)
+	userID := req.Header.Key
+	gd := getGridData(userID, gridData)
 
 	if v, ok := gd.Rooms[body.RoomID]; ok {
 		v.Lasted = time.Now()

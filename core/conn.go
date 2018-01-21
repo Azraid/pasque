@@ -10,10 +10,11 @@ package core
 import (
 	"errors"
 	"net"
-	"github.com/Azraid/pasque/app"
 	"strconv"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Azraid/pasque/app"
 )
 
 const (
@@ -32,7 +33,7 @@ type conn struct {
 	lock   *sync.Mutex
 }
 
-func newConn() *conn {
+func NewNetIO() NetIO {
 	return &conn{
 		eid:    "unknown",
 		status: connStatusDisconnected,
@@ -114,15 +115,15 @@ InitRead:
 		switch data[0] {
 		case '/':
 			continue InitRead
-		case msgTypeConnect:
+		case MsgTypeConnect:
 			break InitRead
-		case msgTypeAccept:
+		case MsgTypeAccept:
 			break InitRead
-		case msgTypePing:
+		case MsgTypePing:
 			break InitRead
-		case msgTypeRequest:
+		case MsgTypeRequest:
 			break InitRead
-		case msgTypeResponse:
+		case MsgTypeResponse:
 			break InitRead
 
 		default:
@@ -179,7 +180,7 @@ InitRead:
 			return msgType, header, sdata, nil
 		}
 
-		if msgType == msgTypePing {
+		if msgType == MsgTypePing {
 			//app.PacketLog("<-%s\r\n", string(data[:offset+1]))
 			return msgType, sdata[:l], nil, nil
 		}

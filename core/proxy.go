@@ -47,7 +47,7 @@ func (prx *proxy) OnRequest(header []byte, body []byte) error {
 		return fmt.Errorf("paring request error! %s", string(header))
 
 	} else {
-		msg := NewMsgPack(msgTypeRequest, header, body)
+		msg := NewMsgPack(MsgTypeRequest, header, body)
 		if err := prx.dlver.LocalRequest(h, msg); err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func (prx *proxy) OnResponse(header []byte, body []byte) error {
 	if h == nil {
 		return fmt.Errorf("paring response error! %s", string(header))
 	} else {
-		msg := NewMsgPack(msgTypeResponse, header, body)
+		msg := NewMsgPack(MsgTypeResponse, header, body)
 		if err := prx.dlver.LocalResponse(h, msg); err != nil {
 			return err
 		}

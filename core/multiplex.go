@@ -9,8 +9,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/Azraid/pasque/app"
 	"sync"
+
+	"github.com/Azraid/pasque/app"
 )
 
 type netIO struct {
@@ -101,7 +102,7 @@ func newMultiplexerIO(eid string, remotes []app.Node, toplgy *Topology, disp Dis
 }
 
 func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node) *netIO {
-	nio := &netIO{index: index, rw: newConn()}
+	nio := &netIO{index: index, rw: NewNetIO()}
 	nio.dial = NewDialer(nio.rw, rnode.ListenAddr,
 		func() error { //onConnected
 			connMsgPack := BuildConnectMsgPack(app.App.Eid, *toplgy)
@@ -117,7 +118,7 @@ func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node)
 			if msgType, header, body, err := nio.rw.Read(); err != nil {
 				nio.rw.Close()
 				return fmt.Errorf("connect error! %v", err)
-			} else if msgType != msgTypeAccept {
+			} else if msgType != MsgTypeAccept {
 				nio.rw.Close()
 				return fmt.Errorf("not expected msgtype")
 			} else {
@@ -126,9 +127,9 @@ func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node)
 					nio.rw.Close()
 					return fmt.Errorf("accept parse error %v", header)
 				} else {
-					if accptmsg.header.ErrCode != NetErrorSucess {
+					if accptmsg.Header.ErrCode != NetErrorSucess {
 						nio.rw.Close()
-						return fmt.Errorf("accept net error %v", accptmsg.header)
+						return fmt.Errorf("accept net error %v", accptmsg.Header)
 					}
 				}
 			}
@@ -171,7 +172,7 @@ func goNetRead(muxio *multiplexerIO, nio *netIO) {
 			}
 		}
 
-		if mpck.msgType == msgTypeRequest || mpck.msgType == msgTypeResponse {
+		if mpck.msgType == MsgTypeRequest || mpck.msgType == MsgTypeResponse {
 			muxio.Dispatch(&mpck)
 		}
 	}
@@ -181,10 +182,10 @@ func goDispatch(muxio *multiplexerIO) {
 	for msg := range muxio.msgC {
 		var err error
 		switch msg.MsgType() {
-		case msgTypeRequest:
+		case MsgTypeRequest:
 			err = muxio.disp.OnRequest(msg.Header(), msg.Body())
 
-		case msgTypeResponse:
+		case MsgTypeResponse:
 			err = muxio.disp.OnResponse(msg.Header(), msg.Body())
 
 		default:

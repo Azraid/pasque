@@ -9,16 +9,17 @@ package core
 
 import (
 	"fmt"
-	"github.com/Azraid/pasque/app"
-	"github.com/Azraid/pasque/util"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Azraid/pasque/app"
+	"github.com/Azraid/pasque/util"
 )
 
 type routeTable struct {
-	stbs map[string]*stub
+	stbs  map[string]Stub
 	actvs util.RingSet
 	lock  *sync.Mutex
 }
@@ -36,7 +37,7 @@ type Server struct {
 func newRouteTable() *routeTable {
 	rt := &routeTable{}
 	rt.lock = new(sync.Mutex)
-	rt.stbs = make(map[string]*stub)
+	rt.stbs = make(map[string]Stub)
 	rt.actvs = util.NewRingSet(false)
 
 	return rt
@@ -99,7 +100,7 @@ func (srv *Server) serve() error {
 	}
 }
 
-func (srv Server) find(eid string) (*stub, string, bool) {
+func (srv Server) find(eid string) (Stub, string, bool) {
 	for k, v := range srv.rtTable {
 		if vv, ok := v.stbs[eid]; ok {
 			return vv, k, true
@@ -119,7 +120,7 @@ func (srv *Server) Register(spn string, eid string, rw NetIO) {
 }
 
 //Register is
-func (srv *Server) register(spn string, eid string, rw NetIO) *stub {
+func (srv *Server) register(spn string, eid string, rw NetIO) Stub {
 	srv.connLock.Lock()
 	defer srv.connLock.Unlock()
 
@@ -131,7 +132,7 @@ func (srv *Server) register(spn string, eid string, rw NetIO) *stub {
 			defer srv.rtTable[ospn].lock.Unlock()
 
 			if v, ok := srv.rtTable[ospn].stbs[eid]; ok {
-				v.rw.Close()
+				v.GetNetIO().Close()
 				delete(srv.rtTable[ospn].stbs, eid)
 			}
 		} else if rw != nil {
@@ -145,7 +146,7 @@ func (srv *Server) register(spn string, eid string, rw NetIO) *stub {
 			srv.rtTable[spn].lock.Lock()
 			defer srv.rtTable[spn].lock.Unlock()
 
-			srv.rtTable[spn].stbs[eid] = newStub(eid, srv.dlver)
+			srv.rtTable[spn].stbs[eid] = NewStub(eid, srv.dlver)
 			srv.rtTable[spn].stbs[eid].ResetConn(rw)
 		} else {
 			srv.rtTable[spn] = newRouteTable()
@@ -153,12 +154,12 @@ func (srv *Server) register(spn string, eid string, rw NetIO) *stub {
 			srv.rtTable[spn].lock.Lock()
 			defer srv.rtTable[spn].lock.Unlock()
 
-			srv.rtTable[spn].stbs[eid] = newStub(eid, srv.dlver)
+			srv.rtTable[spn].stbs[eid] = NewStub(eid, srv.dlver)
 			srv.rtTable[spn].stbs[eid].ResetConn(rw)
 		}
 	}
 
-	if srv.rtTable[spn].stbs[eid].rw != nil && srv.rtTable[spn].stbs[eid].rw.IsStatus(connStatusConnected) {
+	if srv.rtTable[spn].stbs[eid].GetNetIO() != nil && srv.rtTable[spn].stbs[eid].GetNetIO().IsStatus(connStatusConnected) {
 		srv.rtTable[spn].actvs.Add(eid)
 	}
 
@@ -170,8 +171,8 @@ func (srv *Server) close(eid string) {
 	defer srv.connLock.Unlock()
 
 	if stb, spn, ok := srv.find(eid); ok {
-		if stb.rw != nil && stb.rw.IsStatus(connStatusConnected) {
-			stb.rw.Close()
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) {
+			stb.GetNetIO().Close()
 		}
 
 		srv.rtTable[spn].actvs.Remove(eid)
@@ -193,7 +194,7 @@ func (srv *Server) SendRandom(spn string, mpck MsgPack) error {
 		} else {
 			//active list가 없다면, 아무데나 넣는다.
 			for _, v := range rt.stbs {
-				if v.rw != nil {
+				if v.GetNetIO() != nil {
 					return v.Send(mpck)
 				}
 			}
@@ -222,7 +223,7 @@ func goPingMonitor(srv *Server) {
 
 		for _, v := range srv.rtTable {
 			for eid, stb := range v.stbs {
-				if stb.rw != nil && stb.rw.IsStatus(connStatusConnected) && uint32(now.Sub(stb.lastUsed).Seconds()) > PingTimeoutSec {
+				if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) && uint32(now.Sub(stb.GetLastUsed()).Seconds()) > PingTimeoutSec {
 					disused = append(disused, eid)
 				}
 			}
@@ -241,7 +242,7 @@ func goServe(srv *Server) {
 }
 
 func goAccept(srv *Server, rwc net.Conn) {
-	conn := newConn()
+	conn := NewNetIO()
 	conn.Register(rwc)
 
 	msgType, rawHeader, rawBody, err := conn.Read()
@@ -255,7 +256,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 		return
 	}
 
-	if msgType != msgTypeConnect {
+	if msgType != MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
 		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msgtype", Issue: app.App.Eid})
 		if acptMsg != nil {
@@ -278,8 +279,8 @@ func goAccept(srv *Server, rwc net.Conn) {
 
 	// Gate에 등록할 provider 등록`
 	if srv.fdr != nil {
-		toplgy := &Topology{Spn: connMsg.body.Spn, FederatedKey: connMsg.body.FederatedKey, FederatedApis: connMsg.body.FederatedApis}
-		if err := srv.fdr.OnAccept(connMsg.header.Eid, toplgy); err != nil {
+		toplgy := &Topology{Spn: connMsg.Body.Spn, FederatedKey: connMsg.Body.FederatedKey, FederatedApis: connMsg.Body.FederatedApis}
+		if err := srv.fdr.OnAccept(connMsg.Header.Eid, toplgy); err != nil {
 			app.ErrorLog("connected from wrong %v, client[%s]", err, string(rawHeader))
 			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: "federation topology can not accepted", Issue: app.App.Eid})
 			if acptMsg != nil {
@@ -290,13 +291,13 @@ func goAccept(srv *Server, rwc net.Conn) {
 	}
 
 	//clientstb을 생성하는 과정.
-	stb, _, ok := srv.find(connMsg.header.Eid)
+	stb, _, ok := srv.find(connMsg.Header.Eid)
 	if !ok { //이것은 초기에 만들어지지 않았으므로 Provider가 아니다.
-		stb = srv.register(connMsg.body.Spn, connMsg.header.Eid, nil)
+		stb = srv.register(connMsg.Body.Spn, connMsg.Header.Eid, nil)
 	} else {
-		if stb.rw != nil && stb.rw.IsStatus(connStatusConnected) {
-			app.ErrorLog("[%+v] already established", stb.rw)
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.rw), Issue: app.App.Eid})
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) {
+			app.ErrorLog("[%+v] already established", stb.GetNetIO())
+			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.GetNetIO()), Issue: app.App.Eid})
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}
@@ -312,8 +313,8 @@ func goAccept(srv *Server, rwc net.Conn) {
 		app.ErrorLog("can not build")
 	}
 
-	app.DebugLog("connected from %s", connMsg.header.Eid)
+	app.DebugLog("connected from %s", connMsg.Header.Eid)
 	stb.ResetConn(conn)
-	go goStubHandle(stb)
-	stb.unsentQ.SendAll()
+	stb.Go()
+	stb.SendAll()
 }

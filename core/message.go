@@ -20,12 +20,12 @@ import (
 )
 
 const (
-	msgTypeConnect  byte = 'C'
-	msgTypeDie      byte = 'D'
-	msgTypeAccept   byte = 'A'
-	msgTypePing     byte = 'P'
-	msgTypeRequest  byte = 'S'
-	msgTypeResponse byte = 'R'
+	MsgTypeConnect  byte = 'C'
+	MsgTypeDie      byte = 'D'
+	MsgTypeAccept   byte = 'A'
+	MsgTypePing     byte = 'P'
+	MsgTypeRequest  byte = 'S'
+	MsgTypeResponse byte = 'R'
 )
 
 const MaxBufferLength = 1 + 4 + 1024 + 5 + 65535
@@ -66,21 +66,21 @@ type DieHeader struct {
 }
 
 type ConnectMsg struct {
-	header ConnHeader
-	body   ConnBody
+	Header ConnHeader
+	Body   ConnBody
 }
 
 type AcceptMsg struct {
-	header AccptHeader
-	body   AccptBody
+	Header AccptHeader
+	Body   AccptBody
 }
 
 type PingMsg struct {
-	header PingHeader
+	Header PingHeader
 }
 
 type DieMsg struct {
-	header DieHeader
+	Header DieHeader
 }
 
 type ReqHeader struct {
@@ -144,11 +144,11 @@ func (out *msgPack) Bytes() []byte {
 
 func (out *msgPack) build() error {
 	switch out.msgType {
-	case msgTypeConnect:
-	case msgTypeAccept:
-	case msgTypePing:
-	case msgTypeRequest:
-	case msgTypeResponse:
+	case MsgTypeConnect:
+	case MsgTypeAccept:
+	case MsgTypePing:
+	case MsgTypeRequest:
+	case MsgTypeResponse:
 	default:
 		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
 	}
@@ -156,7 +156,7 @@ func (out *msgPack) build() error {
 	out.buffer = []byte(fmt.Sprintf("/%c%05d", out.msgType, len(out.header)))
 	out.buffer = append(out.buffer, out.header...)
 
-	if out.msgType != msgTypePing {
+	if out.msgType != MsgTypePing {
 		out.buffer = append(out.buffer, []byte(fmt.Sprintf("%010d", len(out.body)))...)
 		if len(out.body) > 0 {
 			out.buffer = append(out.buffer, out.body...)
@@ -175,19 +175,19 @@ func (out *msgPack) Rebuild(header interface{}) (err error) {
 
 	switch header.(type) {
 	case ConnHeader:
-		msgType = msgTypeConnect
+		msgType = MsgTypeConnect
 
 	case AccptHeader:
-		msgType = msgTypeAccept
+		msgType = MsgTypeAccept
 
 	case PingHeader:
-		msgType = msgTypePing
+		msgType = MsgTypePing
 
 	case ReqHeader:
-		msgType = msgTypeRequest
+		msgType = MsgTypeRequest
 
 	case ResHeader:
-		msgType = msgTypeResponse
+		msgType = MsgTypeResponse
 
 	default:
 		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
@@ -218,22 +218,22 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 
 	switch header.(type) {
 	case ConnHeader:
-		out.msgType = msgTypeConnect
+		out.msgType = MsgTypeConnect
 
 	case AccptHeader:
-		out.msgType = msgTypeAccept
+		out.msgType = MsgTypeAccept
 
 	case PingHeader:
-		out.msgType = msgTypePing
+		out.msgType = MsgTypePing
 
 	case DieHeader:
-		out.msgType = msgTypeDie
+		out.msgType = MsgTypeDie
 
 	case ReqHeader:
-		out.msgType = msgTypeRequest
+		out.msgType = MsgTypeRequest
 
 	case ResHeader:
-		out.msgType = msgTypeResponse
+		out.msgType = MsgTypeResponse
 
 	default:
 		return nil, NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
@@ -264,11 +264,11 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 func ParseConnectMsg(header []byte, body []byte) *ConnectMsg {
 	var msg ConnectMsg
 
-	if err := json.Unmarshal(header, &msg.header); err != nil {
+	if err := json.Unmarshal(header, &msg.Header); err != nil {
 		return nil
 	}
 
-	if err := json.Unmarshal(body, &msg.body); err != nil {
+	if err := json.Unmarshal(body, &msg.Body); err != nil {
 		return nil
 	}
 
@@ -289,11 +289,11 @@ func BuildConnectMsgPack(eid string, toplgy Topology) MsgPack {
 func ParseAcceptMsg(header []byte, body []byte) *AcceptMsg {
 	var msg AcceptMsg
 
-	if err := json.Unmarshal(header, &msg.header); err != nil {
+	if err := json.Unmarshal(header, &msg.Header); err != nil {
 		return nil
 	}
 
-	if err := json.Unmarshal(body, &msg.body); err != nil {
+	if err := json.Unmarshal(body, &msg.Body); err != nil {
 		return nil
 	}
 

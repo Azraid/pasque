@@ -9,8 +9,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/Azraid/pasque/app"
 	"time"
+
+	"github.com/Azraid/pasque/app"
 )
 
 type stub struct {
@@ -23,12 +24,20 @@ type stub struct {
 	appStatus  int
 }
 
-func newStub(eid string, dlver Deliverer) *stub {
+func NewStub(eid string, dlver Deliverer) Stub {
 	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: AppStatusRunning}
 
 	stb.unsentTick = time.NewTicker(time.Second * UnsentTimerSec)
 	stb.unsentQ = NewUnsentQ(nil, TxnTimeoutSec)
 	return stb
+}
+
+func (stb *stub) GetNetIO() NetIO {
+	return stb.rw
+}
+
+func (stb *stub) GetLastUsed() time.Time {
+	return stb.lastUsed
 }
 
 func (stb *stub) ResetConn(rw NetIO) {
@@ -48,13 +57,13 @@ func (stb *stub) ResetConn(rw NetIO) {
 func (stb *stub) Send(mpck MsgPack) error {
 
 	switch mpck.MsgType() {
-	case msgTypeRequest:
+	case MsgTypeRequest:
 		if stb.appStatus == AppStatusDying { // server가 죽고 있다. request는 받지를 못함.
 			stb.unsentQ.Add(mpck.Bytes())
 			return nil
 		}
 
-	case msgTypeResponse:
+	case MsgTypeResponse:
 		//Response 메세지의 경우는 toEids를 떼고 전달해야 한다.
 		h := ParseResHeader(mpck.Header())
 		if h == nil {
@@ -82,7 +91,7 @@ func (stb *stub) Send(mpck MsgPack) error {
 //Req를 말단에서 받을경우, 해당 말단의 정보를 formEids에 추가한다.
 //이는 router나 gate처럼 server로 동작하는 경우이다.
 func (stb *stub) RecvReq(header []byte, body []byte) error {
-	mpck := NewMsgPack(msgTypeRequest, header, body)
+	mpck := NewMsgPack(MsgTypeRequest, header, body)
 	h := ParseReqHeader(header)
 
 	if h == nil {
@@ -102,6 +111,13 @@ func (stb *stub) RecvReq(header []byte, body []byte) error {
 	}
 
 	return nil
+}
+
+func (stb *stub) Go() {
+	goStubHandle(stb)
+}
+func (stb *stub) SendAll() {
+	stb.unsentQ.SendAll()
 }
 
 func goStubHandle(stb *stub) {
@@ -128,29 +144,29 @@ func goStubHandle(stb *stub) {
 		stb.lastUsed = time.Now()
 
 		switch msgType {
-		case msgTypePing:
+		case MsgTypePing:
 			pingMsgPack := BuildPingMsgPack(app.App.Eid)
 			if err := stb.rw.Write(pingMsgPack.Bytes(), true); err != nil {
 				app.ErrorLog("send pong error, %v", err)
 			}
 
-		case msgTypeDie:
+		case MsgTypeDie:
 			stb.appStatus = AppStatusDying
 			app.DebugLog("recv dying message from %s", stb.remoteEid)
 
-		case msgTypeRequest:
+		case MsgTypeRequest:
 			//RecvReq에 대해서만 함수를 새로 구성한 이유는
 			//말단에서 요청을 받을 경우만, header를 재 구성하기 때문이다.
 			if err := stb.RecvReq(header, body); err != nil {
 				app.ErrorLog("%v", err)
 			}
 
-		case msgTypeResponse:
+		case MsgTypeResponse:
 			h := ParseResHeader(header)
 			if h == nil {
 				app.ErrorLog("Request parse error!, %v, %s", err, string(header))
 			} else {
-				mpck := NewMsgPack(msgTypeResponse, header, body)
+				mpck := NewMsgPack(MsgTypeResponse, header, body)
 
 				if len(h.ToEids) == 1 && stb.dlver.(ServiceDeliverer).IsLocal(h.ToEids[0]) {
 					if err := stb.dlver.LocalResponse(h, mpck); err != nil {

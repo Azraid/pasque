@@ -17,7 +17,10 @@
 
 package core
 
-import "net"
+import (
+	"net"
+	"time"
+)
 
 //StatusDialing conn status
 const (
@@ -89,6 +92,16 @@ type Client interface {
 type Proxy interface {
 	Dial(toplgy Topology) error
 	Send(msg MsgPack) error
+}
+
+type Stub interface {
+	ResetConn(rw NetIO)
+	Send(mpck MsgPack) error
+	RecvReq(header []byte, body []byte) error
+	GetNetIO() NetIO
+	GetLastUsed() time.Time
+	Go()
+	SendAll()
 }
 
 // Router와 Gate는 모두 server를 상속받는다.

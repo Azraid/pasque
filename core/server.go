@@ -159,7 +159,7 @@ func (srv *Server) register(spn string, eid string, rw NetIO) Stub {
 		}
 	}
 
-	if srv.rtTable[spn].stbs[eid].GetNetIO() != nil && srv.rtTable[spn].stbs[eid].GetNetIO().IsStatus(connStatusConnected) {
+	if srv.rtTable[spn].stbs[eid].GetNetIO() != nil && srv.rtTable[spn].stbs[eid].GetNetIO().IsStatus(ConnStatusConnected) {
 		srv.rtTable[spn].actvs.Add(eid)
 	}
 
@@ -171,7 +171,7 @@ func (srv *Server) close(eid string) {
 	defer srv.connLock.Unlock()
 
 	if stb, spn, ok := srv.find(eid); ok {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) {
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) {
 			stb.GetNetIO().Close()
 		}
 
@@ -223,7 +223,7 @@ func goPingMonitor(srv *Server) {
 
 		for _, v := range srv.rtTable {
 			for eid, stb := range v.stbs {
-				if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) && uint32(now.Sub(stb.GetLastUsed()).Seconds()) > PingTimeoutSec {
+				if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) && uint32(now.Sub(stb.GetLastUsed()).Seconds()) > PingTimeoutSec {
 					disused = append(disused, eid)
 				}
 			}
@@ -248,7 +248,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	msgType, rawHeader, rawBody, err := conn.Read()
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msg format", Issue: app.App.Eid})
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msg format", Issue: app.App.Eid}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -258,7 +258,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 
 	if msgType != MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msgtype", Issue: app.App.Eid})
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msgtype", Issue: app.App.Eid}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -269,7 +269,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	connMsg := ParseConnectMsg(rawHeader, rawBody)
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "parse error", Issue: app.App.Eid})
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "parse error", Issue: app.App.Eid}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -282,7 +282,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 		toplgy := &Topology{Spn: connMsg.Body.Spn, FederatedKey: connMsg.Body.FederatedKey, FederatedApis: connMsg.Body.FederatedApis}
 		if err := srv.fdr.OnAccept(connMsg.Header.Eid, toplgy); err != nil {
 			app.ErrorLog("connected from wrong %v, client[%s]", err, string(rawHeader))
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: "federation topology can not accepted", Issue: app.App.Eid})
+			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: "federation topology can not accepted", Issue: app.App.Eid}, "", "")
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}
@@ -295,9 +295,9 @@ func goAccept(srv *Server, rwc net.Conn) {
 	if !ok { //이것은 초기에 만들어지지 않았으므로 Provider가 아니다.
 		stb = srv.register(connMsg.Body.Spn, connMsg.Header.Eid, nil)
 	} else {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(connStatusConnected) {
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) {
 			app.ErrorLog("[%+v] already established", stb.GetNetIO())
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.GetNetIO()), Issue: app.App.Eid})
+			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.GetNetIO()), Issue: app.App.Eid}, "", "")
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}
@@ -306,7 +306,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 		}
 	}
 
-	acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorSucess})
+	acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorSucess}, connMsg.Header.Eid, "")
 	if acptMsg != nil {
 		conn.Write(acptMsg.Bytes(), true)
 	} else {
@@ -314,7 +314,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	}
 
 	app.DebugLog("connected from %s", connMsg.Header.Eid)
-	stb.ResetConn(conn)
+	stb.ResetConn(conn) //TODO: 이 코드는 없어도 돌 듯..
 	stb.Go()
 	stb.SendAll()
 }

@@ -9,33 +9,7 @@ import (
 
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
-	"github.com/Azraid/pasque/util"
 )
-
-type routeTable struct {
-	stbs  map[string]*stub
-	actvs util.RingSet
-	lock  *sync.Mutex
-}
-
-type Server struct {
-	listenAddr      string
-	connLock        *sync.Mutex
-	rtTable         map[string]*routeTable
-	pingMonitorTick *time.Ticker
-	dlver           Deliverer //실제 Deliver를 구현한 자기 자신이 된다.
-	fdr             Federator
-	ln              net.Listener
-}
-
-func newRouteTable() *routeTable {
-	rt := &routeTable{}
-	rt.lock = new(sync.Mutex)
-	rt.stbs = make(map[string]*stub)
-	rt.actvs = util.NewRingSet(false)
-
-	return rt
-}
 
 type Server struct {
 	listenAddr      string
@@ -43,12 +17,14 @@ type Server struct {
 	pingMonitorTick *time.Ticker
 	dlver           co.Deliverer //실제 Deliver를 구현한 자기 자신이 된다.
 	ln              net.Listener
+	stbs            map[string]co.Stub
 }
 
 func (srv *Server) Init(listenAddr string, dlver co.Deliverer) {
 	srv.listenAddr = listenAddr
 	srv.connLock = new(sync.Mutex)
 	srv.dlver = dlver
+	srv.stbs = make(map[string]co.Stub)
 }
 
 func (srv *Server) ListenAndServe() (err error) {
@@ -71,6 +47,70 @@ func (srv *Server) ListenAndServe() (err error) {
 
 func (srv *Server) getNewEid() string {
 	return co.GenerateGuid().String()
+}
+
+func (srv *Server) close(eid string) {
+	srv.connLock.Lock()
+	defer srv.connLock.Unlock()
+
+	if stb, ok := srv.stbs[eid]; ok {
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(co.ConnStatusConnected) {
+			stb.GetNetIO().Close()
+		}
+		delete(srv.stbs, eid)
+	}
+}
+
+func (srv *Server) SendDirect(eid string, mpck co.MsgPack) error {
+	if v, ok := srv.stbs[eid]; ok {
+		return v.Send(mpck)
+	}
+
+	return fmt.Errorf("%s not found", eid)
+}
+
+func (srv *Server) Shutdown() bool {
+	srv.ln.Close()
+
+	for kk, _ := range srv.stbs {
+		srv.close(kk)
+	}
+
+	return true
+}
+
+func goPingMonitor(srv *Server) {
+	for _ = range srv.pingMonitorTick.C {
+		var disused []string
+		now := time.Now()
+
+		for eid, stb := range srv.stbs {
+			if stb.GetNetIO() != nil &&
+				stb.GetNetIO().IsStatus(co.ConnStatusConnected) &&
+				uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
+				disused = append(disused, eid)
+			}
+		}
+
+		for _, eid := range disused {
+			srv.close(eid)
+		}
+	}
+}
+
+//Register is
+func (srv *Server) register(eid string, rw co.NetIO) co.Stub {
+	srv.connLock.Lock()
+	defer srv.connLock.Unlock()
+
+	if v, ok := srv.stbs[eid]; ok {
+		v.ResetConn(rw)
+	} else {
+		srv.stbs[eid] = co.NewStub(eid, srv.dlver)
+		srv.stbs[eid].ResetConn(rw)
+	}
+
+	return srv.stbs[eid]
 }
 
 func (srv *Server) serve() error {
@@ -118,7 +158,12 @@ func goAccept(srv *Server, rwc net.Conn) {
 	msgType, rawHeader, rawBody, err := conn.Read()
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
-		acptMsg := co.BuildAcceptMsgPack(co.NetError{Code: co.NetErrorParsingError, Text: "unknown msg format", Issue: app.App.Eid})
+		acptMsg, _ := co.BuildMsgPack(
+			co.AccptHeader{ErrCode: co.NetErrorParsingError,
+				ErrText:  "unknown msg format",
+				ErrIssue: app.App.Eid},
+			co.AccptBody{})
+
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -128,7 +173,11 @@ func goAccept(srv *Server, rwc net.Conn) {
 
 	if msgType != co.MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
-		acptMsg := co.BuildAcceptMsgPack(co.NetError{Code: co.NetErrorParsingError, Text: "unknown msgtype", Issue: app.App.Eid})
+		acptMsg, _ := co.BuildMsgPack(
+			co.AccptHeader{ErrCode: co.NetErrorParsingError,
+				ErrText:  "unknown msgtype",
+				ErrIssue: app.App.Eid},
+			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -139,7 +188,11 @@ func goAccept(srv *Server, rwc net.Conn) {
 	connMsg := co.ParseConnectMsg(rawHeader, rawBody)
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
-		acptMsg := co.BuildAcceptMsgPack(co.NetError{Code: co.NetErrorParsingError, Text: "parse error", Issue: app.App.Eid})
+		acptMsg, _ := co.BuildMsgPack(
+			co.AccptHeader{ErrCode: co.NetErrorParsingError,
+				ErrText:  "parse error",
+				ErrIssue: app.App.Eid},
+			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -148,24 +201,9 @@ func goAccept(srv *Server, rwc net.Conn) {
 	}
 
 	connMsg.Header.Eid = srv.getNewEid()
+	stb := srv.register(connMsg.Header.Eid, conn)
+	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NetErrorSucess}, co.AccptBody{Eid: connMsg.Header.Eid, RemoteEid: app.App.Eid})
 
-	//clientstb을 생성하는 과정.
-	stb, _, ok := srv.find(connMsg.Header.Eid)
-	if !ok { //이것은 초기에 만들어지지 않았으므로 Provider가 아니다.
-		stb = srv.register(connMsg.Body.Spn, connMsg.Header.Eid, nil)
-	} else {
-		if stb.rw != nil && stb.rw.IsStatus(connStatusConnected) {
-			app.ErrorLog("[%+v] already established", stb.rw)
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.rw), Issue: app.App.Eid})
-			if acptMsg != nil {
-				conn.Write(acptMsg.Bytes(), true)
-			}
-			conn.Close()
-			return
-		}
-	}
-
-	acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorSucess})
 	if acptMsg != nil {
 		conn.Write(acptMsg.Bytes(), true)
 	} else {
@@ -173,7 +211,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	}
 
 	app.DebugLog("connected from %s", connMsg.Header.Eid)
-	stb.ResetConn(conn)
-	go goStubHandle(stb)
-	stb.unsentQ.SendAll()
+
+	stb.Go()
+	stb.SendAll()
 }

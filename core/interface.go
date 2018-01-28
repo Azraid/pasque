@@ -24,9 +24,9 @@ import (
 
 //StatusDialing conn status
 const (
-	connStatusConnected = iota
-	connStatusDisconnected
-	connStatusShutdown
+	ConnStatusConnected = iota
+	ConnStatusDisconnected
+	ConnStatusShutdown
 )
 
 const (

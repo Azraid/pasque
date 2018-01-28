@@ -55,6 +55,8 @@ type AccptHeader struct {
 }
 
 type AccptBody struct {
+	Eid       string
+	RemoteEid string
 }
 
 type PingHeader struct {
@@ -300,8 +302,10 @@ func ParseAcceptMsg(header []byte, body []byte) *AcceptMsg {
 	return &msg
 }
 
-func BuildAcceptMsgPack(ne NetError) MsgPack {
-	mp, _ := BuildMsgPack(AccptHeader{ErrCode: ne.Code, ErrText: ne.Text, ErrIssue: ne.Issue}, nil)
+func BuildAcceptMsgPack(ne NetError, eid string, remoteEid string) MsgPack {
+	mp, _ := BuildMsgPack(AccptHeader{ErrCode: ne.Code, ErrText: ne.Text, ErrIssue: ne.Issue},
+		AccptBody{Eid: eid, RemoteEid: remoteEid},
+	)
 	return mp
 }
 

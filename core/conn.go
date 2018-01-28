@@ -36,7 +36,7 @@ type conn struct {
 func NewNetIO() NetIO {
 	return &conn{
 		eid:    "unknown",
-		status: connStatusDisconnected,
+		status: ConnStatusDisconnected,
 		lock:   new(sync.Mutex)}
 }
 
@@ -50,14 +50,14 @@ func (c *conn) Unlock() {
 
 func (c *conn) Register(rwc net.Conn) {
 	c.rwc = rwc
-	atomic.StoreInt32(&c.status, connStatusConnected)
+	atomic.StoreInt32(&c.status, ConnStatusConnected)
 }
 
 func (c *conn) Close() error {
 	c.Lock()
 	defer c.Unlock()
 
-	atomic.SwapInt32(&c.status, connStatusDisconnected)
+	atomic.SwapInt32(&c.status, ConnStatusDisconnected)
 	return c.rwc.Close()
 }
 
@@ -66,7 +66,7 @@ func (c *conn) IsStatus(status int32) bool {
 }
 
 func (c *conn) Write(b []byte, isLogging bool) error {
-	if atomic.LoadInt32(&c.status) != connStatusConnected {
+	if atomic.LoadInt32(&c.status) != ConnStatusConnected {
 		return errors.New("connection closed")
 	}
 
@@ -92,7 +92,7 @@ func (c *conn) Read() (byte, []byte, []byte, error) {
 	msgType, header, body, err := c.readFrom()
 	if err != nil {
 		// 읽어서 없애버린다.
-		if c.IsStatus(connStatusConnected) {
+		if c.IsStatus(ConnStatusConnected) {
 			data := make([]byte, MaxBufferLength)
 			c.rwc.Read(data)
 		}

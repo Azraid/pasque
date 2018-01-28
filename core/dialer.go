@@ -8,10 +8,11 @@
 package core
 
 import (
-	"github.com/Azraid/pasque/app"
 	"net"
 	"sync/atomic"
 	"time"
+
+	"github.com/Azraid/pasque/app"
 )
 
 type dialer struct {
@@ -34,7 +35,7 @@ func (dial *dialer) set(remoteAddr string) {
 }
 
 func (dial *dialer) CheckAndRedial() {
-	if dial.rw.IsStatus(connStatusDisconnected) {
+	if dial.rw.IsStatus(ConnStatusDisconnected) {
 		go goDial(dial)
 	}
 }
@@ -50,7 +51,7 @@ func (dial *dialer) dial() error {
 	dial.rw.Lock()
 	defer dial.rw.Unlock()
 
-	if dial.rw.IsStatus(connStatusConnected) {
+	if dial.rw.IsStatus(ConnStatusConnected) {
 		return nil
 	}
 
@@ -79,7 +80,7 @@ func goDial(dial *dialer) {
 
 func goPing(dial *dialer) {
 	for _ = range dial.pingTick.C {
-		if !dial.rw.IsStatus(connStatusConnected) {
+		if !dial.rw.IsStatus(ConnStatusConnected) {
 			dial.CheckAndRedial()
 			return
 		}

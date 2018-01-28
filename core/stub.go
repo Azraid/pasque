@@ -136,7 +136,7 @@ func goStubHandle(stb *stub) {
 		msgType, header, body, err := stb.rw.Read()
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
-			if !stb.rw.IsStatus(connStatusConnected) {
+			if !stb.rw.IsStatus(ConnStatusConnected) {
 				return
 			}
 		}

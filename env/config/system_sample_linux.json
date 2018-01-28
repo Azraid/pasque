@@ -40,5 +40,13 @@
                     {   "Eid" : "HelloGame.ApiGate.2", "ListenAddr": "127.0.0.1:27702",         "ConsolePort":"auto"    }
                 ]
             }
+    ],
+
+    "TcpCliNodes" : [
+            {   "Spn" : "Hello2Game", 
+                "Gates" : [
+                    {   "Eid" : "Hello2Game.TcpCliGate.1", "ListenAddr": "127.0.0.1:37701",     "ConsolePort":"auto"    }
+                ]
+            }
     ]
 }

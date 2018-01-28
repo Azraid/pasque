@@ -11,23 +11,53 @@ import (
 	co "github.com/Azraid/pasque/core"
 )
 
-type Server struct {
+type Gate struct {
 	listenAddr      string
 	connLock        *sync.Mutex
 	pingMonitorTick *time.Ticker
-	dlver           co.Deliverer //실제 Deliver를 구현한 자기 자신이 된다.
+	remoter         co.Proxy
 	ln              net.Listener
 	stbs            map[string]co.Stub
 }
 
-func (srv *Server) Init(listenAddr string, dlver co.Deliverer) {
+//NewGate
+func newGate(listenAddr string) *Gate {
+	srv := &Gate{}
+
 	srv.listenAddr = listenAddr
 	srv.connLock = new(sync.Mutex)
-	srv.dlver = dlver
 	srv.stbs = make(map[string]co.Stub)
+	srv.remoter = co.NewProxy(app.Config.Global.Routers, srv)
+	return srv
 }
 
-func (srv *Server) ListenAndServe() (err error) {
+//Deliverer interface 구현. stub에서 호출된다.
+//Router로 보내는 메세지
+func (srv *Gate) RouteRequest(header *co.ReqHeader, msg co.MsgPack) error {
+	return srv.remoter.Send(msg)
+}
+
+//Deliverer interface 구현. proxy에서 호출된다.
+//Local Provider로 요청을 보낸다.
+func (srv *Gate) LocalRequest(header *co.ReqHeader, msg co.MsgPack) error {
+	if len(header.ToEid) == 0 {
+		return fmt.Errorf("message from Remote, but eid not found from [%+v]", *header)
+	}
+
+	return srv.SendDirect(header.ToEid, msg)
+}
+
+//Deliverer interface 구현. stub에서 호출된다.
+func (srv *Gate) RouteResponse(header *co.ResHeader, msg co.MsgPack) error {
+	return srv.remoter.Send(msg)
+}
+
+//Deliverer interface 구현. stub에서 호출된다.
+func (srv *Gate) LocalResponse(header *co.ResHeader, msg co.MsgPack) error {
+	return srv.SendDirect(co.PeekFromEids(header.ToEids), msg)
+}
+
+func (srv *Gate) ListenAndServe() (err error) {
 	app.DebugLog("start listen... ")
 
 	port := strings.Split(srv.listenAddr, ":")[1]
@@ -45,11 +75,11 @@ func (srv *Server) ListenAndServe() (err error) {
 	return nil
 }
 
-func (srv *Server) getNewEid() string {
+func (srv *Gate) getNewEid() string {
 	return co.GenerateGuid().String()
 }
 
-func (srv *Server) close(eid string) {
+func (srv *Gate) close(eid string) {
 	srv.connLock.Lock()
 	defer srv.connLock.Unlock()
 
@@ -61,7 +91,7 @@ func (srv *Server) close(eid string) {
 	}
 }
 
-func (srv *Server) SendDirect(eid string, mpck co.MsgPack) error {
+func (srv *Gate) SendDirect(eid string, mpck co.MsgPack) error {
 	if v, ok := srv.stbs[eid]; ok {
 		return v.Send(mpck)
 	}
@@ -69,7 +99,7 @@ func (srv *Server) SendDirect(eid string, mpck co.MsgPack) error {
 	return fmt.Errorf("%s not found", eid)
 }
 
-func (srv *Server) Shutdown() bool {
+func (srv *Gate) Shutdown() bool {
 	srv.ln.Close()
 
 	for kk, _ := range srv.stbs {
@@ -79,7 +109,7 @@ func (srv *Server) Shutdown() bool {
 	return true
 }
 
-func goPingMonitor(srv *Server) {
+func goPingMonitor(srv *Gate) {
 	for _ = range srv.pingMonitorTick.C {
 		var disused []string
 		now := time.Now()
@@ -99,21 +129,21 @@ func goPingMonitor(srv *Server) {
 }
 
 //Register is
-func (srv *Server) register(eid string, rw co.NetIO) co.Stub {
+func (srv *Gate) register(eid string, rw co.NetIO) co.Stub {
 	srv.connLock.Lock()
 	defer srv.connLock.Unlock()
 
 	if v, ok := srv.stbs[eid]; ok {
 		v.ResetConn(rw)
 	} else {
-		srv.stbs[eid] = co.NewStub(eid, srv.dlver)
+		srv.stbs[eid] = co.NewStub(eid, srv)
 		srv.stbs[eid].ResetConn(rw)
 	}
 
 	return srv.stbs[eid]
 }
 
-func (srv *Server) serve() error {
+func (srv *Gate) serve() error {
 	defer srv.ln.Close()
 
 	l := srv.ln
@@ -145,13 +175,13 @@ func (srv *Server) serve() error {
 	}
 }
 
-func goServe(srv *Server) {
+func goServe(srv *Gate) {
 	if err := srv.serve(); err != nil {
 		app.Shutdown()
 	}
 }
 
-func goAccept(srv *Server, rwc net.Conn) {
+func goAccept(srv *Gate, rwc net.Conn) {
 	conn := co.NewNetIO()
 	conn.Register(rwc)
 

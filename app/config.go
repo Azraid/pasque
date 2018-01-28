@@ -18,11 +18,12 @@ import (
 )
 
 const (
-	AppRouter   = 1
-	AppSvcGate  = 2
-	AppApiGate  = 3
-	AppProvider = 5
-	AppGame     = 6
+	AppRouter     = 1
+	AppSvcGate    = 2
+	AppApiGate    = 3
+	AppTcpCliGate = 4
+	AppProvider   = 5
+	AppGame       = 6
 )
 
 const (
@@ -63,6 +64,7 @@ type globalConfig struct {
 	Routers      []Node
 	SvcNodes     []SvcGateGroup
 	ApiNodes     []GateGroup
+	TcpCliNodes  []GateGroup
 	GoRoutineMax int
 }
 
@@ -143,6 +145,12 @@ func (cfg globalConfig) findGateGroup(spn string) (GateGroup, bool) {
 	}
 
 	for _, v := range cfg.ApiNodes {
+		if v.Spn == spn {
+			return v, true
+		}
+	}
+
+	for _, v := range cfg.TcpCliNodes {
 		if v.Spn == spn {
 			return v, true
 		}
@@ -235,6 +243,17 @@ func LoadConfig(fn string, eid string, spn string) error {
 
 			if sv.ConsolePort == "auto" {
 				cfg.Global.ApiNodes[i].Gates[si].ConsolePort = connPorts.Next()
+			}
+		}
+	}
+
+	for i, v := range cfg.Global.TcpCliNodes {
+		for si, sv := range v.Gates {
+			cfg.Global.TcpCliNodes[i].Gates[si].Type = AppTcpCliGate
+			cfg.Global.TcpCliNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
+
+			if sv.ConsolePort == "auto" {
+				cfg.Global.TcpCliNodes[i].Gates[si].ConsolePort = connPorts.Next()
 			}
 		}
 	}

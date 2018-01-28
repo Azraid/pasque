@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
 )
 
 func main() {
@@ -24,17 +23,13 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	cli := co.NewClient(eid)
-	cli.RegisterGridHandler("CreateSession", doCreateSession)
-	cli.RegisterGridHandler("DeleteSession", doDeleteSession)
-
-	toplgy := co.Topology{
-		Spn:           "Sess",
-		FederatedKey:  "UserId",
-		FederatedApis: []string{"CreateSession", "DeleteSession"}}
-
-	cli.Dial(toplgy)
+	srv := newGate(app.Config.MyNode.ListenAddr)
+	if err := srv.ListenAndServe(); err != nil {
+		app.ErrorLog("%v", err)
+		return
+	}
 
 	app.WaitForShutdown()
+
 	return
 }

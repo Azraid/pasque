@@ -134,6 +134,14 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 		}
 	}
 
+	for _, v := range cfg.TcpCliNodes {
+		for _, vv := range v.Gates {
+			if vv.Eid == eid {
+				return vv, v.Spn, true
+			}
+		}
+	}
+
 	return Node{}, "", false
 }
 

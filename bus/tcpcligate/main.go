@@ -10,7 +10,7 @@ import (
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Println("ex) tcpgate.exe [eid]")
+		fmt.Println("ex) tcpcligate.exe [eid]")
 		os.Exit(1)
 	}
 

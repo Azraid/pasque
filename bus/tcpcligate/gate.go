@@ -58,7 +58,11 @@ func (srv *Gate) LocalResponse(header *co.ResHeader, msg co.MsgPack) error {
 }
 
 func (srv *Gate) ListenAndServe() (err error) {
+
 	app.DebugLog("start listen... ")
+
+	toplgy := co.Topology{Spn: app.Config.Spn}
+	srv.remoter.Dial(toplgy)
 
 	port := strings.Split(srv.listenAddr, ":")[1]
 

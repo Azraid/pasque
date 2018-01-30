@@ -15,20 +15,18 @@
     },
 
     "Routers" : [
-                    {   "Eid" : "Router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     },
-                    {   "Eid" : "Router.2",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
+                    {   "Eid" : "Router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
+                   
     ],
         
     "SvcNodes" : [   
             {   "Spn" : "Hello", 
                 "Gates" : [
-                    {   "Eid" : "Hello.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     },
-                    {   "Eid" : "Hello.Gate.2",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "Hello.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "Hello.1",              "ConsolePort":"auto"                                            },
-                    {   "Eid" : "Hello.2",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "Hello.1",              "ConsolePort":"auto"                                            }
                 ]
             }
     ],
@@ -36,8 +34,7 @@
     "ApiNodes" : [
             {   "Spn" : "HelloGame", 
                 "Gates" : [
-                    {   "Eid" : "HelloGame.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    },
-                    {   "Eid" : "HelloGame.ApiGate.2", "ListenAddr": "127.0.0.1:27702",         "ConsolePort":"auto"    }
+                    {   "Eid" : "HelloGame.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
                 ]
             }
     ],

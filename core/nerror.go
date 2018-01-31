@@ -27,19 +27,17 @@ const (
 )
 
 type NetError struct {
-	Code  uint32 `json:",string"`
-	Text  string
-	Issue string
+	Code uint32 `json:",string"`
+	Text string
 }
 
 func (nerr NetError) Error() string {
-	return fmt.Sprintf("code:%d, text:%s, issue:%s", nerr.Code, nerr.Text, nerr.Issue)
+	return fmt.Sprintf("code:%d, text:%s, issue:%s", nerr.Code, nerr.Text)
 }
 
 func Error(code uint32, text string) NetError {
 	_, file, line, _ := runtime.Caller(1)
-
-	return NetError{Code: code, Text: text, Issue: fmt.Sprintf("%s(%d)", file, line)}
+	return NetError{Code: code, Text: text + fmt.Sprintf("; %s(%d)", file, line)}
 }
 
 func Sucess() NetError {

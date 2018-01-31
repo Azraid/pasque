@@ -10,8 +10,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/Azraid/pasque/app"
 	"sync"
+
+	"github.com/Azraid/pasque/app"
 )
 
 type reqQ struct {
@@ -50,7 +51,6 @@ func (q *reqQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 		if _, ok := q.gridHandlers[msg.Header.Api]; ok {
 			app.ErrorLog("grid api %v with no key", msg.Header)
 			nerr := NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("%s no key", msg.Header.Api)}
-			nerr.Issue = app.App.Eid
 			q.cli.SendResWithError(msg, nerr, nil)
 		} else {
 			go goReqRandHandle(q, msg)
@@ -80,7 +80,6 @@ func goReqRandHandle(q *reqQ, msg *RequestMsg) {
 	} else {
 		app.ErrorLog("not implement api %v", msg.Header)
 		nerr := NetError{Code: NetErrorNotImplemented, Text: fmt.Sprintf("%s not implemented", msg.Header.Api)}
-		nerr.Issue = app.App.Eid
 		q.cli.SendResWithError(msg, nerr, nil)
 	}
 }
@@ -108,7 +107,6 @@ func goReqGridHandle(q *reqQ, ctx *gridContext) {
 		} else {
 			app.ErrorLog("not implement api %v", msg.Header)
 			nerr := NetError{Code: NetErrorNotImplemented, Text: fmt.Sprintf("%s not implemented", msg.Header.Api)}
-			nerr.Issue = app.App.Eid
 			q.cli.SendResWithError(msg, nerr, nil)
 		}
 	}

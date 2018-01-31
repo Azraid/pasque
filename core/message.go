@@ -49,9 +49,8 @@ type ConnBody struct {
 }
 
 type AccptHeader struct {
-	ErrCode  uint32 `json:",string,omitempty"`
-	ErrText  string `json:",,omitempty"`
-	ErrIssue string `json:",,omitempty"`
+	ErrCode uint32 `json:",string,omitempty"`
+	ErrText string `json:",,omitempty"`
 }
 
 type AccptBody struct {
@@ -106,7 +105,6 @@ type ResHeader struct {
 	ToEids   []string `json:",,omitempty"`
 	ErrCode  uint32   `json:",string,omitempty"`
 	ErrText  string   `json:",,omitempty"`
-	ErrIssue string   `json:",,omitempty"`
 }
 
 type ResponseMsg struct {
@@ -117,11 +115,10 @@ type ResponseMsg struct {
 func (header *ResHeader) SetError(neterr NetError) {
 	header.ErrCode = neterr.Code
 	header.ErrText = neterr.Text
-	header.ErrIssue = neterr.Issue
 }
 
 func (header ResHeader) GetError() NetError {
-	return NetError{Code: header.ErrCode, Text: header.ErrText, Issue: header.ErrIssue}
+	return NetError{Code: header.ErrCode, Text: header.ErrText}
 }
 
 func (out *msgPack) MsgType() byte {
@@ -152,7 +149,7 @@ func (out *msgPack) build() error {
 	case MsgTypeRequest:
 	case MsgTypeResponse:
 	default:
-		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	out.buffer = []byte(fmt.Sprintf("/%c%05d", out.msgType, len(out.header)))
@@ -166,7 +163,7 @@ func (out *msgPack) build() error {
 	}
 
 	if len(out.buffer) > MaxBufferLength {
-		return NetError{Code: NetErrorTooLargeSize, Text: "too large size", Issue: "Infra"}
+		return NetError{Code: NetErrorTooLargeSize, Text: "too large size"}
 	}
 
 	return nil
@@ -192,7 +189,7 @@ func (out *msgPack) Rebuild(header interface{}) (err error) {
 		msgType = MsgTypeResponse
 
 	default:
-		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	if out.msgType == 0 {
@@ -200,12 +197,12 @@ func (out *msgPack) Rebuild(header interface{}) (err error) {
 	}
 
 	if out.msgType != msgType {
-		return NetError{Code: NetErrorInternal, Text: "msg type is different from original", Issue: "Infra"}
+		return NetError{Code: NetErrorInternal, Text: "msg type is different from original"}
 	}
 
 	out.header, err = json.Marshal(header)
 	if err != nil {
-		return NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+		return NetError{Code: NetErrorInternal, Text: err.Error()}
 	}
 
 	return out.build()
@@ -238,13 +235,13 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 		out.msgType = MsgTypeResponse
 
 	default:
-		return nil, NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return nil, NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	var err error
 	out.header, err = json.Marshal(header)
 	if err != nil {
-		return nil, NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+		return nil, NetError{Code: NetErrorInternal, Text: err.Error()}
 	}
 
 	if body == nil {
@@ -252,7 +249,7 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 	} else {
 		out.body, err = json.Marshal(body)
 		if err != nil {
-			return nil, NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+			return nil, NetError{Code: NetErrorInternal, Text: err.Error()}
 		}
 	}
 
@@ -303,7 +300,7 @@ func ParseAcceptMsg(header []byte, body []byte) *AcceptMsg {
 }
 
 func BuildAcceptMsgPack(ne NetError, eid string, remoteEid string) MsgPack {
-	mp, _ := BuildMsgPack(AccptHeader{ErrCode: ne.Code, ErrText: ne.Text, ErrIssue: ne.Issue},
+	mp, _ := BuildMsgPack(AccptHeader{ErrCode: ne.Code, ErrText: ne.Text},
 		AccptBody{Eid: eid, RemoteEid: remoteEid},
 	)
 	return mp

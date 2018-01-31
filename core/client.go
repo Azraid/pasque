@@ -8,8 +8,9 @@
 package core
 
 import (
-	"github.com/Azraid/pasque/app"
 	"sync/atomic"
+
+	"github.com/Azraid/pasque/app"
 )
 
 //client는 Client 인터페이스를 구현한 객체이다.
@@ -56,7 +57,7 @@ func (cli *client) Dial(toplgy Topology) error {
 
 func (cli *client) SendReq(spn string, api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
-		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping", Issue: app.App.Eid}
+		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
 		var res ResponseMsg
 		res.Header.SetError(neterr)
 		return &res, neterr
@@ -83,7 +84,7 @@ func (cli *client) SendReq(spn string, api string, body interface{}) (res *Respo
 
 func (cli *client) LoopbackReq(api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
-		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping", Issue: app.App.Eid}
+		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
 		var res ResponseMsg
 		res.Header.SetError(neterr)
 		return &res, neterr
@@ -111,7 +112,7 @@ func (cli *client) LoopbackReq(api string, body interface{}) (res *ResponseMsg, 
 
 func (cli *client) SendNoti(spn string, api string, body interface{}) (err error) {
 	if app.IsStopping() {
-		return NetError{Code: NetErrorAppStopping, Text: "Application stopping", Issue: app.App.Eid}
+		return NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
 	}
 
 	header := ReqHeader{Spn: spn, Api: api}
@@ -125,7 +126,7 @@ func (cli *client) SendNoti(spn string, api string, body interface{}) (err error
 
 func (cli *client) LoopbackNoti(api string, body interface{}) (err error) {
 	if app.IsStopping() {
-		return NetError{Code: NetErrorAppStopping, Text: "Application stopping", Issue: app.App.Eid}
+		return NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
 	}
 
 	header := ReqHeader{Spn: app.Config.Spn, ToEid: app.App.Eid, Api: api}
@@ -154,7 +155,7 @@ func (cli *client) SendRes(req *RequestMsg, body interface{}) (err error) {
 }
 
 func (cli *client) SendResWithError(req *RequestMsg, nerr NetError, body interface{}) (err error) {
-	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ExtTxnNo: req.Header.ExtTxnNo, ErrCode: nerr.Code, ErrText: nerr.Text, ErrIssue: nerr.Issue}
+	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ExtTxnNo: req.Header.ExtTxnNo, ErrCode: nerr.Code, ErrText: nerr.Text}
 	out, e := BuildMsgPack(header, body)
 
 	if e != nil {

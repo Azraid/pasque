@@ -248,7 +248,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	msgType, rawHeader, rawBody, err := conn.Read()
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msg format", Issue: app.App.Eid}, "", "")
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msg format"}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -258,7 +258,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 
 	if msgType != MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msgtype", Issue: app.App.Eid}, "", "")
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "unknown msgtype"}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -269,7 +269,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	connMsg := ParseConnectMsg(rawHeader, rawBody)
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
-		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "parse error", Issue: app.App.Eid}, "", "")
+		acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorParsingError, Text: "parse error"}, "", "")
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -282,7 +282,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 		toplgy := &Topology{Spn: connMsg.Body.Spn, FederatedKey: connMsg.Body.FederatedKey, FederatedApis: connMsg.Body.FederatedApis}
 		if err := srv.fdr.OnAccept(connMsg.Header.Eid, toplgy); err != nil {
 			app.ErrorLog("connected from wrong %v, client[%s]", err, string(rawHeader))
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: "federation topology can not accepted", Issue: app.App.Eid}, "", "")
+			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: "federation topology can not accepted"}, "", "")
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}
@@ -297,7 +297,7 @@ func goAccept(srv *Server, rwc net.Conn) {
 	} else {
 		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) {
 			app.ErrorLog("[%+v] already established", stb.GetNetIO())
-			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.GetNetIO()), Issue: app.App.Eid}, "", "")
+			acptMsg := BuildAcceptMsgPack(NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("[%+v] already established", stb.GetNetIO())}, "", "")
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}

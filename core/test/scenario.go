@@ -21,7 +21,7 @@ import (
 
 type ScenarioStep struct {
 	ReqSpn    string
-	IsNoti    bool `json:",string"`
+	IsNoti    bool
 	Api       string
 	Nerr      NetError
 	Response  json.RawMessage

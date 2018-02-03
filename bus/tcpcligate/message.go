@@ -11,12 +11,21 @@
 *   common한 protocol들을 등록
 ***/
 
-package core
+package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
+
+	co "github.com/Azraid/pasque/core"
+)
+
+const (
+	MsgTypeConnect  byte = co.MsgTypeConnect
+	MsgTypeAccept   byte = co.MsgTypeAccept
+	MsgTypePing     byte = co.MsgTypePing
+	MsgTypeRequest  byte = co.MsgTypeRequest
+	MsgTypeResponse byte = co.MsgTypeResponse
 )
 
 type msgPack struct {
@@ -27,31 +36,21 @@ type msgPack struct {
 }
 
 type ConnHeader struct {
-	Ver int `json:",string,omitempty"`
+	Ver int `json:",,omitempty"`
 }
 
 type ConnBody struct {
-	Spn           string   `json:",,omitempty"`
-	FederatedKey  string   `json:",,omitempty"`
-	FederatedApis []string `json:",,omitempty"`
 }
 
 type AccptHeader struct {
-	ErrCode uint32 `json:",string,omitempty"`
+	ErrCode uint32 `json:",,omitempty"`
 	ErrText string `json:",,omitempty"`
 }
 
 type AccptBody struct {
-	Eid       string
-	RemoteEid string
 }
 
 type PingHeader struct {
-	Eid string
-}
-
-type DieHeader struct {
-	Eid string
 }
 
 type ConnectMsg struct {
@@ -68,18 +67,10 @@ type PingMsg struct {
 	Header PingHeader
 }
 
-type DieMsg struct {
-	Header DieHeader
-}
-
 type ReqHeader struct {
-	Spn      string
-	Api      string
-	Key      string   `json:",,omitempty"`
-	TxnNo    uint64   `json:",string,omitempty"`
-	ExtTxnNo uint64   `json:",string,omitempty"`
-	ToEid    string   `json:",,omitempty"`
-	FromEids []string `json:",,omitempty"`
+	Spn   string
+	Api   string
+	TxnNo uint64
 }
 
 type RequestMsg struct {
@@ -88,12 +79,9 @@ type RequestMsg struct {
 }
 
 type ResHeader struct {
-	TxnNo    uint64   `json:",string,omitempty"`
-	ExtTxnNo uint64   `json:",string,omitempty"`
-	ToEids   []string `json:",,omitempty"`
-	ErrCode  uint32   `json:",string,omitempty"`
-	ErrText  string   `json:",,omitempty"`
-	ErrIssue string   `json:",,omitempty"`
+	TxnNo   uint64 `json:",,omitempty"`
+	ErrCode uint32 `json:",,omitempty"`
+	ErrText string `json:",,omitempty"`
 }
 
 type ResponseMsg struct {
@@ -101,14 +89,13 @@ type ResponseMsg struct {
 	Body   json.RawMessage
 }
 
-func (header *ResHeader) SetError(neterr NetError) {
+func (header *ResHeader) SetError(neterr co.NetError) {
 	header.ErrCode = neterr.Code
 	header.ErrText = neterr.Text
-	header.ErrIssue = neterr.Issue
 }
 
-func (header ResHeader) GetError() NetError {
-	return NetError{Code: header.ErrCode, Text: header.ErrText, Issue: header.ErrIssue}
+func (header ResHeader) GetError() co.NetError {
+	return co.NetError{Code: header.ErrCode, Text: header.ErrText}
 }
 
 func (out *msgPack) MsgType() byte {
@@ -139,7 +126,7 @@ func (out *msgPack) build() error {
 	case MsgTypeRequest:
 	case MsgTypeResponse:
 	default:
-		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return co.NetError{Code: co.NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	out.buffer = []byte(fmt.Sprintf("/%c%05d", out.msgType, len(out.header)))
@@ -152,8 +139,8 @@ func (out *msgPack) build() error {
 		}
 	}
 
-	if len(out.buffer) > MaxBufferLength {
-		return NetError{Code: NetErrorTooLargeSize, Text: "too large size", Issue: "Infra"}
+	if len(out.buffer) > co.MaxBufferLength {
+		return co.NetError{Code: co.NetErrorTooLargeSize, Text: "too large size"}
 	}
 
 	return nil
@@ -179,7 +166,7 @@ func (out *msgPack) Rebuild(header interface{}) (err error) {
 		msgType = MsgTypeResponse
 
 	default:
-		return NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return co.NetError{Code: co.NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	if out.msgType == 0 {
@@ -187,51 +174,48 @@ func (out *msgPack) Rebuild(header interface{}) (err error) {
 	}
 
 	if out.msgType != msgType {
-		return NetError{Code: NetErrorInternal, Text: "msg type is different from original", Issue: "Infra"}
+		return co.NetError{Code: co.NetErrorInternal, Text: "msg type is different from original"}
 	}
 
 	out.header, err = json.Marshal(header)
 	if err != nil {
-		return NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+		return co.NetError{Code: co.NetErrorInternal, Text: err.Error()}
 	}
 
 	return out.build()
 }
 
-func NewMsgPack(msgType byte, header []byte, body []byte) MsgPack {
+func NewMsgPack(msgType byte, header []byte, body []byte) co.MsgPack {
 	return &msgPack{msgType: msgType, header: header, body: body}
 }
 
-func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
+func BuildMsgPack(header interface{}, body interface{}) (co.MsgPack, error) {
 	var out msgPack
 
 	switch header.(type) {
 	case ConnHeader:
-		out.msgType = MsgTypeConnect
+		out.msgType = co.MsgTypeConnect
 
 	case AccptHeader:
-		out.msgType = MsgTypeAccept
+		out.msgType = co.MsgTypeAccept
 
 	case PingHeader:
-		out.msgType = MsgTypePing
-
-	case DieHeader:
-		out.msgType = MsgTypeDie
+		out.msgType = co.MsgTypePing
 
 	case ReqHeader:
-		out.msgType = MsgTypeRequest
+		out.msgType = co.MsgTypeRequest
 
 	case ResHeader:
-		out.msgType = MsgTypeResponse
+		out.msgType = co.MsgTypeResponse
 
 	default:
-		return nil, NetError{Code: NetErrorUnknownMsgType, Text: "unknown msg type", Issue: "Infra"}
+		return nil, co.NetError{Code: co.NetErrorUnknownMsgType, Text: "unknown msg type"}
 	}
 
 	var err error
 	out.header, err = json.Marshal(header)
 	if err != nil {
-		return nil, NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+		return nil, co.NetError{Code: co.NetErrorInternal, Text: err.Error()}
 	}
 
 	if body == nil {
@@ -239,7 +223,7 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 	} else {
 		out.body, err = json.Marshal(body)
 		if err != nil {
-			return nil, NetError{Code: NetErrorInternal, Text: err.Error(), Issue: "Infra"}
+			return nil, co.NetError{Code: co.NetErrorInternal, Text: err.Error()}
 		}
 	}
 
@@ -248,163 +232,4 @@ func BuildMsgPack(header interface{}, body interface{}) (MsgPack, error) {
 	}
 
 	return &out, err
-}
-
-func ParseConnectMsg(header []byte, body []byte) *ConnectMsg {
-	var msg ConnectMsg
-
-	if err := json.Unmarshal(header, &msg.Header); err != nil {
-		return nil
-	}
-
-	if err := json.Unmarshal(body, &msg.Body); err != nil {
-		return nil
-	}
-
-	return &msg
-}
-
-func BuildConnectMsgPack(eid string, toplgy Topology) MsgPack {
-	federated := false
-	if len(toplgy.FederatedKey) > 0 {
-		federated = true
-	}
-
-	mp, _ := BuildMsgPack(ConnHeader{Eid: eid, Federated: federated}, ConnBody{Spn: toplgy.Spn, FederatedKey: toplgy.FederatedKey, FederatedApis: toplgy.FederatedApis})
-
-	return mp
-}
-
-func ParseAcceptMsg(header []byte, body []byte) *AcceptMsg {
-	var msg AcceptMsg
-
-	if err := json.Unmarshal(header, &msg.Header); err != nil {
-		return nil
-	}
-
-	if err := json.Unmarshal(body, &msg.Body); err != nil {
-		return nil
-	}
-
-	return &msg
-}
-
-func BuildAcceptMsgPack(ne NetError, eid string, remoteEid string) MsgPack {
-	mp, _ := BuildMsgPack(AccptHeader{ErrCode: ne.Code, ErrText: ne.Text, ErrIssue: ne.Issue},
-		AccptBody{Eid: eid, RemoteEid: remoteEid},
-	)
-	return mp
-}
-
-func BuildPingMsgPack(eid string) MsgPack {
-	mp, _ := BuildMsgPack(PingHeader{Eid: eid}, nil)
-	return mp
-}
-
-func BuildDieMsgPack(eid string) MsgPack {
-	mp, _ := BuildMsgPack(DieHeader{Eid: eid}, nil)
-	return mp
-}
-
-func ParseReqHeader(b []byte) *ReqHeader {
-	var header ReqHeader
-	if err := json.Unmarshal(b, &header); err != nil {
-		return nil
-	}
-
-	return &header
-}
-
-func ParseResHeader(b []byte) *ResHeader {
-	var header ResHeader
-	if err := json.Unmarshal(b, &header); err != nil {
-		return nil
-	}
-
-	return &header
-}
-
-func PeekFromEids(eids []string) string {
-	if len(eids) == 0 {
-		return ""
-	}
-
-	return eids[len(eids)-1]
-}
-
-func PopFromEids(eids []string) (string, []string, error) {
-	l := len(eids)
-	if l == 0 {
-		return "", nil, fmt.Errorf("nothing at eids")
-	}
-
-	eid := eids[l-1]
-	eids = eids[:l-1]
-
-	return eid, eids, nil
-}
-
-func PushToEids(eid string, eids []string) []string {
-	return append(eids, eid)
-}
-
-func IsValidMsg(rv reflect.Value) error {
-	switch rv.Kind() {
-	case reflect.Ptr:
-		fallthrough
-	case reflect.Interface:
-		if !rv.Elem().IsValid() {
-			return fmt.Errorf("nil")
-		}
-
-		return IsValidMsg(rv.Elem())
-
-	case reflect.Struct:
-		var errText string
-		for i := 0; i < rv.NumField(); i += 1 {
-			if len(rv.Type().Field(i).Tag.Get("required")) > 0 {
-				if err := IsValidMsg(rv.Field(i)); err != nil {
-					if len(errText) > 0 {
-						errText += ","
-					}
-
-					errText += rv.Type().Field(i).Name
-				}
-			}
-		}
-
-		if len(errText) > 0 {
-			return fmt.Errorf("%s", errText)
-		} else {
-			return nil
-		}
-
-	case reflect.String:
-		fallthrough
-	case reflect.Map:
-		fallthrough
-	case reflect.Slice:
-		if rv.Len() == 0 {
-			return fmt.Errorf("nil")
-		}
-
-	default:
-		if rv.Interface() == 0 || rv.Interface() == nil {
-			return fmt.Errorf("nil")
-		}
-	}
-
-	return nil
-}
-
-func UnmarshalMsg(raw []byte, body interface{}) error {
-	if err := json.Unmarshal(raw, body); err != nil {
-		return err
-	}
-
-	if err := IsValidMsg(reflect.ValueOf(body)); err != nil {
-		return fmt.Errorf("invalid param, %s", err.Error())
-	}
-
-	return nil
 }

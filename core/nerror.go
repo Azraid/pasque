@@ -27,7 +27,7 @@ const (
 )
 
 type NetError struct {
-	Code uint32 `json:",string"`
+	Code uint32
 	Text string
 }
 

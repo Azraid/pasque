@@ -28,12 +28,12 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "<h1>router : %s</h1>", App.Eid)
 			fmt.Fprintf(w, "</br><div>listen address : %s</div>", node.ListenAddr)
 
-		case AppSvcGate:
-			fmt.Fprintf(w, "<h1>AppSvcGate : %s</h1>", App.Eid)
+		case AppSGate:
+			fmt.Fprintf(w, "<h1>AppSGate : %s</h1>", App.Eid)
 			fmt.Fprintf(w, "</br><div>listen address : %s</div>", node.ListenAddr)
 
-		case AppApiGate:
-			fmt.Fprintf(w, "<h1>AppApiGate : %s</h1>", App.Eid)
+		case AppEGate:
+			fmt.Fprintf(w, "<h1>AppEGate : %s</h1>", App.Eid)
 			fmt.Fprintf(w, "</br><div>listen address : %s</div>", node.ListenAddr)
 
 		case AppProvider:

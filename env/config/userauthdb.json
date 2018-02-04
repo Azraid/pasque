@@ -1,0 +1,16 @@
+[
+	{
+		"UserID" : "bed0aa6c-1201-4faf-a584-bb97a65e0fd7",
+		"Token" : "user01-token"
+	},
+
+	{
+		"UserID" : "5b27116f-98c8-4df5-83f0-ed9d8b010622",
+		"Token" : "user02-token"
+	},
+
+	{
+		"UserID" : "d31d7e15-5132-45d9-bd88-394646c91c81",
+		"Token" : "user03-token"
+	}
+]

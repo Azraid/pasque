@@ -19,7 +19,7 @@
                    
     ],
         
-    "SvcNodes" : [   
+    "SNodes" : [   
             {   "Spn" : "Hello", 
                 "Gates" : [
                     {   "Eid" : "Hello.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
@@ -31,18 +31,18 @@
             }
     ],
         
-    "ApiNodes" : [
+    "ENodes" : [
             {   "Spn" : "HelloGame", 
                 "Gates" : [
-                    {   "Eid" : "HelloGame.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
+                    {   "Eid" : "HelloGame.egate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
                 ]
             }
     ],
 
-    "TcpCliNodes" : [
+    "TcNodes" : [
             {   "Spn" : "Hello2Game", 
                 "Gates" : [
-                    {   "Eid" : "Hello2Game.TcpCliGate.1", "ListenAddr": "127.0.0.1:37701",     "ConsolePort":"auto"    }
+                    {   "Eid" : "Hello2Game.tcgate.1", "ListenAddr": "127.0.0.1:37701",     "ConsolePort":"auto"    }
                 ]
             }
     ]

@@ -19,7 +19,7 @@
                     {   "Eid" : "Router.2",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
     ],
         
-    "SvcNodes" : [   
+    "SNodes" : [   
             {   "Spn" : "ChatUser", 
                 "Gates" : [
                     {   "Eid" : "ChatUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
@@ -31,7 +31,7 @@
             }
     ],
 
-    "SvcNodes" : [   
+    "SNodes" : [   
             {   "Spn" : "ChatRoom", 
                 "Gates" : [
                     {   "Eid" : "ChatRoom.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
@@ -44,10 +44,10 @@
     ],
  
         
-    "ApiNodes" : [
-            {   "Spn" : "ApiGate", 
+    "ENodes" : [
+            {   "Spn" : "egate", 
                 "Gates" : [
-                    {   "Eid" : "ChatCli.ApiGate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
+                    {   "Eid" : "ChatCli.egate.1", "ListenAddr": "127.0.0.1:27701",         "ConsolePort":"auto"    }
                 ]
             }
     ]

@@ -18,26 +18,17 @@ import (
 )
 
 const (
-	AppRouter     = 1
-	AppSvcGate    = 2
-	AppApiGate    = 3
-	AppTcpCliGate = 4
-	AppProvider   = 5
-	AppGame       = 6
+	AppRouter   = 1
+	AppSGate    = 2
+	AppEGate    = 3
+	AppTcGate   = 4
+	AppProvider = 5
+	AppGame     = 6
 )
 
 const (
 	SpnNameRouter = "Router"
 )
-
-type LogInfo struct {
-	Path      string
-	Error     bool
-	Info      bool
-	Debug     bool
-	Packet    bool
-	Immediate bool
-}
 
 type Node struct {
 	Type        int
@@ -57,14 +48,22 @@ type SvcGateGroup struct {
 }
 
 type globalConfig struct {
-	UseStdIn     bool
-	UseStdOut    bool
-	LogDAddr     string
-	Log          LogInfo
+	UseStdIn  bool
+	UseStdOut bool
+	LogDAddr  string
+	Log       struct {
+		Path      string
+		Error     bool
+		Info      bool
+		Debug     bool
+		Packet    bool
+		Immediate bool
+	}
+
 	Routers      []Node
-	SvcNodes     []SvcGateGroup
-	ApiNodes     []GateGroup
-	TcpCliNodes  []GateGroup
+	SNodes       []SvcGateGroup
+	ENodes       []GateGroup
+	TcNodes      []GateGroup
 	GoRoutineMax int
 }
 
@@ -112,7 +111,7 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 		}
 	}
 
-	for _, v := range cfg.SvcNodes {
+	for _, v := range cfg.SNodes {
 		for _, vv := range v.Gates {
 			if vv.Eid == eid {
 				return vv, v.Spn, true
@@ -126,7 +125,7 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 		}
 	}
 
-	for _, v := range cfg.ApiNodes {
+	for _, v := range cfg.ENodes {
 		for _, vv := range v.Gates {
 			if vv.Eid == eid {
 				return vv, v.Spn, true
@@ -134,7 +133,7 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 		}
 	}
 
-	for _, v := range cfg.TcpCliNodes {
+	for _, v := range cfg.TcNodes {
 		for _, vv := range v.Gates {
 			if vv.Eid == eid {
 				return vv, v.Spn, true
@@ -146,19 +145,19 @@ func (cfg globalConfig) Find(eid string) (Node, string, bool) {
 }
 
 func (cfg globalConfig) findGateGroup(spn string) (GateGroup, bool) {
-	for _, v := range cfg.SvcNodes {
+	for _, v := range cfg.SNodes {
 		if v.Spn == spn {
 			return v.GateGroup, true
 		}
 	}
 
-	for _, v := range cfg.ApiNodes {
+	for _, v := range cfg.ENodes {
 		if v.Spn == spn {
 			return v, true
 		}
 	}
 
-	for _, v := range cfg.TcpCliNodes {
+	for _, v := range cfg.TcNodes {
 		if v.Spn == spn {
 			return v, true
 		}
@@ -168,7 +167,7 @@ func (cfg globalConfig) findGateGroup(spn string) (GateGroup, bool) {
 }
 
 func (cfg globalConfig) FindSvcGateGroup(spn string) (SvcGateGroup, bool) {
-	for _, v := range cfg.SvcNodes {
+	for _, v := range cfg.SNodes {
 		if v.Spn == spn {
 			return v, true
 		}
@@ -226,42 +225,42 @@ func LoadConfig(fn string, eid string, spn string) error {
 		}
 	}
 
-	for i, v := range cfg.Global.SvcNodes {
+	for i, v := range cfg.Global.SNodes {
 		for si, sv := range v.Gates {
-			cfg.Global.SvcNodes[i].Gates[si].Type = AppSvcGate
-			cfg.Global.SvcNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
+			cfg.Global.SNodes[i].Gates[si].Type = AppSGate
+			cfg.Global.SNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
 			if sv.ConsolePort == "auto" {
-				cfg.Global.SvcNodes[i].Gates[si].ConsolePort = connPorts.Next()
+				cfg.Global.SNodes[i].Gates[si].ConsolePort = connPorts.Next()
 			}
 		}
 
 		for si, sv := range v.Providers {
-			cfg.Global.SvcNodes[i].Providers[si].Type = AppProvider
+			cfg.Global.SNodes[i].Providers[si].Type = AppProvider
 
 			if sv.ConsolePort == "auto" {
-				cfg.Global.SvcNodes[i].Providers[si].ConsolePort = connPorts.Next()
+				cfg.Global.SNodes[i].Providers[si].ConsolePort = connPorts.Next()
 			}
 		}
 	}
 
-	for i, v := range cfg.Global.ApiNodes {
+	for i, v := range cfg.Global.ENodes {
 		for si, sv := range v.Gates {
-			cfg.Global.ApiNodes[i].Gates[si].Type = AppApiGate
-			cfg.Global.ApiNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
+			cfg.Global.ENodes[i].Gates[si].Type = AppEGate
+			cfg.Global.ENodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
 
 			if sv.ConsolePort == "auto" {
-				cfg.Global.ApiNodes[i].Gates[si].ConsolePort = connPorts.Next()
+				cfg.Global.ENodes[i].Gates[si].ConsolePort = connPorts.Next()
 			}
 		}
 	}
 
-	for i, v := range cfg.Global.TcpCliNodes {
+	for i, v := range cfg.Global.TcNodes {
 		for si, sv := range v.Gates {
-			cfg.Global.TcpCliNodes[i].Gates[si].Type = AppTcpCliGate
-			cfg.Global.TcpCliNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
+			cfg.Global.TcNodes[i].Gates[si].Type = AppTcGate
+			cfg.Global.TcNodes[i].Gates[si].ListenAddr = assignPort(&lstnPorts, sv.ListenAddr)
 
 			if sv.ConsolePort == "auto" {
-				cfg.Global.TcpCliNodes[i].Gates[si].ConsolePort = connPorts.Next()
+				cfg.Global.TcNodes[i].Gates[si].ConsolePort = connPorts.Next()
 			}
 		}
 	}

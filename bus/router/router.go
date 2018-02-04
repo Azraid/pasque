@@ -33,8 +33,10 @@ func (srv *router) RouteRequest(header *ReqHeader, mpck MsgPack) error {
 }
 
 func (srv *router) LocalRequest(header *ReqHeader, mpck MsgPack) error {
-	if len(header.ToEid) > 0 {
-		return srv.SendDirect(header.ToEid, mpck)
+	// router는 direct로 던지지 않는다.
+
+	if len(header.ToGateEid) > 0 {
+		return srv.SendDirect(header.ToGateEid, mpck)
 	}
 
 	if len(header.Spn) > 0 {

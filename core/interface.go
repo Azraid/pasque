@@ -80,7 +80,7 @@ type Client interface {
 	RegisterRandHandler(api string, handler func(cli Client, msg *RequestMsg))
 	SendReq(spn string, api string, body interface{}) (res *ResponseMsg, err error)
 	SendNoti(spn string, api string, body interface{}) (err error)
-
+	SendReqDirect(spn string, gateEid string, eid string, api string, body interface{}) (res *ResponseMsg, err error)
 	SendRes(req *RequestMsg, body interface{}) (err error)
 	SendResWithError(req *RequestMsg, nerr NetError, body interface{}) (err error)
 

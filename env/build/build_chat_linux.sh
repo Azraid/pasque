@@ -9,8 +9,8 @@ if [ ! -d "$GOPATH/bin/pasque/linux/config" ]; then
 fi
 
 go build -o $GOPATH/bin/pasque/linux/router $GOPATH/src/github.com/Azraid/pasque/bus/router/main.go $GOPATH/src/github.com/Azraid/pasque/bus/router/router.go
-go build -o $GOPATH/bin/pasque/linux/svcgate $GOPATH/src/github.com/Azraid/pasque/bus/svcgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/svcgate/gate.go
-go build -o $GOPATH/bin/pasque/linux/apigate $GOPATH/src/github.com/Azraid/pasque/bus/apigate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/apigate/gate.go
+go build -o $GOPATH/bin/pasque/linux/sgate $GOPATH/src/github.com/Azraid/pasque/bus/sgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/sgate/gate.go
+go build -o $GOPATH/bin/pasque/linux/egate $GOPATH/src/github.com/Azraid/pasque/bus/egate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/egate/gate.go
 go build -o $GOPATH/bin/pasque/linux/chatusersrv $GOPATH/src/github.com/Azraid/pasque/services/chat/chatuser/main.go $GOPATH/src/github.com/Azraid/pasque/services/chat/chatuser/txn.go  $GOPATH/src/github.com/Azraid/pasque/services/chat/chatuser/grid.go
 
 go build -o $GOPATH/bin/pasque/linux/chatroomsrv $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroom/main.go $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroom/txn.go  $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroom/grid.go

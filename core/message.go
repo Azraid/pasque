@@ -85,13 +85,14 @@ type DieMsg struct {
 }
 
 type ReqHeader struct {
-	Spn      string
-	Api      string
-	Key      string   `json:",,omitempty"`
-	TxnNo    uint64   `json:",,omitempty"`
-	ExtTxnNo uint64   `json:",,omitempty"`
-	ToEid    string   `json:",,omitempty"`
-	FromEids []string `json:",,omitempty"`
+	Spn       string
+	Api       string
+	Key       string   `json:",,omitempty"`
+	TxnNo     uint64   `json:",,omitempty"`
+	ToEid     string   `json:",,omitempty"`
+	FromEids  []string `json:",,omitempty"`
+	FromSpn   string   `json:",,omitempty"`
+	ToGateEid string   `json:",,omitempty"`
 }
 
 type RequestMsg struct {
@@ -100,11 +101,10 @@ type RequestMsg struct {
 }
 
 type ResHeader struct {
-	TxnNo    uint64   `json:",,omitempty"`
-	ExtTxnNo uint64   `json:",,omitempty"`
-	ToEids   []string `json:",,omitempty"`
-	ErrCode  uint32   `json:",,omitempty"`
-	ErrText  string   `json:",,omitempty"`
+	TxnNo   uint64   `json:",,omitempty"`
+	ToEids  []string `json:",,omitempty"`
+	ErrCode uint32   `json:",,omitempty"`
+	ErrText string   `json:",,omitempty"`
 }
 
 type ResponseMsg struct {

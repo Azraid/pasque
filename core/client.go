@@ -82,6 +82,32 @@ func (cli *client) SendReq(spn string, api string, body interface{}) (res *Respo
 	return res, nil
 }
 
+func (cli *client) SendReqDirect(spn string, gateEid string, eid string, api string, body interface{}) (res *ResponseMsg, err error) {
+	if app.IsStopping() {
+		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		var res ResponseMsg
+		res.Header.SetError(neterr)
+		return &res, neterr
+	}
+
+	txnNo := cli.newTxnNo()
+
+	//header := ReqHeader{Spn: cli.gateSpn, ToEid: app.App.Eid, Api: api, TxnNo: txnNo}
+	header := ReqHeader{Spn: spn, ToGateEid: gateEid, ToEid: eid, Api: api, TxnNo: txnNo}
+	out, neterr := BuildMsgPack(header, body)
+	if neterr != nil {
+		return nil, neterr
+	}
+
+	req := &RequestMsg{Header: header, Body: out.Body()}
+	resC := make(chan *ResponseMsg)
+	cli.resQ.Push(txnNo, req, resC)
+	cli.muxio.Write(out.Bytes(), true)
+
+	res = <-resC
+	return res, nil
+}
+
 func (cli *client) LoopbackReq(api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
 		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
@@ -139,7 +165,7 @@ func (cli *client) LoopbackNoti(api string, body interface{}) (err error) {
 }
 
 func (cli *client) SendRes(req *RequestMsg, body interface{}) (err error) {
-	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ExtTxnNo: req.Header.ExtTxnNo, ErrCode: NetErrorSucess}
+	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ErrCode: NetErrorSucess}
 	out, e := BuildMsgPack(header, body)
 
 	if e != nil {
@@ -155,7 +181,7 @@ func (cli *client) SendRes(req *RequestMsg, body interface{}) (err error) {
 }
 
 func (cli *client) SendResWithError(req *RequestMsg, nerr NetError, body interface{}) (err error) {
-	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ExtTxnNo: req.Header.ExtTxnNo, ErrCode: nerr.Code, ErrText: nerr.Text}
+	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ErrCode: nerr.Code, ErrText: nerr.Text}
 	out, e := BuildMsgPack(header, body)
 
 	if e != nil {

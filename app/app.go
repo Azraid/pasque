@@ -33,11 +33,13 @@ type RemoteInfo struct {
 }
 
 type Application struct {
-	status   int
-	svcs     []Servicer
-	Eid      string
-	Hostname string
-	Remotes  map[string]RemoteInfo
+	status     int
+	svcs       []Servicer
+	Eid        string
+	Hostname   string
+	Remotes    map[string]RemoteInfo
+	ConfigPath string
+	LogPath    string
 
 	//application이 종료할때까지 기다림.
 	done chan bool
@@ -48,13 +50,13 @@ var App Application
 func InitApp(eid string, spn string, workPath string) {
 	App.Eid = eid
 	App.Hostname, _ = os.Hostname()
-	cfgpath := os.ExpandEnv(workPath) + "/config"
-	logpath := os.ExpandEnv(workPath) + "/log"
+	App.ConfigPath = os.ExpandEnv(workPath) + "/config"
+	App.LogPath = os.ExpandEnv(workPath) + "/log"
 
-	if err := LoadConfig(cfgpath+"/system.json", eid, spn); err != nil {
+	if err := LoadConfig(App.ConfigPath+"/system.json", eid, spn); err != nil {
 		panic(err.Error())
 	}
-	initLog(logpath)
+	initLog(App.LogPath)
 
 	//initDbConfig(cfgpath + "/db.json")
 	DebugLog("Application Initialized. ok!")
@@ -87,6 +89,7 @@ func goWinConsole() {
 		}
 
 		fmt.Println("if you want to shutdown, please type 'exit'")
+		time.Sleep(1 * time.Second)
 	}
 }
 

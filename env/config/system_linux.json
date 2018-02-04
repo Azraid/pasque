@@ -1,0 +1,61 @@
+{
+    "UseStdIn":false,
+    "UseStdOut":true,
+    "LogDAddr" : "127.0.0.1:10001",
+    "ListenPortRange":  "16600-16699",
+    "ConsolePortRange":  "26600-26699",
+    
+    "Log": {
+        "Path":"./log",
+        "Immediate" : true,
+        "Error":true,
+        "Info":true,
+        "Debug":true,
+        "Packet":true
+    },
+
+    "Routers" : [
+                    {   "Eid" : "Router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
+                   
+    ],
+        
+    "SNodes" : [   
+            {   "Spn" : "Session", 
+                "Gates" : [
+                    {   "Eid" : "Session.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "SessionSrv.1",              "ConsolePort":"auto"                                            }
+                ]
+            },
+ 
+            {   "Spn" : "ChatRoom", 
+                "Gates" : [
+                    {   "Eid" : "ChatRoom.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "ChatRoomSrv.1",              "ConsolePort":"auto"                                            }
+                ]
+            },
+
+	  {   "Spn" : "ChatUser", 
+                "Gates" : [
+                    {   "Eid" : "ChatUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "ChatUserSrv.1",              "ConsolePort":"auto"                                            }
+                ]
+            }
+    ],
+        
+    "TcNodes" : [
+            {   "Spn" : "Julivonoblitz.Tcgate", 
+                "Gates" : [
+                    {   "Eid" : "Julivonoblitz.Tcgate.1", "ListenAddr": "127.0.0.1:37701",     "ConsolePort":"auto"    }
+                ]
+            }
+    ]
+}

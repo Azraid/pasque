@@ -38,8 +38,8 @@ type msgPack struct {
 }
 
 type ConnHeader struct {
-	Eid       string
-	Federated bool `json:",,omitempty"`
+	Eid       string `json:",,omitempty"`
+	Federated bool   `json:",,omitempty"`
 }
 
 type ConnBody struct {
@@ -54,16 +54,16 @@ type AccptHeader struct {
 }
 
 type AccptBody struct {
-	Eid       string
-	RemoteEid string
+	Eid       string `json:",,omitempty"`
+	RemoteEid string `json:",,omitempty"`
 }
 
 type PingHeader struct {
-	Eid string
+	Eid string `json:",,omitempty"`
 }
 
 type DieHeader struct {
-	Eid string
+	Eid string `json:",,omitempty"`
 }
 
 type ConnectMsg struct {

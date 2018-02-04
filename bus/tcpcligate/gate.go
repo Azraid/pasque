@@ -140,7 +140,7 @@ func (srv *Gate) register(eid string, rw co.NetIO) co.Stub {
 	if v, ok := srv.stbs[eid]; ok {
 		v.ResetConn(rw)
 	} else {
-		srv.stbs[eid] = co.NewStub(eid, srv)
+		srv.stbs[eid] = NewStub(eid, srv)
 		srv.stbs[eid].ResetConn(rw)
 	}
 
@@ -193,8 +193,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError,
-				ErrText: "unknown msg format"},
+			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "unknown msg format"},
 			co.AccptBody{})
 
 		if acptMsg != nil {
@@ -207,8 +206,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if msgType != co.MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError,
-				ErrText: "unknown msgtype"},
+			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "unknown msgtype"},
 			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
@@ -221,8 +219,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError,
-				ErrText: "parse error"},
+			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "parse error"},
 			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
@@ -231,9 +228,9 @@ func goAccept(srv *Gate, rwc net.Conn) {
 		return
 	}
 
-	connMsg.Header.Eid = srv.getNewEid()
-	stb := srv.register(connMsg.Header.Eid, conn)
-	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NetErrorSucess}, co.AccptBody{Eid: connMsg.Header.Eid, RemoteEid: app.App.Eid})
+	eid := srv.getNewEid()
+	stb := srv.register(eid, conn)
+	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NetErrorSucess}, co.AccptBody{})
 
 	if acptMsg != nil {
 		conn.Write(acptMsg.Bytes(), true)
@@ -241,7 +238,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 		app.ErrorLog("can not build")
 	}
 
-	app.DebugLog("connected from %s", connMsg.Header.Eid)
+	app.DebugLog("connected from %s", eid)
 
 	stb.Go()
 	stb.SendAll()

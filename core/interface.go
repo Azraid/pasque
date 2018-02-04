@@ -97,7 +97,7 @@ type Proxy interface {
 type Stub interface {
 	ResetConn(rw NetIO)
 	Send(mpck MsgPack) error
-	RecvReq(header []byte, body []byte) error
+	//	RecvReq(header []byte, body []byte) error
 	GetNetIO() NetIO
 	GetLastUsed() time.Time
 	Go()

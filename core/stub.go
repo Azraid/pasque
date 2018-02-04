@@ -55,7 +55,6 @@ func (stb *stub) ResetConn(rw NetIO) {
 
 //srv에서 호출하게 됨
 func (stb *stub) Send(mpck MsgPack) error {
-
 	switch mpck.MsgType() {
 	case MsgTypeRequest:
 		if stb.appStatus == AppStatusDying { // server가 죽고 있다. request는 받지를 못함.
@@ -83,31 +82,6 @@ func (stb *stub) Send(mpck MsgPack) error {
 	b := mpck.Bytes()
 	if err := stb.rw.Write(b, true); err != nil {
 		stb.unsentQ.Add(b) //나중에 보내줄 것이므로... 여기서 retrun하지 말구 이후에도 계속 기다리자
-	}
-
-	return nil
-}
-
-//Req를 말단에서 받을경우, 해당 말단의 정보를 formEids에 추가한다.
-//이는 router나 gate처럼 server로 동작하는 경우이다.
-func (stb *stub) RecvReq(header []byte, body []byte) error {
-	mpck := NewMsgPack(MsgTypeRequest, header, body)
-	h := ParseReqHeader(header)
-
-	if h == nil {
-		return fmt.Errorf("Request parse error!, %s", string(header))
-	} else {
-		//Loopback Request는 router로 보내지 않아도 된다.
-		h.FromEids = PushToEids(stb.remoteEid, h.FromEids)
-		if err := mpck.Rebuild(*h); err != nil {
-			return err
-		}
-
-		if len(h.ToEid) > 0 && stb.dlver.(ServiceDeliverer).IsLocal(h.ToEid) {
-			return stb.dlver.LocalRequest(h, mpck)
-		} else {
-			return stb.dlver.RouteRequest(h, mpck)
-		}
 	}
 
 	return nil
@@ -155,10 +129,32 @@ func goStubHandle(stb *stub) {
 			app.DebugLog("recv dying message from %s", stb.remoteEid)
 
 		case MsgTypeRequest:
-			//RecvReq에 대해서만 함수를 새로 구성한 이유는
-			//말단에서 요청을 받을 경우만, header를 재 구성하기 때문이다.
-			if err := stb.RecvReq(header, body); err != nil {
-				app.ErrorLog("%v", err)
+			mpck := NewMsgPack(MsgTypeRequest, header, body)
+			h := ParseReqHeader(header)
+
+			if h == nil {
+				app.ErrorLog("Request parse error!, %s", string(header))
+
+			} else {
+				//Loopback Request는 router로 보내지 않아도 된다.
+				h.FromEids = PushToEids(stb.remoteEid, h.FromEids)
+
+				//RecvReq에 대해서만 함수를 새로 구성한 이유는
+				//말단에서 요청을 받을 경우만, header를 재 구성하기 때문이다.
+				if err := mpck.Rebuild(*h); err != nil {
+					app.ErrorLog("Request parse rebuild error %s", err.Error())
+				} else {
+
+					if len(h.ToEid) > 0 && stb.dlver.(ServiceDeliverer).IsLocal(h.ToEid) {
+						err = stb.dlver.LocalRequest(h, mpck)
+					} else {
+						err = stb.dlver.RouteRequest(h, mpck)
+					}
+
+					if err != nil {
+						app.ErrorLog("Request remote %s", err.Error())
+					}
+				}
 			}
 
 		case MsgTypeResponse:

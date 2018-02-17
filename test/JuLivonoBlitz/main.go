@@ -10,68 +10,6 @@ import (
 
 var g_cli *client
 
-func printUsage() {
-
-	fmt.Println("<usage>>>>>>>>>>>>>>>>>>>")
-	fmt.Println("login [user01-token]")
-	fmt.Println("createroom")
-	fmt.Println("listmyroom")
-	fmt.Println("joinroom [roomid]")
-	fmt.Println("chat [data]")
-	fmt.Println("exit")
-}
-
-func command(args ...string) bool {
-
-	switch args[0] {
-	case "login":
-		if len(args) == 2 {
-			DoLoginToken(args[1])
-			return true
-		}
-
-	case "createroom":
-		DoCreateChatRoom()
-		return true
-
-	case "listmyrooms":
-		DoListMyRooms()
-		return true
-
-	case "chat":
-		if len(args) == 2 {
-			DoSendChat(args[1])
-			return true
-		}
-
-	case "joinroom":
-		if len(args) == 2 {
-			DoJoinRoom(args[1])
-			return true
-		}
-	}
-
-	return false
-}
-
-func consoleCommand() {
-
-	for {
-		var cmd, data string
-		n, _ := fmt.Scanln(&cmd, &data)
-
-		if n > 0 {
-			if cmd == "exit" {
-				return
-			}
-
-			if ok := command(cmd, data); !ok {
-				printUsage()
-			}
-		}
-	}
-}
-
 func main() {
 
 	if len(os.Args) < 2 {
@@ -88,6 +26,16 @@ func main() {
 	g_cli = newClient(os.Args[1], os.Args[3])
 
 	g_cli.RegisterRandHandler("RecvChat", OnRecvChat)
+	g_cli.RegisterRandHandler("CShapeList", OnCShapeList)
+	g_cli.RegisterRandHandler("CPlayStart", OnCPlayStart)
+	g_cli.RegisterRandHandler("CPlayEnd", OnCPlayEnd)
+	g_cli.RegisterRandHandler("CGroupResultFall", OnCGroupResultFall)
+	g_cli.RegisterRandHandler("CSingleResultFall", OnCSingleResultFall)
+	g_cli.RegisterRandHandler("CSingleResultFirm", OnCSingleResultFirm)
+	g_cli.RegisterRandHandler("CGroupResultFirm", OnCGroupResultFirm)
+	g_cli.RegisterRandHandler("CBlocksFirm", OnCBlocksFirm)
+	g_cli.RegisterRandHandler("CLinesClear", OnCLinesClear)
+	g_cli.RegisterRandHandler("CGameEnd", OnCGameEnd)
 
 	time.Sleep(1 * time.Second)
 	go consoleCommand()

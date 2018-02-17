@@ -5,11 +5,34 @@ import (
 )
 
 const (
-	NetErrorSessionAlreadyExists = 2001
-	NetErrorSessionIDNotFound    = 2002
-	NetErrorSessionNotExists     = 2003
-	NetErrorAuthTokenError       = 2101
+	NErrorSessionAlreadyExists = 2001
+	NErrorSessionIDNotFound    = 2002
+	NErrorSessionNotExists     = 2003
+	NErrorAuthTokenError       = 2101
 )
+
+func ErrorName(code int) string {
+	if code < 100 {
+		return co.CoErrorName(code)
+	}
+	
+	switch code {
+	case NErrorSessionAlreadyExists:
+		return "NErrorSessionAlreadyExists"
+	case NErrorSessionIDNotFound:
+		return "NErrorSessionIDNotFound"
+	case NErrorSessionNotExists:
+		return "NErrorSessionNotExists"
+	case NErrorAuthTokenError:
+		return "NErrorAuthTokenError"
+	}
+
+	return "NErrorUnknown"
+}
+
+func RaiseNError(args ...interface{}) co.NError {
+	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+}
 
 type GetUserLocationMsg struct {
 	UserID co.TUserID

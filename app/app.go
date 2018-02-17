@@ -33,6 +33,7 @@ type RemoteInfo struct {
 }
 
 type Application struct {
+	AppName    string
 	status     int
 	svcs       []Servicer
 	Eid        string
@@ -48,6 +49,7 @@ type Application struct {
 var App Application
 
 func InitApp(eid string, spn string, workPath string) {
+	App.AppName = os.Args[0]
 	App.Eid = eid
 	App.Hostname, _ = os.Hostname()
 	App.ConfigPath = os.ExpandEnv(workPath) + "/config"

@@ -44,7 +44,7 @@ func DoHelloAnyOne(cli *client, req *co.RequestMsg) {
 	var body HelloReqMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: 333, Text: "error"}, nil)
+		cli.SendResWithError(req, co.NError{Code: 333, Text: "error"}, nil)
 		return
 	}
 

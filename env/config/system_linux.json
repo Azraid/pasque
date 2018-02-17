@@ -40,7 +40,7 @@
                 ]
             },
 
-	  {   "Spn" : "ChatUser", 
+	    {   "Spn" : "ChatUser", 
                 "Gates" : [
                     {   "Eid" : "ChatUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
@@ -48,7 +48,25 @@
                 "Providers" : [
                     {   "Eid" : "ChatUserSrv.1",              "ConsolePort":"auto"                                            }
                 ]
-            }
+           },
+	   {   "Spn" : "JuliUser", 
+                "Gates" : [
+                    {   "Eid" : "JuliUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "JuliUserSrv.1",              "ConsolePort":"auto"                                            }
+                ]
+           },
+	   {   "Spn" : "JuliWorld", 
+                "Gates" : [
+                    {   "Eid" : "JuliWorld.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "JuliWorldSrv.1",              "ConsolePort":"auto"                                            }
+                ]
+           }
     ],
         
     "TcNodes" : [

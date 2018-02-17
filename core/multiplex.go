@@ -127,7 +127,7 @@ func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node)
 					nio.rw.Close()
 					return fmt.Errorf("accept parse error %v", header)
 				} else {
-					if accptmsg.Header.ErrCode != NetErrorSucess {
+					if accptmsg.Header.ErrCode != NErrorSucess {
 						nio.rw.Close()
 						return fmt.Errorf("accept net error %v", accptmsg.Header)
 					}

@@ -193,7 +193,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "unknown msg format"},
+			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "unknown msg format"},
 			co.AccptBody{})
 
 		if acptMsg != nil {
@@ -206,7 +206,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if msgType != co.MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "unknown msgtype"},
+			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "unknown msgtype"},
 			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
@@ -219,7 +219,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
 		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NetErrorParsingError, ErrText: "parse error"},
+			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "parse error"},
 			co.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
@@ -230,7 +230,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 
 	eid := srv.getNewEid()
 	stb := srv.register(eid, conn)
-	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NetErrorSucess}, co.AccptBody{})
+	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NErrorSucess}, co.AccptBody{})
 
 	if acptMsg != nil {
 		conn.Write(acptMsg.Bytes(), true)

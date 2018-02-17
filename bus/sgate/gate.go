@@ -91,7 +91,7 @@ func (srv *gate) LocalRequest(header *co.ReqHeader, msg co.MsgPack) error {
 
 	//key값으로 rebuild 하여.
 	if ok := srv.adjustKey(header, msg.Body()); ok {
-		msg.Rebuild(*header)
+		msg.ResetHeader(*header)
 	}
 
 	//ToEid지정보다, Key 분산이 우선한다.

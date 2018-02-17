@@ -106,7 +106,7 @@ func (q *resQ) Push(txnNo uint64, req *co.RequestMsg, res chan *co.ResponseMsg) 
 func (q *resQ) Fire(txnNo uint64) {
 	if rt := q.delRoundTrip(txnNo); rt != nil {
 		var res co.ResponseMsg
-		res.Header = co.ResHeader{TxnNo: txnNo, ErrCode: co.NetErrorTimeout, ErrText: "Internal Expired"}
+		res.Header = co.ResHeader{TxnNo: txnNo, ErrCode: co.NErrorTimeout, ErrText: "Internal Expired"}
 		rt.res <- &res
 	}
 }

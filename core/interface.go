@@ -44,6 +44,11 @@ type GridData interface {
 	String()
 }
 
+type NError interface {
+	Code() int
+	Error() string
+}
+
 type WriteCloser interface {
 	Write(b []byte, isLogging bool) error
 	Close() error
@@ -78,11 +83,13 @@ type Client interface {
 	Dial(topgy Topology) error
 	RegisterGridHandler(api string, handler func(cli Client, msg *RequestMsg, gridData interface{}) interface{})
 	RegisterRandHandler(api string, handler func(cli Client, msg *RequestMsg))
+	ListGridApis() []string
+	ListRandApis() []string
 	SendReq(spn string, api string, body interface{}) (res *ResponseMsg, err error)
 	SendNoti(spn string, api string, body interface{}) (err error)
 	SendReqDirect(spn string, gateEid string, eid string, api string, body interface{}) (res *ResponseMsg, err error)
 	SendRes(req *RequestMsg, body interface{}) (err error)
-	SendResWithError(req *RequestMsg, nerr NetError, body interface{}) (err error)
+	SendResWithError(req *RequestMsg, nerr NError, body interface{}) (err error)
 
 	LoopbackReq(api string, body interface{}) (res *ResponseMsg, err error)
 	LoopbackNoti(api string, body interface{}) (err error)
@@ -136,5 +143,6 @@ type MsgPack interface {
 	MsgType() byte
 	Header() []byte
 	Body() []byte
-	Rebuild(header interface{}) error
+	ResetHeader(header interface{}) error
+	ResetBody(key string, value interface{}) error
 }

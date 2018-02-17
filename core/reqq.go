@@ -50,7 +50,7 @@ func (q *reqQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 	} else {
 		if _, ok := q.gridHandlers[msg.Header.Api]; ok {
 			app.ErrorLog("grid api %v with no key", msg.Header)
-			nerr := NetError{Code: NetErrorFederationError, Text: fmt.Sprintf("%s no key", msg.Header.Api)}
+			nerr := CoRaiseNError(NErrorFederationError, 1, fmt.Sprintf("%s no key", msg.Header.Api))
 			q.cli.SendResWithError(msg, nerr, nil)
 		} else {
 			go goReqRandHandle(q, msg)
@@ -58,6 +58,24 @@ func (q *reqQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 	}
 
 	return nil
+}
+
+func (q reqQ) ListGridApis() []string {
+	var s []string
+	for k, _ := range q.gridHandlers {
+		s = append(s, k)
+	}
+
+	return s
+}
+
+func (q reqQ) ListRandApis() []string {
+	var s []string
+	for k, _ := range q.randHandlers {
+		s = append(s, k)
+	}
+
+	return s
 }
 
 func (q *reqQ) RegisterGridHandler(api string, handler func(cli Client, msg *RequestMsg, gridData interface{}) interface{}) {
@@ -79,7 +97,7 @@ func goReqRandHandle(q *reqQ, msg *RequestMsg) {
 		handler(q.cli, msg)
 	} else {
 		app.ErrorLog("not implement api %v", msg.Header)
-		nerr := NetError{Code: NetErrorNotImplemented, Text: fmt.Sprintf("%s not implemented", msg.Header.Api)}
+		nerr := CoRaiseNError(NErrorNotImplemented, 1, fmt.Sprintf("%s not implemented", msg.Header.Api))
 		q.cli.SendResWithError(msg, nerr, nil)
 	}
 }
@@ -106,7 +124,7 @@ func goReqGridHandle(q *reqQ, ctx *gridContext) {
 			ctx.data = handler(q.cli, msg, ctx.data)
 		} else {
 			app.ErrorLog("not implement api %v", msg.Header)
-			nerr := NetError{Code: NetErrorNotImplemented, Text: fmt.Sprintf("%s not implemented", msg.Header.Api)}
+			nerr := CoRaiseNError(NErrorNotImplemented, 1, fmt.Sprintf("%s not implemented", msg.Header.Api))
 			q.cli.SendResWithError(msg, nerr, nil)
 		}
 	}

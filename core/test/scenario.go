@@ -23,7 +23,7 @@ type ScenarioStep struct {
 	ReqSpn    string
 	IsNoti    bool
 	Api       string
-	Nerr      NetError
+	Nerr      NError
 	Response  json.RawMessage
 	Request   json.RawMessage
 	ParsedMsg interface{}

@@ -18,8 +18,14 @@ go build -o $GOPATH/bin/pasque/linux/chatroomsrv $GOPATH/src/github.com/Azraid/p
 
 go build -o $GOPATH/bin/pasque/linux/chatusersrv $GOPATH/src/github.com/Azraid/pasque/services/chat/chatusersrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/chat/chatusersrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/chat/chatusersrv/txn.go
 
+go build -o $GOPATH/bin/pasque/linux/juliworldsrv $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliworldsrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliworldsrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliworldsrv/intxn.go  $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliworldsrv/outtxn.go $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliworldsrv/player.go
 
-go build -o $GOPATH/bin/pasque/linux/julivonoblitz $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/main.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_chat.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/conn.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/dialer.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/resq.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/client.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_login.go 
+go build -o $GOPATH/bin/pasque/linux/juliusersrv $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliusersrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliusersrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/julivonoblitz/juliusersrv/txn.go
+
+
+go build -o $GOPATH/bin/pasque/linux/julivonoblitz $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/main.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_chat.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/conn.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/dialer.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/resq.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/client.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_login.go  $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_juli.go  $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/cmd.go 
+
+
 
 
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/config/system_linux.json $GOPATH/bin/pasque/linux/config/system.json

@@ -53,7 +53,7 @@ func DoHelloWorld(cli co.Client, req *co.RequestMsg, gridData interface{}) inter
 	var body HelloReqMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: 333, Text: "error"}, nil)
+		cli.SendResWithError(req, co.NError{Code: 333, Text: "error"}, nil)
 		return nil
 	}
 
@@ -73,7 +73,7 @@ func DoHelloAnyOne(cli co.Client, req *co.RequestMsg) {
 	var body HelloReqMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: 333, Text: "error"}, nil)
+		cli.SendResWithError(req, co.NError{Code: 333, Text: "error"}, nil)
 		return
 	}
 

@@ -13,7 +13,7 @@ var g_userID co.TUserID
 func DoLoginToken(token string) {
 	req := auth.LoginTokenMsg{Token: token}
 	res, err := g_cli.SendReq("Session", "LoginToken", req)
-	if err == nil && res.Header.ErrCode == co.NetErrorSucess {
+	if err == nil && res.Header.ErrCode == co.NErrorSucess {
 		fmt.Println("login ok!")
 
 		var rbody auth.LoginTokenMsgR

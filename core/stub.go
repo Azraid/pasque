@@ -73,7 +73,7 @@ func (stb *stub) Send(mpck MsgPack) error {
 			return fmt.Errorf("eid not found %s", string(mpck.Header()))
 		} else {
 			h.ToEids = toEids
-			if err := mpck.Rebuild(*h); err != nil {
+			if err := mpck.ResetHeader(*h); err != nil {
 				return err
 			}
 		}
@@ -141,7 +141,7 @@ func goStubHandle(stb *stub) {
 
 				//RecvReq에 대해서만 함수를 새로 구성한 이유는
 				//말단에서 요청을 받을 경우만, header를 재 구성하기 때문이다.
-				if err := mpck.Rebuild(*h); err != nil {
+				if err := mpck.ResetHeader(*h); err != nil {
 					app.ErrorLog("Request parse rebuild error %s", err.Error())
 				} else {
 

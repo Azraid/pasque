@@ -6,13 +6,15 @@ import (
 
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
-	. "github.com/Azraid/pasque/services/chat"
+	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
+
+const GameSpn = "Julivonoblitz.Tcgate"
 
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Println("ex) chatroomsrv.exe [eid]")
+		fmt.Println("ex) juliusersrv.exe [eid]")
 		os.Exit(1)
 	}
 
@@ -26,13 +28,16 @@ func main() {
 	app.InitApp(eid, "", workPath)
 
 	cli := co.NewClient(eid)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
+	cli.RegisterGridHandler(co.GetNameOfApiMsg(CreateRoomMsg{}), OnCreateRoom)
 	cli.RegisterGridHandler(co.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(SendChatMsg{}), OnSendChat)
+	cli.RegisterGridHandler(co.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
+	cli.RegisterGridHandler(co.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayRead)
+	cli.RegisterGridHandler(co.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
+	cli.RegisterGridHandler(co.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
 
 	toplgy := co.Topology{
 		Spn:           app.Config.Spn,
-		FederatedKey:  "RoomID",
+		FederatedKey:  "UserID",
 		FederatedApis: cli.ListGridApis()}
 
 	cli.Dial(toplgy)

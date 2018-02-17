@@ -46,6 +46,14 @@ func (cli *client) RegisterRandHandler(api string, handler func(cli Client, msg 
 	cli.reqQ.RegisterRandHandler(api, handler)
 }
 
+func (cli client) ListGridApis() []string {
+	return cli.reqQ.ListGridApis()
+}
+
+func (cli client) ListRandApis() []string {
+	return cli.reqQ.ListRandApis()
+}
+
 func (cli *client) Dial(toplgy Topology) error {
 	cli.toplgy = toplgy
 	go goDispatch(cli.muxio)
@@ -57,7 +65,7 @@ func (cli *client) Dial(toplgy Topology) error {
 
 func (cli *client) SendReq(spn string, api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
-		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		neterr := CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
 		var res ResponseMsg
 		res.Header.SetError(neterr)
 		return &res, neterr
@@ -84,7 +92,7 @@ func (cli *client) SendReq(spn string, api string, body interface{}) (res *Respo
 
 func (cli *client) SendReqDirect(spn string, gateEid string, eid string, api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
-		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		neterr := CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
 		var res ResponseMsg
 		res.Header.SetError(neterr)
 		return &res, neterr
@@ -110,7 +118,7 @@ func (cli *client) SendReqDirect(spn string, gateEid string, eid string, api str
 
 func (cli *client) LoopbackReq(api string, body interface{}) (res *ResponseMsg, err error) {
 	if app.IsStopping() {
-		neterr := NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		neterr := CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
 		var res ResponseMsg
 		res.Header.SetError(neterr)
 		return &res, neterr
@@ -138,7 +146,7 @@ func (cli *client) LoopbackReq(api string, body interface{}) (res *ResponseMsg, 
 
 func (cli *client) SendNoti(spn string, api string, body interface{}) (err error) {
 	if app.IsStopping() {
-		return NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		return CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
 	}
 
 	header := ReqHeader{Spn: spn, Api: api}
@@ -152,7 +160,7 @@ func (cli *client) SendNoti(spn string, api string, body interface{}) (err error
 
 func (cli *client) LoopbackNoti(api string, body interface{}) (err error) {
 	if app.IsStopping() {
-		return NetError{Code: NetErrorAppStopping, Text: "Application stopping"}
+		return CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
 	}
 
 	header := ReqHeader{Spn: app.Config.Spn, ToEid: app.App.Eid, Api: api}
@@ -165,11 +173,11 @@ func (cli *client) LoopbackNoti(api string, body interface{}) (err error) {
 }
 
 func (cli *client) SendRes(req *RequestMsg, body interface{}) (err error) {
-	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ErrCode: NetErrorSucess}
+	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ErrCode: NErrorSucess}
 	out, e := BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(NetError); ok {
+		if neterr, ok := e.(NError); ok {
 			header.SetError(neterr)
 			if out, e = BuildMsgPack(header, nil); e != nil {
 				return e
@@ -180,12 +188,14 @@ func (cli *client) SendRes(req *RequestMsg, body interface{}) (err error) {
 	return cli.muxio.Write(out.Bytes(), true)
 }
 
-func (cli *client) SendResWithError(req *RequestMsg, nerr NetError, body interface{}) (err error) {
-	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo, ErrCode: nerr.Code, ErrText: nerr.Text}
+func (cli *client) SendResWithError(req *RequestMsg, nerr NError, body interface{}) (err error) {
+	header := ResHeader{ToEids: req.Header.FromEids, TxnNo: req.Header.TxnNo}
+	header.SetError(nerr)
+
 	out, e := BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(NetError); ok {
+		if neterr, ok := e.(NError); ok {
 			header.SetError(neterr)
 			if out, e = BuildMsgPack(header, nil); e != nil {
 				return e

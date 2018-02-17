@@ -10,8 +10,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/Azraid/pasque/services/auth"
 
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
@@ -21,6 +24,7 @@ import (
 type inContexts struct {
 	orgTxn   uint64
 	lastUsed time.Time
+	loginTxn bool
 }
 
 //stub > client
@@ -107,7 +111,7 @@ func (stb *stub) Send(mpck co.MsgPack) error {
 		h.Key = ""
 		h.Spn = ""
 		h.ToEid = ""
-		if err := mpck.Rebuild(*h); err != nil {
+		if err := mpck.ResetHeader(*h); err != nil {
 			return err
 		}
 
@@ -126,12 +130,21 @@ func (stb *stub) Send(mpck co.MsgPack) error {
 			if inc, ok := stb.inq[h.TxnNo]; !ok {
 				return fmt.Errorf("txn not found ", h.TxnNo)
 			} else {
+				// login session 처리를 한다.
+				if inc.loginTxn && len(stb.userID) == 0 {
+					var rbody auth.LoginTokenMsgR
+					if err := json.Unmarshal(mpck.Body(), &rbody); err == nil {
+						stb.userID = rbody.UserID
+					}
+				}
+				// login session end.
+
 				txnNo := h.TxnNo
 				h.TxnNo = inc.orgTxn
 				delete(stb.inq, txnNo)
 			}
 
-			if err := mpck.Rebuild(*h); err != nil {
+			if err := mpck.ResetHeader(*h); err != nil {
 				return err
 			}
 		}
@@ -197,19 +210,32 @@ func goStubHandle(stb *stub) {
 				//Loopback Request는 router로 보내지 않아도 된다.
 				h.FromEids = co.PushToEids(stb.remoteEid, h.FromEids)
 
+				loginTxn := false
+				if h.Spn == "Session" && h.Api == "LoginToken" {
+					loginTxn = true
+				}
+
 				txnNo := stb.newTxnNo()
 				stb.inq[txnNo] = inContexts{
 					orgTxn:   h.TxnNo,
 					lastUsed: time.Now(),
+					loginTxn: loginTxn,
 				}
+
 				h.TxnNo = txnNo
 				if len(h.FromSpn) == 0 {
 					h.FromSpn = app.Config.Spn
 				}
 
+				if len(stb.userID) > 0 {
+					if err := mpck.ResetBody("UserID", stb.userID); err != nil {
+						app.ErrorLog("Request added UserID %s", err.Error())
+					}
+				}
+
 				//RecvReq에 대해서만 함수를 새로 구성한 이유는
 				//말단에서 요청을 받을 경우만, header를 재 구성하기 때문이다.
-				if err := mpck.Rebuild(*h); err != nil {
+				if err := mpck.ResetHeader(*h); err != nil {
 					app.ErrorLog("Request parse rebuild error %s", err.Error())
 				} else {
 
@@ -241,7 +267,7 @@ func goStubHandle(stb *stub) {
 
 					mpck := co.NewMsgPack(co.MsgTypeResponse, header, body)
 
-					if err := mpck.Rebuild(*h); err != nil {
+					if err := mpck.ResetHeader(*h); err != nil {
 						app.ErrorLog("Request parse rebuild error %s", err.Error())
 					} else {
 						if len(h.ToEids) == 1 && stb.dlver.(co.ServiceDeliverer).IsLocal(h.ToEids[0]) {

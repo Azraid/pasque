@@ -252,13 +252,13 @@ func setStructTag(tag reflect.StructTag) *TStructTag {
 	return p
 }
 
-func CheckParam(v interface{}) *NetError {
+func CheckParam(v interface{}) NError {
 	r := reflect.ValueOf(v)
 	t := reflect.TypeOf(v)
 	if r.Kind() == reflect.Ptr {
 		panic(fmt.Errorf("ptr value is not allowed.\n change your code"))
 	}
-	var nErr *NetError
+
 	var err error
 
 	for i := 0; i < r.NumField(); i++ {
@@ -281,10 +281,10 @@ func CheckParam(v interface{}) *NetError {
 		default:
 			panic(fmt.Errorf("undefined Type For CheckParam\n to do define type.go"))
 		}
+
 		if nil != err {
-			nErr = &NetError{Code: NetErrorInvalidparams, Text: err.Error()}
-			break
+			return CoRaiseNError(NErrorInvalidparams, 2, err.Error())
 		}
 	}
-	return nErr
+	return Sucess()
 }

@@ -13,7 +13,7 @@ var g_roomID string
 
 func DoCreateChatRoom() {
 
-	req := chat.CreateRoomMsg{UserID: g_userID}
+	req := chat.CreateRoomMsg{}
 	if res, err := g_cli.SendReq("ChatUser", "CreateRoom", req); err == nil {
 		var rbody chat.CreateRoomMsgR
 
@@ -27,7 +27,7 @@ func DoCreateChatRoom() {
 
 func DoListMyRooms() {
 
-	req := chat.ListMyRoomsMsg{UserID: g_userID}
+	req := chat.ListMyRoomsMsg{}
 	if res, err := g_cli.SendReq("ChatUser", "ListMyRooms", req); err == nil {
 		var rbody chat.ListMyRoomsMsgR
 
@@ -40,7 +40,7 @@ func DoListMyRooms() {
 }
 
 func DoSendChat(data string) {
-	req := chat.SendChatMsg{UserID: g_userID, RoomID: g_roomID, ChatType: 1, Msg: data}
+	req := chat.SendChatMsg{RoomID: g_roomID, ChatType: 1, Msg: data}
 
 	if res, err := g_cli.SendReq("ChatUser", "SendChat", req); err == nil {
 		var rbody chat.SendChatMsgR
@@ -53,7 +53,7 @@ func DoSendChat(data string) {
 
 func DoJoinRoom(roomID string) {
 	g_roomID = roomID
-	req := chat.JoinRoomMsg{RoomID: g_roomID, UserID: g_userID}
+	req := chat.JoinRoomMsg{RoomID: g_roomID}
 
 	if res, err := g_cli.SendReq("ChatUser", "JoinRoom", req); err == nil {
 		var rbody chat.JoinRoomMsgR
@@ -68,7 +68,7 @@ func OnRecvChat(cli *client, req *co.RequestMsg) {
 	var body chat.RecvChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: 333, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
 		return
 	}
 

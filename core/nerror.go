@@ -9,37 +9,93 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 )
 
+type nerror struct {
+	code int
+	text string
+}
+
+type FErrorName func(code int) string
+
+//RaiseNError(code, runtimeSkip = 1, data...)
+func RaiseNError(ename FErrorName, args ...interface{}) NError {
+	if len(args) == 0 {
+		return nerror{code: NErrorSucess}
+	}
+
+	c := nerror{code: args[0].(int)}
+
+	if len(args) > 1 {
+		_, file, line, _ := runtime.Caller(args[1].(int))
+		c.text = fmt.Sprintf("%s;%s;%s(%d);", ename(c.code), os.Args[0], file, line)
+	}
+
+	if l := len(args); l > 2 {
+		for i := 2; i < l; i++ {
+			c.text += fmt.Sprintf("%+v;", args[i])
+		}
+	}
+	return c
+}
+
+func (e nerror) Error() string {
+	return e.text
+}
+
+func (e nerror) Code() int {
+	return e.code
+}
+
+func Sucess() NError {
+	return nerror{code: NErrorSucess, text: "Sucess"}
+}
+
 const (
-	NetErrorSucess          = 0
-	NetErrorParsingError    = 1
-	NetErrorNotImplemented  = 2
-	NetErrorFederationError = 3
-	NetErrorAppStopping     = 4
-	NetErrorTooLargeSize    = 5
-	NetErrorUnknownMsgType  = 6
-	NetErrorInternal        = 7
-	NetErrorTimeout         = 8
-	NetErrorInvalidparams   = 9
-	NetErrorNoPermission    = 10
+	NErrorSucess          = 0
+	NErrorParsingError    = 1
+	NErrorNotImplemented  = 2
+	NErrorFederationError = 3
+	NErrorAppStopping     = 4
+	NErrorTooLargeSize    = 5
+	NErrorUnknownMsgType  = 6
+	NErrorInternal        = 7
+	NErrorTimeout         = 8
+	NErrorInvalidparams   = 9
+	NErrorNoPermission    = 10
 )
 
-type NetError struct {
-	Code uint32
-	Text string
+func CoErrorName(code int) string {
+	switch code {
+	case NErrorSucess:
+		return "Sucess"
+	case NErrorParsingError:
+		return "NErrorParsingError"
+	case NErrorNotImplemented:
+		return "NErrorNotImplemented"
+	case NErrorFederationError:
+		return "NErrorFederationError"
+	case NErrorAppStopping:
+		return "NErrorAppStopping"
+	case NErrorTooLargeSize:
+		return "NErrorTooLargeSize"
+	case NErrorUnknownMsgType:
+		return "NErrorUnknownMsgType"
+	case NErrorInternal:
+		return "NErrorInternal"
+	case NErrorTimeout:
+		return "NErrorTimeout"
+	case NErrorInvalidparams:
+		return "NErrorInvalidparams"
+	case NErrorNoPermission:
+		return "NErrorNoPermission"
+	}
+
+	return "NErrorUnknown"
 }
 
-func (nerr NetError) Error() string {
-	return fmt.Sprintf("code:%d, text:%s, issue:%s", nerr.Code, nerr.Text)
-}
-
-func Error(code uint32, text string) NetError {
-	_, file, line, _ := runtime.Caller(1)
-	return NetError{Code: code, Text: text + fmt.Sprintf("; %s(%d)", file, line)}
-}
-
-func Sucess() NetError {
-	return NetError{Code: NetErrorSucess}
+func CoRaiseNError(args ...interface{}) NError {
+	return RaiseNError(CoErrorName, args)
 }

@@ -8,71 +8,71 @@ import (
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/services/auth"
-	proto "github.com/Azraid/pasque/services/chat"
+	. "github.com/Azraid/pasque/services/chat"
 )
 
 func OnCreateRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
-	var body proto.CreateRoomMsg
+	var body CreateRoomMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
 		return gridData
 	}
 
 	roomID := co.GenerateGuid().String()
-	if r, err := cli.SendReq("ChatRoom", "JoinRoom", proto.JoinRoomMsg{RoomID: roomID, UserID: body.UserID}); err != nil {
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorInternal, Text: "error"}, nil)
+	if r, err := cli.SendReq("ChatRoom", "JoinRoom", JoinRoomMsg{RoomID: roomID, UserID: body.UserID}); err != nil {
+		cli.SendResWithError(req, RaiseNError(co.NErrorInternal), nil)
 		return gridData
-	} else if r.Header.ErrCode != co.NetErrorSucess {
-		cli.SendResWithError(req, co.NetError{Code: r.Header.ErrCode, Text: r.Header.ErrText}, nil)
+	} else if r.Header.ErrCode != co.NErrorSucess {
+		cli.SendResWithError(req, r.Header.GetError(), nil)
 		return gridData
 	}
 
 	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
 	gd.Rooms[roomID] = ChatRoom{Lasted: time.Now()}
 
-	cli.SendRes(req, proto.CreateRoomMsgR{RoomID: roomID})
+	cli.SendRes(req, CreateRoomMsgR{RoomID: roomID})
 	return gd
 }
 
 func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
-	var body proto.JoinRoomMsg
+	var body JoinRoomMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
 		return gridData
 	}
 
-	if r, err := cli.SendReq("ChatRoom", "JoinRoom", proto.JoinRoomMsg{RoomID: body.RoomID, UserID: body.UserID}); err != nil {
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorInternal, Text: "error"}, nil)
+	if r, err := cli.SendReq("ChatRoom", "JoinRoom", JoinRoomMsg{RoomID: body.RoomID, UserID: body.UserID}); err != nil {
+		cli.SendResWithError(req, RaiseNError(co.NErrorInternal), nil)
 		return gridData
-	} else if r.Header.ErrCode != co.NetErrorSucess {
-		cli.SendResWithError(req, co.NetError{Code: r.Header.ErrCode, Text: r.Header.ErrText}, nil)
+	} else if r.Header.ErrCode != co.NErrorSucess {
+		cli.SendResWithError(req, r.Header.GetError(), nil)
 		return gridData
 	}
 
 	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
 	gd.Rooms[body.RoomID] = ChatRoom{Lasted: time.Now()}
 
-	cli.SendRes(req, proto.JoinRoomMsgR{})
+	cli.SendRes(req, JoinRoomMsgR{})
 	return gd
 }
 
 //ListRooms 사용자가 채팅중인 방 리스트를 보여준다.
 func OnListMyRooms(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
 
-	var body proto.ListMyRoomsMsg
+	var body ListMyRoomsMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
 		return gridData
 	}
 
 	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
 
-	res := proto.ListMyRoomsMsgR{}
+	res := ListMyRoomsMsgR{}
 	res.Rooms = make([]struct {
 		RoomID string
 		Lasted time.Time
@@ -94,10 +94,10 @@ func OnListMyRooms(cli co.Client, req *co.RequestMsg, gridData interface{}) inte
 //SendChatMsg 채팅 메세지를 전송한다.
 func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
 
-	var body proto.SendChatMsg
+	var body SendChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
 		return gridData
 	}
 
@@ -106,26 +106,26 @@ func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 
 	if v, ok := gd.Rooms[body.RoomID]; !ok {
 		app.ErrorLog("RoomID[%s] not found", body.RoomID)
-		cli.SendResWithError(req, co.NetError{Code: proto.NetErrorChatNotFoundRoomID, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(NErrorChatNotFoundRoomID), nil)
 		return gd
 	} else {
 		v.Lasted = time.Now()
 	}
 
-	chatroomReq := proto.SendChatMsg{UserID: userID, RoomID: body.RoomID, ChatType: 1, Msg: body.Msg}
+	chatroomReq := SendChatMsg{UserID: userID, RoomID: body.RoomID, ChatType: 1, Msg: body.Msg}
 
 	res, err := cli.SendReq("ChatRoom", "SendChat", chatroomReq)
 	if err != nil {
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorInternal, Text: err.Error()}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorInternal), nil)
 		return gd
 	}
 
-	if res.Header.ErrCode != co.NetErrorSucess {
-		cli.SendResWithError(req, co.NetError{Code: res.Header.ErrCode, Text: res.Header.ErrText}, nil)
+	if res.Header.ErrCode != co.NErrorSucess {
+		cli.SendResWithError(req, res.Header.GetError(), nil)
 		return gd
 	}
 
-	if err := cli.SendRes(req, proto.SendChatMsgR{}); err != nil {
+	if err := cli.SendRes(req, SendChatMsgR{}); err != nil {
 		app.ErrorLog(err.Error())
 	}
 	return gd
@@ -133,10 +133,10 @@ func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 
 //RecvChatMsg 채팅 메세지를 수신한다.
 func OnRecvChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
-	var body proto.RecvChatMsg
+	var body RecvChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
 		return gridData
 	}
 

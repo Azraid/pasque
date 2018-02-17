@@ -15,6 +15,27 @@ import (
 	co "github.com/Azraid/pasque/core"
 )
 
+const (
+	NErrorGameClientError = 99000
+)
+
+func ErrorName(code int) string {
+	if code < 100 {
+		return co.CoErrorName(code)
+	}
+
+	switch code {
+	case NErrorGameClientError:
+		return "NErrorGameClientError"
+	}
+
+	return "NErrorUnknown"
+}
+
+func RaiseNError(args ...interface{}) co.NError {
+	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+}
+
 //client는 Client 인터페이스를 구현한 객체이다.
 type client struct {
 	lastTxnNo    uint64
@@ -59,7 +80,7 @@ func newClient(remoteAddr string, spn string) *client {
 					cli.rw.Close()
 					return fmt.Errorf("accept parse error %v", header)
 				} else {
-					if accptmsg.Header.ErrCode != co.NetErrorSucess {
+					if accptmsg.Header.ErrCode != co.NErrorSucess {
 						cli.rw.Close()
 						return fmt.Errorf("accept net error %v", accptmsg.Header)
 					}
@@ -158,11 +179,11 @@ func (cli *client) SendReq(spn string, api string, body interface{}) (res *co.Re
 }
 
 func (cli *client) SendRes(req *co.RequestMsg, body interface{}) (err error) {
-	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: co.NetErrorSucess}
+	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: co.NErrorSucess}
 	out, e := co.BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(co.NetError); ok {
+		if neterr, ok := e.(co.NError); ok {
 			header.SetError(neterr)
 			if out, e = co.BuildMsgPack(header, nil); e != nil {
 				return e
@@ -173,12 +194,12 @@ func (cli *client) SendRes(req *co.RequestMsg, body interface{}) (err error) {
 	return cli.rw.Write(out.Bytes(), true)
 }
 
-func (cli *client) SendResWithError(req *co.RequestMsg, nerr co.NetError, body interface{}) (err error) {
-	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: nerr.Code, ErrText: nerr.Text}
+func (cli *client) SendResWithError(req *co.RequestMsg, nerr co.NError, body interface{}) (err error) {
+	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: nerr.Code(), ErrText: nerr.Error()}
 	out, e := co.BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(co.NetError); ok {
+		if neterr, ok := e.(co.NError); ok {
 			header.SetError(neterr)
 			if out, e = co.BuildMsgPack(header, nil); e != nil {
 				return e
@@ -206,7 +227,7 @@ func (cli *client) OnRequest(rawHeader []byte, rawBody []byte) error {
 		handler(cli, msg)
 	} else {
 		app.ErrorLog("not implement api %v", msg.Header)
-		nerr := co.NetError{Code: co.NetErrorNotImplemented, Text: fmt.Sprintf("%s not implemented", msg.Header.Api)}
+		nerr := RaiseNError(co.NErrorNotImplemented, fmt.Sprintf("%s not implemented", msg.Header.Api))
 		cli.SendResWithError(msg, nerr, nil)
 	}
 

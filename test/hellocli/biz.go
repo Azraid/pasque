@@ -9,17 +9,17 @@ import (
 )
 
 type HelloReqMsg struct {
-	UserID string
+	UserID co.TUserID
 	Say    string
 }
 
 type HelloResMsg struct {
-	UserID string
+	UserID co.TUserID
 	Reply  string
 }
 
 type GridUserData struct {
-	UserID string
+	UserID co.TUserID
 }
 
 //랜덤 메세지 예제

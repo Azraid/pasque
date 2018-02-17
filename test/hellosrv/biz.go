@@ -9,18 +9,18 @@ import (
 )
 
 type HelloReqMsg struct {
-	UserId string
+	UserId co.TUserID
 	Say    string
 }
 
 type HelloResMsg struct {
-	UserId string
+	UserId co.TUserID
 	Count  int
 	Answer string
 }
 
 type GridUserData struct {
-	UserId string
+	UserId co.TUserID
 	Count  int
 }
 

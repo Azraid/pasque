@@ -29,7 +29,7 @@ func OnCreateRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) inter
 		return gridData
 	}
 
-	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
+	gd := getGridData(req.Header.Key, gridData)
 	gd.Rooms[roomID] = ChatRoom{Lasted: time.Now()}
 
 	cli.SendRes(req, proto.CreateRoomMsgR{RoomID: roomID})
@@ -53,7 +53,7 @@ func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return gridData
 	}
 
-	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
+	gd := getGridData(req.Header.Key, gridData)
 	gd.Rooms[body.RoomID] = ChatRoom{Lasted: time.Now()}
 
 	cli.SendRes(req, proto.JoinRoomMsgR{})
@@ -70,7 +70,7 @@ func OnListMyRooms(cli co.Client, req *co.RequestMsg, gridData interface{}) inte
 		return gridData
 	}
 
-	gd := getGridData(co.ToUserID(req.Header.Key), gridData)
+	gd := getGridData(req.Header.Key, gridData)
 
 	res := proto.ListMyRoomsMsgR{}
 	res.Rooms = make([]struct {
@@ -101,7 +101,7 @@ func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return gridData
 	}
 
-	userID := co.ToUserID(req.Header.Key)
+	userID := req.Header.Key
 	gd := getGridData(userID, gridData)
 
 	if v, ok := gd.Rooms[body.RoomID]; !ok {
@@ -140,7 +140,7 @@ func OnRecvChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return gridData
 	}
 
-	userID := co.ToUserID(req.Header.Key)
+	userID := req.Header.Key
 	gd := getGridData(userID, gridData)
 	if v, ok := gd.Rooms[body.RoomID]; ok {
 		v.Lasted = time.Now()

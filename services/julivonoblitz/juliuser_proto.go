@@ -1,4 +1,4 @@
-package chat
+package julivonoblitz
 
 import (
 	"time"
@@ -6,11 +6,11 @@ import (
 	co "github.com/Azraid/pasque/core"
 )
 
-type CreateRoomMsg struct {
+type CJoinRoomRoomMsg struct {
 	UserID co.TUserID
 }
 
-type CreateRoomMsgR struct {
+type CJoinRoomRoomMsgR struct {
 	RoomID string
 }
 

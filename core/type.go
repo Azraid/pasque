@@ -25,6 +25,11 @@ import (
 const TIME_LAYOUT = "2006-01-02 15:04:05.999"
 
 type TimeNZone time.Time
+type TUserID string
+
+func ToUserID(v string) TUserID {
+	return TUserID(v)
+}
 
 func (t TimeNZone) MarshalJSON() ([]byte, error) {
 	b := make([]byte, 0, len(TIME_LAYOUT)+2)

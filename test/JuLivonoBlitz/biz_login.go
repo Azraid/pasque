@@ -8,7 +8,7 @@ import (
 	auth "github.com/Azraid/pasque/services/auth"
 )
 
-var g_userID string
+var g_userID co.TUserID
 
 func DoLoginToken(token string) {
 	req := auth.LoginTokenMsg{Token: token}

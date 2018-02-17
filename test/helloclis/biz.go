@@ -12,17 +12,17 @@ import (
 )
 
 type HelloReqMsg struct {
-	UserID string
+	UserID co.TUserID
 	Say    string
 }
 
 type HelloResMsg struct {
-	UserID string
+	UserID co.TUserID
 	Reply  string
 }
 
 type GridUserData struct {
-	UserID string
+	UserID co.TUserID
 }
 
 func Run(cli co.Client, count int) {

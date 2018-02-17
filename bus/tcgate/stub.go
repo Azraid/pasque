@@ -41,6 +41,7 @@ type stub struct {
 	inq        map[uint64]inContexts
 	outq       map[uint64]outContexts
 	lastTxnNo  uint64
+	userID     co.TUserID
 }
 
 func NewStub(eid string, dlver co.Deliverer) co.Stub {

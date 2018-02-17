@@ -42,7 +42,7 @@ func OnGetRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfac
 	gd := getGridData(req.Header.Key, gridData)
 
 	res := proto.GetRoomMsgR{}
-	res.UserIDs = make([]string, len(gd.Members))
+	res.UserIDs = make([]co.TUserID, len(gd.Members))
 
 	i := 0
 	for k, _ := range gd.Members {

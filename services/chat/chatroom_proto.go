@@ -1,12 +1,16 @@
 package chat
 
+import (
+	co "github.com/Azraid/pasque/core"
+)
+
 const (
 	NetErrorChatNotFoundRoomID = 3000
 )
 
 type JoinRoomMsg struct {
 	RoomID string
-	UserID string
+	UserID co.TUserID
 }
 
 type JoinRoomMsgR struct {
@@ -17,5 +21,5 @@ type GetRoomMsg struct {
 }
 
 type GetRoomMsgR struct {
-	UserIDs []string
+	UserIDs []co.TUserID
 }

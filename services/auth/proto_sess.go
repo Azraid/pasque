@@ -1,5 +1,9 @@
 package auth
 
+import (
+	co "github.com/Azraid/pasque/core"
+)
+
 const (
 	NetErrorSessionAlreadyExists = 2001
 	NetErrorSessionIDNotFound    = 2002
@@ -8,7 +12,7 @@ const (
 )
 
 type GetUserLocationMsg struct {
-	UserID string
+	UserID co.TUserID
 	Spn    string
 }
 
@@ -18,7 +22,7 @@ type GetUserLocationMsgR struct {
 }
 
 type VerifySessionMsg struct {
-	UserID    string
+	UserID    co.TUserID
 	SessionID string
 }
 
@@ -30,12 +34,12 @@ type LoginTokenMsg struct {
 }
 
 type LoginTokenMsgR struct {
-	UserID    string
+	UserID    co.TUserID
 	SessionID string
 }
 
 type CreateSessionMsg struct {
-	UserID  string
+	UserID  co.TUserID
 	GateSpn string
 	GateEid string
 	Eid     string //Client Eid를 의미함.
@@ -46,7 +50,7 @@ type CreateSessionMsgR struct {
 }
 
 type LogoutMsg struct {
-	UserID string
+	UserID co.TUserID
 }
 
 type LogoutMsgR struct {

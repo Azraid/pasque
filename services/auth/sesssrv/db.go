@@ -6,18 +6,19 @@ import (
 	"io/ioutil"
 
 	"github.com/Azraid/pasque/app"
+	co "github.com/Azraid/pasque/core"
 )
 
 type UserAuthDB struct {
 	User []struct {
-		UserID string
+		UserID co.TUserID
 		Token  string
 	}
 }
 
 var db UserAuthDB
 
-func getUserID(token string) (string, bool) {
+func getUserID(token string) (co.TUserID, bool) {
 
 	for _, v := range db.User {
 		if v.Token == token {

@@ -51,6 +51,19 @@ func DoSendChat(data string) {
 	}
 }
 
+func DoJoinRoom(roomID string) {
+	g_roomID = roomID
+	req := chat.JoinRoomMsg{RoomID: g_roomID, UserID: g_userID}
+
+	if res, err := g_cli.SendReq("ChatUser", "JoinRoom", req); err == nil {
+		var rbody chat.JoinRoomMsgR
+
+		if err := json.Unmarshal(res.Body, &rbody); err != nil {
+			fmt.Println("JoinRoom fail", err.Error())
+		}
+	}
+}
+
 func OnRecvChat(cli *client, req *co.RequestMsg) {
 	var body chat.RecvChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {

@@ -28,6 +28,7 @@ func main() {
 
 	cli := co.NewClient(eid)
 	cli.RegisterGridHandler("CreateRoom", OnCreateRoom)
+	cli.RegisterGridHandler("JoinRoom", OnJoinRoom)
 	cli.RegisterGridHandler("ListMyRooms", OnListMyRooms)
 	cli.RegisterGridHandler("SendChat", OnSendChat)
 	cli.RegisterGridHandler("RecvChat", OnRecvChat)
@@ -35,7 +36,7 @@ func main() {
 	toplgy := co.Topology{
 		Spn:           "ChatUser",
 		FederatedKey:  "UserID",
-		FederatedApis: []string{"CreateRoom", "ListMyRooms", "SendChat", "RecvChat"}}
+		FederatedApis: []string{"CreateRoom", "JoinRoom", "ListMyRooms", "SendChat", "RecvChat"}}
 
 	cli.Dial(toplgy)
 

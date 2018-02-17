@@ -43,6 +43,12 @@ func command(args ...string) bool {
 			DoSendChat(args[1])
 			return true
 		}
+
+	case "joinroom":
+		if len(args) == 2 {
+			DoJoinRoom(args[1])
+			return true
+		}
 	}
 
 	return false
@@ -81,7 +87,7 @@ func main() {
 	app.InitApp(os.Args[2], os.Args[3], workPath)
 	g_cli = newClient(os.Args[1], os.Args[3])
 
-	g_cli.RegisterRandHandler("OnRecvChat", OnRecvChat)
+	g_cli.RegisterRandHandler("RecvChat", OnRecvChat)
 
 	time.Sleep(1 * time.Second)
 	go consoleCommand()

@@ -36,6 +36,30 @@ func OnCreateRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) inter
 	return gd
 }
 
+func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+	var body proto.JoinRoomMsg
+
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, co.NetError{Code: co.NetErrorParsingError, Text: "error"}, nil)
+		return gridData
+	}
+
+	if r, err := cli.SendReq("ChatRoom", "JoinRoom", proto.JoinRoomMsg{RoomID: body.RoomID, UserID: body.UserID}); err != nil {
+		cli.SendResWithError(req, co.NetError{Code: co.NetErrorInternal, Text: "error"}, nil)
+		return gridData
+	} else if r.Header.ErrCode != co.NetErrorSucess {
+		cli.SendResWithError(req, co.NetError{Code: r.Header.ErrCode, Text: r.Header.ErrText}, nil)
+		return gridData
+	}
+
+	gd := getGridData(req.Header.Key, gridData)
+	gd.Rooms[body.RoomID] = ChatRoom{Lasted: time.Now()}
+
+	cli.SendRes(req, proto.JoinRoomMsgR{})
+	return gd
+}
+
 //ListRooms 사용자가 채팅중인 방 리스트를 보여준다.
 func OnListMyRooms(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
 
@@ -135,7 +159,7 @@ func OnRecvChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return gd
 	}
 
-	cli.SendReqDirect(GameSpn, rbody.GateEid, rbody.Eid, "RecvChatMsg", body)
+	cli.SendReqDirect(GameSpn, rbody.GateEid, rbody.Eid, "RecvChat", body)
 
 	fmt.Printf("%s:%s-%s\r\n", body.ChatUserID, body.Msg, time.Now().Format(time.RFC3339))
 

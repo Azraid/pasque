@@ -83,10 +83,7 @@ func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 			Msg:        body.Msg,
 		}
 
-		_, err := cli.SendReq("ChatUser", "RecvChat", chatuserReq)
-		if err != nil {
-			app.ErrorLog("%s - %s", k, err.Error())
-		}
+		cli.SendNoti("ChatUser", "RecvChat", chatuserReq)
 	}
 
 	return gd

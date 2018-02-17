@@ -88,8 +88,8 @@ func OnLoginToken(cli co.Client, req *co.RequestMsg) {
 		return
 	}
 
-	gateEid := req.Header.FromEids[lstIdx-1]
-	cliEid := req.Header.FromEids[lstIdx]
+	cliEid := req.Header.FromEids[lstIdx-1]
+	gateEid := req.Header.FromEids[lstIdx]
 
 	r, err := cli.LoopbackReq("CreateSession", proto.CreateSessionMsg{
 		UserID:  userID,

@@ -30,5 +30,5 @@ else
 	xterm -e ./juliusersrv JuliUserSrv.1 &
 
 
-	xterm -e ./julivonoblitz 127.0.0.1:37701 Julivonoblitz Julivonoblitz.Tcgate &
+#	xterm -e ./julivonoblitz 127.0.0.1:37701 Julivonoblitz Julivonoblitz.Tcgate &
 fi 

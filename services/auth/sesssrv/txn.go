@@ -21,15 +21,15 @@ func OnGetUserLocation(cli co.Client, req *co.RequestMsg, gridData interface{}) 
 		return gridData
 	}
 
-	gd := getGridData(req.Header.Key, gridData)
+	g := GetGridData(gridData)
 
-	if v, ok := gd.Loc[body.Spn]; ok {
+	if v, ok := g.Loc[body.Spn]; ok {
 		cli.SendRes(req, GetUserLocationMsgR{GateEid: v.GateEid, Eid: v.Eid})
-		return gd
+		return g
 	}
 
 	cli.SendResWithError(req, RaiseNError(NErrorSessionNotExists), nil)
-	return gd
+	return g
 }
 
 //OnCreateSession Session을 생성한다.
@@ -41,29 +41,27 @@ func OnCreateSession(cli co.Client, req *co.RequestMsg, gridData interface{}) in
 		return gridData
 	}
 
+	var g *GridData
 	res := CreateSessionMsgR{}
 	if gridData != nil {
-		res.SessionID = gridData.(*GridData).SessionID
-		cli.SendResWithError(req, RaiseNError(NErrorSessionAlreadyExists, "Session Exists"), res)
-		return gridData
-	}
-
-	gd := getGridData(req.Header.Key, gridData)
-	if v, ok := gd.Loc[body.GateSpn]; ok {
-		if v.Eid != body.Eid || v.GateEid != body.GateEid {
+		g = GetGridData(gridData)
+		if !g.Validate(body.GateSpn, body.GateEid, body.GateEid) {
 			//TODO Kick()....
-			app.DebugLog("shoud be kick. different from %s, %v", v, req.Header)
-		} else {
-			//ok 이전 session 값과 같음
+			app.DebugLog("shoud be kick. different from %s, %v", g, req.Header)
+			//우선 update
+			g.ResetSession(body.GateSpn, body.GateEid, body.Eid)
 		}
+
+		res.SessionID = g.SessionID
+		//cli.SendResWithError(req, RaiseNError(NErrorSessionAlreadyExists, "Session Exists"), res)
 	} else {
-		// new session created
-		gd.Loc[body.GateSpn] = Location{Eid: body.Eid, GateEid: body.GateEid}
+		g = CreateGridData(req.Header.Key, gridData)
+		g.ResetSession(body.GateSpn, body.GateEid, body.Eid)
 	}
 
-	res.SessionID = gd.SessionID
+	res.SessionID = g.SessionID
 	cli.SendRes(req, res)
-	return gd
+	return g
 }
 
 //doLoginToken Session을 생성한다.
@@ -121,6 +119,9 @@ func OnLogout(cli co.Client, req *co.RequestMsg, gridData interface{}) interface
 		return gridData
 	}
 
+	if g := GetGridData(gridData); g != nil {
+		g.DeleteSession(req.Header.Key, body.GateSpn)
+	}
 	res := LogoutMsgR{}
 	cli.SendRes(req, res)
 	return nil //grid Cache might be removed

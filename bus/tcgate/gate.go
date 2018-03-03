@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azraid/pasque/services/auth"
+
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
 )
@@ -29,6 +31,18 @@ func newGate(listenAddr string) *Gate {
 	srv.stbs = make(map[string]co.Stub)
 	srv.remoter = co.NewProxy(app.Config.Global.Routers, srv)
 	return srv
+}
+
+func (srv *Gate) SendLogout(userID co.TUserID, gateSpn string) error {
+	header := co.ReqHeader{Spn: "Session", Api: "Logout"}
+	body := auth.LogoutMsg{UserID: userID, GateSpn: gateSpn}
+	out, neterr := co.BuildMsgPack(header, body)
+	if neterr != nil {
+		return neterr
+	}
+
+	srv.RouteRequest(&header, out)
+	return nil
 }
 
 //Deliverer interface 구현. stub에서 호출된다.

@@ -15,7 +15,7 @@ func ErrorName(code int) string {
 	if code < 100 {
 		return co.CoErrorName(code)
 	}
-	
+
 	switch code {
 	case NErrorSessionAlreadyExists:
 		return "NErrorSessionAlreadyExists"
@@ -73,7 +73,8 @@ type CreateSessionMsgR struct {
 }
 
 type LogoutMsg struct {
-	UserID co.TUserID
+	UserID  co.TUserID
+	GateSpn string
 }
 
 type LogoutMsgR struct {

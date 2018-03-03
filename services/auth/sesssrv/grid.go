@@ -25,15 +25,45 @@ type GridData struct {
 	Lasted    time.Time
 }
 
-// key is UserID
-func getGridData(key string, gridData interface{}) *GridData {
+func GetGridData(gridData interface{}) *GridData {
 	if gridData == nil {
-		g := &GridData{UserID: key, SessionID: co.GenerateGuid().String(), Lasted: time.Now()}
+		return nil
+	}
+
+	g := gridData.(*GridData)
+	g.Lasted = time.Now()
+
+	return g
+}
+
+// key is UserID
+func CreateGridData(userID string, gridData interface{}) *GridData {
+	if gridData == nil {
+		g := &GridData{UserID: userID, SessionID: co.GenerateGuid().String(), Lasted: time.Now()}
 		g.Loc = make(map[string]Location)
 		return g
 	}
 
-	gd := gridData.(*GridData)
-	gd.Lasted = time.Now()
-	return gd
+	return GetGridData(gridData)
+}
+
+func (g *GridData) DeleteSession(userID string, gateSpn string) {
+	if _, ok := g.Loc[gateSpn]; ok {
+		delete(g.Loc, gateSpn)
+	}
+}
+
+func (g *GridData) Validate(gateSpn string, gateEid string, eid string) bool {
+	if v, ok := g.Loc[gateSpn]; ok {
+		if v.Eid == eid && v.GateEid == gateEid {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (g *GridData) ResetSession(gateSpn string, gateEid string, eid string) {
+	g.Loc[gateSpn] = Location{GateEid: gateEid, Eid: eid}
+	g.Lasted = time.Now()
 }

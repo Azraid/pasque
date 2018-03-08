@@ -25,10 +25,7 @@ go build -o $GOPATH/bin/pasque/linux/juliusersrv $GOPATH/src/github.com/Azraid/p
 
 go build -o $GOPATH/bin/pasque/linux/julivonoblitz $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/main.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_chat.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/conn.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/dialer.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/resq.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/client.go $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_login.go  $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/biz_juli.go  $GOPATH/src/github.com/Azraid/pasque/test/JuLivonoBlitz/cmd.go 
 
-
-
-
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/config/system_linux.json $GOPATH/bin/pasque/linux/config/system.json
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/run/run_linux.sh $GOPATH/bin/pasque/linux/run.sh
+cp -rf $GOPATH/src/github.com/Azraid/pasque/env/run/sampling.sh $GOPATH/bin/pasque/linux/sampling.sh
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/config/userauthdb.json $GOPATH/bin/pasque/linux/config/userauthdb.json
-

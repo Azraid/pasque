@@ -140,18 +140,18 @@ func SendLinesClear(p *Player) {
 	}
 }
 
-func SendBlocksFirm(p *Player, blocks []*SingleInfo) {
+func SendBlocksFirm(p *Player, blocks []*SingleInfo, count int) {
 	req := CBlocksFirmMsg{
 		UserID: p.userID,
-		Count:  len(blocks),
+		Count:  count,
 	}
 
-	req.Routes = make([]POS, len(blocks))
-	req.ObjIDs = make([]int, len(blocks))
+	req.Routes = make([]POS, count)
+	req.ObjIDs = make([]int, count)
 
-	for k, v := range blocks {
-		req.Routes[k] = v.drawPos
-		req.ObjIDs[k] = v.objID
+	for i := 0; i < count; i++ {
+		req.Routes[i] = blocks[i].drawPos
+		req.ObjIDs[i] = blocks[i].objID
 	}
 
 	if spn, gateEid, eid, err := getUserLocation(p.userID); err == nil {

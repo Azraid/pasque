@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/Azraid/pasque/app"
+	co "github.com/Azraid/pasque/core"
 )
 
 var g_cli *client
+
+var g_auto bool = false
 
 func main() {
 
@@ -18,8 +21,12 @@ func main() {
 	}
 
 	workPath := "./"
-	if len(os.Args) == 5 {
+	if len(os.Args) >= 5 {
 		workPath = os.Args[4]
+	}
+
+	if len(os.Args) >= 6 {
+		g_auto = true
 	}
 
 	app.InitApp(os.Args[2], os.Args[3], workPath)
@@ -37,8 +44,17 @@ func main() {
 	g_cli.RegisterRandHandler("CLinesClear", OnCLinesClear)
 	g_cli.RegisterRandHandler("CGameEnd", OnCGameEnd)
 
-	time.Sleep(1 * time.Second)
-	go consoleCommand()
+	for !g_cli.rw.IsStatus(co.ConnStatusConnected) {
+		time.Sleep(1 * time.Second)
+	}
+
+	if g_auto {
+		fmt.Println("run auto command")
+		autoCommand(os.Args[5])
+	} else {
+		consoleCommand()
+	}
+
 	//DoLoginToken("user01-token")
 
 	app.WaitForShutdown()

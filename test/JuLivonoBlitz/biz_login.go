@@ -11,6 +11,8 @@ import (
 var g_userID co.TUserID
 
 func DoLoginToken(token string) {
+	fmt.Println("logintoken-", token)
+
 	req := auth.LoginTokenMsg{Token: token}
 	res, err := g_cli.SendReq("Session", "LoginToken", req)
 	if err == nil && res.Header.ErrCode == co.NErrorSucess {

@@ -21,6 +21,13 @@ func printUsage() {
 	fmt.Println("exit")
 }
 
+func autoCommand(token string) {
+
+	DoLoginToken(token)
+	DoCreateGameRoom("SP")
+	DoPlayReady()
+}
+
 func command(args ...string) bool {
 
 	fmt.Println(args)

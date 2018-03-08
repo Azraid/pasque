@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/Azraid/pasque/app"
@@ -51,7 +52,7 @@ var g_cnst CnstMngr
 
 func DoCreateGameRoom(mode string) {
 
-	fmt.Println("create room,", mode)
+	//fmt.Println("create room,", mode)
 	req := juli.CreateRoomMsg{Mode: strings.ToUpper(mode)}
 	if res, err := g_cli.SendReq("JuliUser", "CreateRoom", req); err == nil {
 		var rbody juli.CreateRoomMsgR
@@ -162,18 +163,25 @@ func getDolRoutes(dol string) []juli.POS {
 }
 
 func DoDrawGroup() {
-
 	dol := g_cnst.GetCurrentCnst().String()
-
+	g_cnst.ShiftCnstQ()
+	
 	req := juli.DrawGroupMsg{DolKind: dol}
 	req.Routes = getDolRoutes(dol)
 	req.Count = len(req.Routes)
 
 	if res, err := g_cli.SendReq("JuliUser", "DrawGroup", req); err == nil {
+
+		if g_auto {
+			if res.Header.ErrCode == juli.NErrorJulivonoblitzNotEmptySpace {
+				os.Exit(1)
+			}
+		}
+
 		var rbody juli.DrawGroupMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err != nil {
-			fmt.Println("Send PlayReady fail", err.Error())
+			fmt.Println("reply error", err.Error())
 		}
 	}
 }
@@ -200,6 +208,10 @@ func OnCShapeList(cli *client, req *co.RequestMsg) {
 
 	var rbody juli.CShapeListMsgR
 	g_cli.SendRes(req, rbody)
+
+	if g_auto {
+		DoDrawGroup()
+	}
 }
 
 func OnCPlayStart(cli *client, req *co.RequestMsg) {
@@ -212,22 +224,36 @@ func OnCPlayEnd(cli *client, req *co.RequestMsg) {
 
 func OnCGroupResultFall(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFallMsgR{})
+
 }
 
 func OnCSingleResultFall(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFallMsgR{})
+
 }
 
 func OnCSingleResultFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
+
+	if g_auto {
+		DoDrawGroup()
+	}
 }
 
 func OnCGroupResultFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
+	if g_auto {
+		DoDrawGroup()
+	}
+
 }
 
 func OnCBlocksFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
+
+	if g_auto {
+		DoDrawGroup()
+	}
 }
 
 func OnCLinesClear(cli *client, req *co.RequestMsg) {
@@ -236,4 +262,5 @@ func OnCLinesClear(cli *client, req *co.RequestMsg) {
 
 func OnCGameEnd(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CGameEndMsgR{})
+	os.Exit(1)
 }

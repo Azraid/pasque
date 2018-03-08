@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if ["$1" = "bg" ]; then
 	nohup ./router Router.1 > router.1.out & 
 	nohup ./sgate Session.Gate.1 > session.sgate.1.out &
@@ -28,7 +27,4 @@ else
 	xterm -e ./chatusersrv ChatUserSrv.1 &
 	xterm -e ./juliworldsrv JuliWorldSrv.1 &
 	xterm -e ./juliusersrv JuliUserSrv.1 &
-
-
-#	xterm -e ./julivonoblitz 127.0.0.1:37701 Julivonoblitz Julivonoblitz.Tcgate &
 fi 

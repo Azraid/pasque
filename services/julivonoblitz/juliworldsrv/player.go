@@ -458,6 +458,9 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 				}
 
 				cell.posY -= _playerOption.fallingSpeed * float32(elapsedTimeMs) / float32(1000)
+
+				//		fmt.Println("cell.posX: ", cell.posY, "elapsedTimeMs : ", elapsedTimeMs)
+
 				// Move Next Cell
 				if cell.posY < float32(0.0) {
 					if y < 1 {
@@ -483,8 +486,8 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 		}
 	}
 
-	if p.blockInfoCnt > 0 { //p.BlockINfoCnt 가 필요한지 ??
-		SendBlocksFirm(p, p.blockInfos)
+	if p.blockInfoCnt > 0 { //p.blockInfoCnt 가 필요한지 ??
+		SendBlocksFirm(p, p.blockInfos, p.blockInfoCnt)
 	}
 
 	if len(p.burstLines) > 0 {

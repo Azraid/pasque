@@ -214,6 +214,7 @@ func (g *GridData) initGame() {
 	g.opt.cnsts = append(g.opt.cnsts, ECNST_I3)
 
 	// Shuffle
+
 	for i, _ := range g.opt.cnsts {
 		pick := rand.Intn(len(g.opt.cnsts) - 1)
 		g.opt.cnsts[i], g.opt.cnsts[pick] = g.opt.cnsts[pick], g.opt.cnsts[i]

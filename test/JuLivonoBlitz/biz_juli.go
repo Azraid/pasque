@@ -165,7 +165,7 @@ func getDolRoutes(dol string) []juli.POS {
 func DoDrawGroup() {
 	dol := g_cnst.GetCurrentCnst().String()
 	g_cnst.ShiftCnstQ()
-	
+
 	req := juli.DrawGroupMsg{DolKind: dol}
 	req.Routes = getDolRoutes(dol)
 	req.Count = len(req.Routes)
@@ -210,7 +210,7 @@ func OnCShapeList(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, rbody)
 
 	if g_auto {
-		DoDrawGroup()
+		go DoDrawGroup()
 	}
 }
 
@@ -236,14 +236,14 @@ func OnCSingleResultFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
 
 	if g_auto {
-		DoDrawGroup()
+		go DoDrawGroup()
 	}
 }
 
 func OnCGroupResultFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
 	if g_auto {
-		DoDrawGroup()
+		go DoDrawGroup()
 	}
 
 }
@@ -252,7 +252,7 @@ func OnCBlocksFirm(cli *client, req *co.RequestMsg) {
 	g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
 
 	if g_auto {
-		DoDrawGroup()
+		go DoDrawGroup()
 	}
 }
 

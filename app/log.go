@@ -106,11 +106,11 @@ func initLog(path string) {
 		path += "/log"
 	}
 
-	elog = log.New(&logWriteCloser{path: path, prefix: "error"}, "", log.Lshortfile|log.Ldate|log.Ltime)
-	ilog = log.New(&logWriteCloser{path: path, prefix: "info"}, "", log.Ldate|log.Ltime)
-	dlog = log.New(&logWriteCloser{path: path, prefix: "debug"}, "", log.Lshortfile|log.Ldate|log.Ltime)
+	elog = log.New(&logWriteCloser{path: path, prefix: "error"}, "", log.LstdFlags|log.Lmicroseconds)
+	ilog = log.New(&logWriteCloser{path: path, prefix: "info"}, "", log.LstdFlags|log.Lmicroseconds)
+	dlog = log.New(&logWriteCloser{path: path, prefix: "debug"}, "", log.LstdFlags|log.Lmicroseconds)
 	dump = log.New(&logWriteCloser{path: path, prefix: "dmp"}, "", log.Ldate|log.Ltime)
-	plog = log.New(&logWriteCloser{path: path, prefix: "packet"}, "", log.Ldate|log.Ltime)
+	plog = log.New(&logWriteCloser{path: path, prefix: "packet"}, "", log.LstdFlags|log.Lmicroseconds)
 
 	connectLogD()
 }
@@ -143,7 +143,7 @@ func PacketLog(a string, v ...interface{}) {
 	}
 
 	if logDConn != nil {
-		msg := "[" + App.Eid + "]" + time.Now().Format("2006/01/02 15:30:30 ") + fmt.Sprintf(a, v...) + "\r\n"
+		msg := "[" + App.Eid + "]" + time.Now().Format("2006/01/02 15:30:30.000 ") + fmt.Sprintf(a, v...) + "\r\n"
 		logDConn.Write([]byte(msg))
 	}
 }

@@ -28,4 +28,5 @@ go build -o $GOPATH/bin/pasque/linux/julivonoblitz $GOPATH/src/github.com/Azraid
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/config/system_linux.json $GOPATH/bin/pasque/linux/config/system.json
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/run/run_linux.sh $GOPATH/bin/pasque/linux/run.sh
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/run/sampling.sh $GOPATH/bin/pasque/linux/sampling.sh
+cp -rf $GOPATH/src/github.com/Azraid/pasque/env/run/sampling100.sh $GOPATH/bin/pasque/linux/sampling100.sh
 cp -rf $GOPATH/src/github.com/Azraid/pasque/env/config/userauthdb.json $GOPATH/bin/pasque/linux/config/userauthdb.json

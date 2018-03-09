@@ -78,7 +78,7 @@ func (c *conn) Write(b []byte, isLogging bool) error {
 	}
 
 	if isLogging {
-		app.PacketLog("->%s\r\n", string(b))
+		app.PacketLog("->%s\r\n", string(b[1:]))
 	}
 
 	if n != len(b) {

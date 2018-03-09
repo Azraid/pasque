@@ -134,6 +134,10 @@ func goNetRead(cli *client) {
 }
 
 func goDispatch(cli *client) {
+	defer func() {
+		fmt.Println("why exit?")
+	}()
+
 	for msg := range cli.msgC {
 		var err error
 		switch msg.MsgType() {

@@ -8,6 +8,8 @@ if [ ! -d "$GOPATH/bin/pasque/linux/config" ]; then
    mkdir $GOPATH/bin/pasque/linux/config
 fi
 
+go build -o $GOPATH/bin/pasque/linux/spawn $GOPATH/src/github.com/Azraid/pasque/bus/spawn/main.go 
+
 go build -o $GOPATH/bin/pasque/linux/router $GOPATH/src/github.com/Azraid/pasque/bus/router/main.go $GOPATH/src/github.com/Azraid/pasque/bus/router/router.go
 go build -o $GOPATH/bin/pasque/linux/sgate $GOPATH/src/github.com/Azraid/pasque/bus/sgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/sgate/gate.go
 go build -o $GOPATH/bin/pasque/linux/tcgate $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/gate.go $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/stub.go

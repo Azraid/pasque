@@ -26,7 +26,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "SessionSrv.1",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "SessionSrv.1",           "Exec": "sesssrv",  			 "ConsolePort":"auto"                                            }
                 ]
             },
  
@@ -36,7 +36,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "ChatRoomSrv.1",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "ChatRoomSrv.1",           "Exec": "chatroomsrv",	  	 "ConsolePort":"auto"                                            }
                 ]
             },
 
@@ -46,7 +46,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "ChatUserSrv.1",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "ChatUserSrv.1",           "Exec" : "chatusersrv",   		"ConsolePort":"auto"                                            }
                 ]
            },
 	   {   "Spn" : "JuliUser", 
@@ -55,7 +55,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "JuliUserSrv.1",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "JuliUserSrv.1",           "Exec" : "juliusersrv",   		"ConsolePort":"auto"                                            }
                 ]
            },
 	   {   "Spn" : "JuliWorld", 
@@ -64,7 +64,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "JuliWorldSrv.1",              "ConsolePort":"auto"                                            }
+                    {   "Eid" : "JuliWorldSrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"auto"                                            }
                 ]
            }
     ],

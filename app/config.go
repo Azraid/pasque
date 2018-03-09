@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	AppSpawn    = 0
 	AppRouter   = 1
 	AppSGate    = 2
 	AppEGate    = 3
@@ -35,6 +36,7 @@ type Node struct {
 	Eid         string
 	ListenAddr  string
 	ConsolePort string
+	Exec        string
 }
 
 type GateGroup struct {
@@ -277,6 +279,10 @@ func LoadConfig(fn string, eid string, spn string) error {
 		cfg.MyNode = Node{Type: AppGame, Eid: eid}
 		cfg.Spn = spn
 		cfg.MyGateGroup, _ = cfg.Global.findGateGroup(cfg.Spn)
+	} else if eid == "Spawn" {
+		cfg.MyNode = Node{Type: AppSpawn, Eid: eid}
+		cfg.Spn = eid
+		//cfg.MyGateGroup, _ = cfg.Global.findGateGroup(cfg.Spn)
 	}
 
 	Config = &cfg

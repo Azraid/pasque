@@ -48,7 +48,7 @@ type stub struct {
 	userID     co.TUserID
 }
 
-func NewStub(eid string, dlver co.Deliverer) co.Stub {
+func NewStub(eid string, dlver co.Deliverer) GateStub {
 	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: co.AppStatusRunning}
 
 	stb.unsentTick = time.NewTicker(time.Second * co.UnsentTimerSec)
@@ -57,6 +57,10 @@ func NewStub(eid string, dlver co.Deliverer) co.Stub {
 	stb.outq = make(map[uint64]outContexts)
 	stb.lastTxnNo = 0
 	return stb
+}
+
+func (stb stub) GetUserID() co.TUserID {
+	return stb.userID
 }
 
 func (stb *stub) newTxnNo() uint64 {

@@ -13,13 +13,18 @@ import (
 	co "github.com/Azraid/pasque/core"
 )
 
+type GateStub interface {
+	co.Stub
+	GetUserID() co.TUserID
+}
+
 type Gate struct {
 	listenAddr      string
 	connLock        *sync.Mutex
 	pingMonitorTick *time.Ticker
 	remoter         co.Proxy
 	ln              net.Listener
-	stbs            map[string]co.Stub
+	stbs            map[string]GateStub
 }
 
 //NewGate
@@ -28,7 +33,7 @@ func newGate(listenAddr string) *Gate {
 
 	srv.listenAddr = listenAddr
 	srv.connLock = new(sync.Mutex)
-	srv.stbs = make(map[string]co.Stub)
+	srv.stbs = make(map[string]GateStub)
 	srv.remoter = co.NewProxy(app.Config.Global.Routers, srv)
 	return srv
 }
@@ -105,6 +110,8 @@ func (srv *Gate) close(eid string) {
 		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(co.ConnStatusConnected) {
 			stb.GetNetIO().Close()
 		}
+
+		srv.SendLogout(stb.GetUserID(), app.Config.Spn)
 		delete(srv.stbs, eid)
 	}
 }

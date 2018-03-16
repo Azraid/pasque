@@ -1,10 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"runtime"
+
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
+
+const ConDebug bool = false
 
 type playerOption struct {
 	grpSize        int
@@ -50,7 +55,7 @@ type Player struct {
 	blockInfos   []*SingleInfo
 
 	svrMatrix [][]*ServerBlock
-	svrBlocks []*ServerBlock
+	//svrBlocks []*ServerBlock
 
 	checkBurstLine []bool
 	burstLines     []int
@@ -64,6 +69,25 @@ func newPlayer(userID co.TUserID) *Player {
 	p := &Player{stat: EPSTAT_INIT, userID: userID}
 
 	return p
+}
+
+func (p *Player) PrintSvrMatrix() {
+	fmt.Println("---------------------------------------")
+
+	for y := p.ymax; y >= 0; y-- {
+		for x := 0; x < p.xsize; x++ {
+
+			switch p.svrMatrix[x][y].dolStat {
+			case EDSTAT_FALL:
+				fmt.Printf("%02d[*],", p.svrMatrix[x][y].objID)
+			case EDSTAT_FIRM:
+				fmt.Printf("%02d[O],", p.svrMatrix[x][y].objID)
+			default:
+				fmt.Printf("%02d[ ],", p.svrMatrix[x][y].objID)
+			}
+		}
+		fmt.Println("")
+	}
 }
 
 func (p *Player) Init(width int, height int, other *Player) {
@@ -93,7 +117,7 @@ func (p *Player) Init(width int, height int, other *Player) {
 		p.svrMatrix[k] = make([]*ServerBlock, p.ysize)
 	}
 
-	p.svrBlocks = make([]*ServerBlock, p.xsize*p.ysize)
+	//p.svrBlocks = make([]*ServerBlock, p.xsize*p.ysize)
 	p.checkBurstLine = make([]bool, p.ysize)
 	p.burstLines = make([]int, 0, p.ysize)
 	p.slidingOff = make([]int, p.xsize)
@@ -101,16 +125,17 @@ func (p *Player) Init(width int, height int, other *Player) {
 	i := 0
 	for y := 0; y < p.ysize; y++ {
 		for x := 0; x < p.xsize; x++ {
-			p.svrMatrix[x][y] = newServerBlock(POS{X: x, Y: y})
-			p.svrBlocks[i] = p.svrMatrix[x][y]
+			p.svrMatrix[x][y] = newServerBlock(i, POS{X: x, Y: y})
+			//p.svrBlocks[i] = p.svrMatrix[x][y]
 			i++
 		}
 	}
 
 	for i := 0; i < _playerOption.grpSize; i++ {
-		p.svrGroups[i] = newServerGroup()
+		p.svrGroups[i] = newServerGroup(i)
 	}
 
+	p.PrintSvrMatrix()
 }
 
 func (p *Player) SetCnstList(l []TCnst) {
@@ -218,7 +243,7 @@ func (p *Player) ClearSvrBlock(pos POS) bool {
 
 func (p *Player) ActivateSvrBlock(pos POS, grpID int, dolKind TDol, firm bool) bool {
 	// Don't touch svrMatrix[].pos value
-
+	// RelaseSrvBlock에서  grpID를 제거 하지 않았ㅇㅁ.. 걍  overwrite
 	p.svrMatrix[pos.X][pos.Y].grpID = grpID
 	p.svrMatrix[pos.X][pos.Y].dolKind = dolKind
 
@@ -296,6 +321,12 @@ func (p Player) FindUnderFirmBlocks(route []POS, count int) bool {
 }
 
 func (p *Player) ProcessBlocksFirm(pos POS) {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	if p.svrMatrix[pos.X][pos.Y].grpID < 0 {
 		p.SetSvrBlockFirm(p.svrMatrix[pos.X][pos.Y])
 		p.AddFirmBlockInfo((*p.svrMatrix[pos.X][pos.Y]).SingleInfo)
@@ -313,10 +344,22 @@ func (p *Player) ProcessBlocksFirm(pos POS) {
 }
 
 func (p *Player) ResetBurstLine() {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	p.burstLines = make([]int, 0, p.ysize)
 }
 
 func (p *Player) AddBusrtLine(y int) {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	if len(p.burstLines) > 0 {
 		for i := 0; i < len(p.burstLines); i++ {
 			if y < p.burstLines[i] {
@@ -337,6 +380,12 @@ func (p Player) HasBurstLine() bool {
 }
 
 func (p *Player) GetSvrBlockBurstCnt(route []POS, count int) {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	p.ResetBurstLine()
 
 	for i := 0; i < count; i++ {
@@ -356,6 +405,12 @@ func (p *Player) GetSvrBlockBurstCnt(route []POS, count int) {
 }
 
 func (p Player) TestOneLineClear(idx int) bool {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	for x := 0; x < p.xsize; x++ {
 		if p.svrMatrix[x][idx].dolStat != EDSTAT_FIRM {
 			return false
@@ -366,6 +421,12 @@ func (p Player) TestOneLineClear(idx int) bool {
 }
 
 func (p *Player) ClearLines() {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	burstCnt := len(p.burstLines)
 	for i := 0; i < burstCnt; i++ {
 		y := p.burstLines[i]
@@ -376,6 +437,12 @@ func (p *Player) ClearLines() {
 }
 
 func (p Player) IsBurstLine(y int) bool {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	burstCnt := len(p.burstLines)
 	for i := 0; i < burstCnt; i++ {
 		if y == p.burstLines[i] {
@@ -386,6 +453,12 @@ func (p Player) IsBurstLine(y int) bool {
 }
 
 func (p *Player) SlideAllDown() {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	for k, _ := range p.slidingOff {
 		p.slidingOff[k] = 0
 	}
@@ -411,6 +484,12 @@ func (p *Player) SlideAllDown() {
 }
 
 func (p *Player) AddFirmBlockInfo(info SingleInfo) {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	*p.blockInfos[p.blockInfoCnt] = info
 	p.blockInfoCnt++
 	//blockInfos[blockInfoCnt].dolKind = info.dolKind;
@@ -418,6 +497,12 @@ func (p *Player) AddFirmBlockInfo(info SingleInfo) {
 }
 
 func (p *Player) CheckNoRoom() bool {
+	if ConDebug {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("before- %s, line:%d", file, line)
+		defer fmt.Printf("after- %s, line:%d", file, line)
+	}
+
 	if p.fallingCnt > 0 {
 		return false
 	}
@@ -435,10 +520,16 @@ func (p *Player) CheckNoRoom() bool {
 // Update Frame
 // 서버가 너무 느려 1프레임에 1셀을 넘어가는 속도는 고려되지 않았음!!!
 func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
-	p.playTimeMs += elapsedTimeMs
 
-	p.ResetBurstLine()
-	p.blockInfoCnt = 0
+	//p.PrintSvrMatrix()
+	//fmt.Println(p.playTimeMs)
+	if int(p.playTimeMs/1000) != int((p.playTimeMs+elapsedTimeMs)/1000) {
+		p.PrintSvrMatrix()
+	}
+
+	p.playTimeMs += elapsedTimeMs
+	p.ResetBurstLine() // 라인 클리어 정보 리셋
+	p.blockInfoCnt = 0 //몇개 굳었냐?
 
 	for y := 0; y < p.ysize; y++ {
 		burst := true
@@ -458,8 +549,6 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 				}
 
 				cell.posY -= _playerOption.fallingSpeed * float32(elapsedTimeMs) / float32(1000)
-
-				//		fmt.Println("cell.posX: ", cell.posY, "elapsedTimeMs : ", elapsedTimeMs)
 
 				// Move Next Cell
 				if cell.posY < float32(0.0) {
@@ -488,6 +577,7 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 
 	if p.blockInfoCnt > 0 { //p.blockInfoCnt 가 필요한지 ??
 		SendBlocksFirm(p, p.blockInfos, p.blockInfoCnt)
+		p.PrintSvrMatrix()
 	}
 
 	if len(p.burstLines) > 0 {
@@ -505,4 +595,5 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 			SendGameEnd(p, TEnd(EEND_LKO).String())
 		}
 	}
+
 }

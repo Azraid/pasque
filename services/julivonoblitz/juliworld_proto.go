@@ -39,6 +39,10 @@ func ErrorName(code int) string {
 	return "NErrorUnknown"
 }
 
+func PrintNError(code int) string {
+	return ErrorName(code)
+}
+
 func RaiseNError(args ...interface{}) co.NError {
 	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
 }
@@ -152,6 +156,7 @@ type CSingleResultFirmMsg struct {
 type CSingleResultFirmMsgR struct {
 }
 
+//바로 굳을때 사용함.
 type CGroupResultFirmMsg struct {
 	UserID  co.TUserID
 	DolKind string

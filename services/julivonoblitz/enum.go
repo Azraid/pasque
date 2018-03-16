@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const DEFAULT_TICK_MS = 100
+const DEFAULT_TICK_MS = 40
 
 const (
 	EGMODE_SP = iota

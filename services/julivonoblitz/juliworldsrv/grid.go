@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azraid/pasque/app"
+
 	co "github.com/Azraid/pasque/core"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
@@ -27,13 +29,13 @@ type ServerBlock struct {
 	posY    float32
 	//atTime       time.Time
 	fallWaitTimeMs int64
-	Number         int
+	//Number         int
 }
 
-func newServerBlock(pos POS) *ServerBlock {
+func newServerBlock(objID int, pos POS) *ServerBlock {
 	sb := &ServerBlock{
 		SingleInfo: SingleInfo{
-			objID:   0,
+			objID:   objID,
 			drawPos: pos,
 			dolKind: EDOL_NORMAL_MAX,
 		},
@@ -44,8 +46,6 @@ func newServerBlock(pos POS) *ServerBlock {
 		fallWaitTimeMs: 0,
 	}
 
-	sb.Number++
-
 	return sb
 }
 
@@ -53,20 +53,17 @@ type ServerGroup struct {
 	grpID  int
 	cnt    int
 	blocks []*ServerBlock
-	Number int
 }
 
-func newServerGroup() *ServerGroup {
+func newServerGroup(grpID int) *ServerGroup {
 	sg := &ServerGroup{
-		grpID:  0,
-		cnt:    0,
-		Number: 0,
+		grpID: grpID,
+		cnt:   0,
 	}
 
-	sg.Number++
 	sg.blocks = make([]*ServerBlock, 6)
 	for k, _ := range sg.blocks {
-		sg.blocks[k] = newServerBlock(POS{X: -1, Y: -1})
+		sg.blocks[k] = newServerBlock(-1, POS{X: -1, Y: -1})
 	}
 
 	return sg
@@ -93,11 +90,13 @@ type GridData struct {
 	tick     *time.Ticker
 }
 
+var procTimer time.Duration = time.Millisecond * DEFAULT_TICK_MS
+
 func CreateGridData(key string, mode TGMode, gridData interface{}) *GridData {
 	if gridData == nil {
 		g := &GridData{GameStat: EGROOM_STAT_NONE, Mode: mode}
 		g.lock = new(sync.RWMutex)
-		g.tick = time.NewTicker(time.Millisecond * DEFAULT_TICK_MS)
+		g.tick = time.NewTicker(procTimer)
 		return g
 	}
 
@@ -162,18 +161,22 @@ func (g *GridData) RemovePlayer(userID co.TUserID) {
 			g.p1.stat = EPSTAT_STOP
 		}
 	}
+
+	if g.p1 == nil && g.p2 == nil {
+		g.Final()
+	}
 }
 
 func (g *GridData) TryStart() {
 	if g.Mode == EGMODE_SP && g.p1.stat == EPSTAT_READY {
 		g.initGame()
-		go goPlay(g)
+		go goPlay(g, time.Now())
 	} else if g.Mode == EGMODE_PE && g.p1.stat == EPSTAT_READY {
 		g.initGame()
-		go goPlay(g)
+		go goPlay(g, time.Now())
 	} else if g.p1.stat == EPSTAT_READY && g.p2.stat == EPSTAT_READY {
 		g.initGame()
-		go goPlay(g)
+		go goPlay(g, time.Now())
 	}
 }
 
@@ -238,7 +241,7 @@ func (g *GridData) Final() {
 	g.tick.Stop()
 }
 
-func goPlay(g *GridData) {
+func goPlay(g *GridData, beforeT time.Time) {
 	g.GameStat = EGROOM_STAT_PLAY_READY
 
 	if g.Mode == EGMODE_PP {
@@ -251,17 +254,33 @@ func goPlay(g *GridData) {
 		SendShapeList(g.p1.userID, g.p1.cnstList)
 	}
 
-	beforeT := time.Now()
+	//beforeT := time.Now()
 	for _ = range g.tick.C {
-		elapsedTimeMs := int(time.Now().Sub(beforeT).Nanoseconds() / int64(time.Millisecond))
+
+		elapsed := time.Now().Sub(beforeT)
+		if elapsed.Nanoseconds() > procTimer.Nanoseconds() {
+			if gap := (elapsed.Nanoseconds() - procTimer.Nanoseconds()) / int64(time.Millisecond); gap > 100 {
+				app.ErrorLog("-----------------Too Slow %d ms", gap)
+			}
+		}
+
+		elapsedTimeMs := int(elapsed.Nanoseconds() / int64(time.Millisecond))
 		g.Go(elapsedTimeMs)
+
 		beforeT = time.Now()
 	}
 }
 
 func (g *GridData) Go(elapsedTimeMs int) {
 	g.Lock()
-	defer g.Unlock()
+
+	defer func() {
+		g.Unlock()
+
+		if r := recover(); r != nil {
+			app.Dump(r)
+		}
+	}()
 
 	if g.GameStat != EGROOM_STAT_PLAY_READY {
 		return
@@ -270,10 +289,16 @@ func (g *GridData) Go(elapsedTimeMs int) {
 	g.GameStat = EGROOM_STAT_PLAYING
 
 	if g.Mode == EGMODE_PP {
-		g.p1.Play(int64(elapsedTimeMs), g.Mode)
-		g.p2.Play(int64(elapsedTimeMs), g.Mode)
+		if g.p1 != nil {
+			g.p1.Play(int64(elapsedTimeMs), g.Mode)
+		}
+		if g.p2 != nil {
+			g.p2.Play(int64(elapsedTimeMs), g.Mode)
+		}
 	} else {
-		g.p1.Play(int64(elapsedTimeMs), g.Mode)
+		if g.p1 != nil {
+			g.p1.Play(int64(elapsedTimeMs), g.Mode)
+		}
 	}
 
 	g.GameStat = EGROOM_STAT_PLAY_READY

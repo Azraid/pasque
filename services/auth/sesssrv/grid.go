@@ -10,19 +10,22 @@
 
 package main
 
-import "time"
-import co "github.com/Azraid/pasque/core"
+import (
+	"time"
+
+	co "github.com/Azraid/pasque/core"
+)
 
 type Location struct {
-	GateEid string
-	Eid     string
+	GateEid   string
+	Eid       string
+	SessionID string
 }
 
 type GridData struct {
-	UserID    string //key
-	SessionID string
-	Loc       map[string]Location //key : spn
-	Lasted    time.Time
+	UserID co.TUserID          //key
+	Loc    map[string]Location //key : spn
+	Lasted time.Time
 }
 
 func GetGridData(gridData interface{}) *GridData {
@@ -39,7 +42,7 @@ func GetGridData(gridData interface{}) *GridData {
 // key is UserID
 func CreateGridData(userID string, gridData interface{}) *GridData {
 	if gridData == nil {
-		g := &GridData{UserID: userID, SessionID: co.GenerateGuid().String(), Lasted: time.Now()}
+		g := &GridData{UserID: co.TUserID(userID), Lasted: time.Now()}
 		g.Loc = make(map[string]Location)
 		return g
 	}
@@ -47,13 +50,13 @@ func CreateGridData(userID string, gridData interface{}) *GridData {
 	return GetGridData(gridData)
 }
 
-func (g *GridData) DeleteSession(userID string, gateSpn string) {
+func (g *GridData) DeleteSession(gateSpn string) {
 	if _, ok := g.Loc[gateSpn]; ok {
 		delete(g.Loc, gateSpn)
 	}
 }
 
-func (g *GridData) Validate(gateSpn string, gateEid string, eid string) bool {
+func (g GridData) Validate(gateSpn string, gateEid string, eid string) bool {
 	if v, ok := g.Loc[gateSpn]; ok {
 		if v.Eid == eid && v.GateEid == gateEid {
 			return true
@@ -64,6 +67,6 @@ func (g *GridData) Validate(gateSpn string, gateEid string, eid string) bool {
 }
 
 func (g *GridData) ResetSession(gateSpn string, gateEid string, eid string) {
-	g.Loc[gateSpn] = Location{GateEid: gateEid, Eid: eid}
+	g.Loc[gateSpn] = Location{GateEid: gateEid, Eid: eid, SessionID: co.GenerateGuid().String()}
 	g.Lasted = time.Now()
 }

@@ -21,25 +21,37 @@ var perfs = map[string]*int32{"Perf": nil}
 var perfLock = sync.RWMutex{}
 
 func PerfAdd(key string) int32 {
-	if v, ok := perfs[key]; ok {
 
-		return atomic.AddInt32(v, 1)
-	}
+	return 0
+	/*
+		if v, ok := perfs[key]; ok {
 
-	return func() int32 {
-		perfLock.Lock()
-		defer perfLock.Unlock()
+			//TODO :
+			//return atomic.AddInt32(v, 1)
+			*v++
+			return *v
+		}
 
-		data := int32(1)
-		perfs[key] = &data
-		return 1
-	}()
+		return func() int32 {
+			perfLock.Lock()
+			defer perfLock.Unlock()
+
+			data := int32(1)
+			perfs[key] = &data
+			return 1
+		}()
+	*/
 }
 
 func PerfSub(key string) int32 {
-	if v, ok := perfs[key]; ok {
-		return atomic.AddInt32(v, -1)
-	}
+	/*
+		if v, ok := perfs[key]; ok {
+			*v--
+			return *v
+			//TODO :
+			//return atomic.AddInt32(v, -1)
+		}
+	*/
 
 	return 0
 }

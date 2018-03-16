@@ -40,8 +40,9 @@ type GetUserLocationMsg struct {
 }
 
 type GetUserLocationMsgR struct {
-	GateEid string
-	Eid     string
+	GateEid   string
+	Eid       string
+	SessionID string
 }
 
 type VerifySessionMsg struct {

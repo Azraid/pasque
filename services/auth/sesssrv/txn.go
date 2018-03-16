@@ -6,6 +6,7 @@ import (
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
 	. "github.com/Azraid/pasque/services/auth"
+	juli "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
 func OnGetUserLocation(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
@@ -47,19 +48,20 @@ func OnCreateSession(cli co.Client, req *co.RequestMsg, gridData interface{}) in
 		g = GetGridData(gridData)
 		if !g.Validate(body.GateSpn, body.GateEid, body.GateEid) {
 			//TODO Kick()....
+			cli.SendReq("JuliUser", "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
 			app.DebugLog("shoud be kick. different from %s, %v", g, req.Header)
 			//우선 update
 			g.ResetSession(body.GateSpn, body.GateEid, body.Eid)
 		}
 
-		res.SessionID = g.SessionID
+		res.SessionID = g.Loc[body.GateSpn].SessionID
 		//cli.SendResWithError(req, RaiseNError(NErrorSessionAlreadyExists, "Session Exists"), res)
 	} else {
 		g = CreateGridData(req.Header.Key, gridData)
 		g.ResetSession(body.GateSpn, body.GateEid, body.Eid)
 	}
 
-	res.SessionID = g.SessionID
+	res.SessionID = g.Loc[body.GateSpn].SessionID
 	cli.SendRes(req, res)
 	return g
 }
@@ -120,8 +122,11 @@ func OnLogout(cli co.Client, req *co.RequestMsg, gridData interface{}) interface
 	}
 
 	if g := GetGridData(gridData); g != nil {
-		g.DeleteSession(req.Header.Key, body.GateSpn)
+		//TODO: pub/sub으로 구현해야 함.
+		cli.SendReq("JuliUser", "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
+		g.DeleteSession(body.GateSpn)
 	}
+
 	res := LogoutMsgR{}
 	cli.SendRes(req, res)
 	return nil //grid Cache might be removed

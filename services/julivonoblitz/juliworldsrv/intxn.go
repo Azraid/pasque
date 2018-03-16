@@ -36,7 +36,6 @@ func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzGameModeMissMatch, "GMode error"), nil)
 		return g
 	}
-
 	if err := g.SetPlayer(body.UserID); err != nil {
 		cli.SendResWithError(req, RaiseNError(co.NErrorInternal, "set player"), nil)
 		return g

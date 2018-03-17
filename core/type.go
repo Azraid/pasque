@@ -1,7 +1,7 @@
 /********************************************************************************
 * util.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -63,7 +63,7 @@ func (t TimeNZone) String() string {
 	return time.Time(t).Format(TIME_LAYOUT)
 }
 func (t TimeNZone) IsPassed() bool {
-	now := Now()
+	now := time.Now()
 	dt := time.Time(t)
 	if now.Year() > dt.Year() {
 		return true
@@ -178,10 +178,10 @@ func (p *TStructTag) ValidString(v reflect.Value, t reflect.StructField) error {
 	str := v.String()
 	strLen := len(str)
 	if p.Required && strLen == 0 {
-		return fmt.Errorf("%s required", t.Name)
+		return IssueErrorf("%s required", t.Name)
 	}
 	if p.LengthChecked && strLen > p.Length {
-		return fmt.Errorf("%s is greater than the length(%d)", t.Name, p.Length)
+		return IssueErrorf("%s is greater than the length(%d)", t.Name, p.Length)
 	}
 	return nil
 }
@@ -190,16 +190,16 @@ func (p *TStructTag) ValidPtr(v reflect.Value, t reflect.StructField) error {
 	case reflect.TypeOf((*Guid)(nil)):
 		if p.Required {
 			if v.IsNil() {
-				return fmt.Errorf("%s required", t.Name)
+				return IssueErrorf("%s required", t.Name)
 			}
 			guid := v.Interface().(*Guid)
 			if *guid == GuidZERO {
-				return fmt.Errorf("%s required", t.Name)
+				return IssueErrorf("%s required", t.Name)
 			}
 		}
 
 	default:
-		panic(fmt.Errorf("ValidPtr... undefined reflect.Type(%s)\n to do define type.go", v.Type()))
+		panic(IssueErrorf("ValidPtr... undefined reflect.Type(%s)\n to do define type.go", v.Type()))
 	}
 	return nil
 }
@@ -207,31 +207,31 @@ func (p *TStructTag) ValidPtr(v reflect.Value, t reflect.StructField) error {
 func (p *TStructTag) ValidInt(v reflect.Value, t reflect.StructField) error {
 	val := v.Uint()
 	if p.Required && val == 0 {
-		return fmt.Errorf("%s required", t.Name)
+		return IssueErrorf("%s required", t.Name)
 	}
 	if !p.Required && val == 0 {
 		p.RangeChecked = false
 	}
 	if p.RangeChecked {
 		if p.Range.Min > 0 && val < p.Range.Min {
-			return fmt.Errorf("%s out of range min(%d)", t.Name, p.Range.Min)
+			return IssueErrorf("%s out of range min(%d)", t.Name, p.Range.Min)
 		}
 		if p.Range.Max > 0 && val > p.Range.Max {
-			return fmt.Errorf("%s out of range max(%d)", t.Name, p.Range.Max)
+			return IssueErrorf("%s out of range max(%d)", t.Name, p.Range.Max)
 		}
 	}
 	return nil
 }
 func (p *TStructTag) ValidArray(v reflect.Value, t reflect.StructField) error {
 	if p.Required && (v.IsNil() || 0 == v.Len()) {
-		return fmt.Errorf("%s required", t.Name)
+		return IssueErrorf("%s required", t.Name)
 	}
 	if p.LengthChecked && v.Len() > p.Length {
-		return fmt.Errorf("%s is greater than the length(%d)", t.Name, p.Length)
+		return IssueErrorf("%s is greater than the length(%d)", t.Name, p.Length)
 	}
 	return nil
 }
-func setStructTag(tag reflect.StructTag) *TStructTag {
+func SetStructTag(tag reflect.StructTag) *TStructTag {
 	p := &TStructTag{}
 	p.Required = 0 == strings.Compare(tag.Get("required"), "true")
 	_tLen := tag.Get("length")
@@ -250,41 +250,4 @@ func setStructTag(tag reflect.StructTag) *TStructTag {
 		}
 	}
 	return p
-}
-
-func CheckParam(v interface{}) NError {
-	r := reflect.ValueOf(v)
-	t := reflect.TypeOf(v)
-	if r.Kind() == reflect.Ptr {
-		panic(fmt.Errorf("ptr value is not allowed.\n change your code"))
-	}
-
-	var err error
-
-	for i := 0; i < r.NumField(); i++ {
-		tag := setStructTag(t.Field(i).Tag)
-		switch r.Field(i).Kind() {
-		case reflect.String:
-			err = tag.ValidString(r.Field(i), t.Field(i))
-		case reflect.Uint16:
-			err = tag.ValidInt(r.Field(i), t.Field(i))
-		case reflect.Uint32:
-			err = tag.ValidInt(r.Field(i), t.Field(i))
-		case reflect.Uint64:
-			err = tag.ValidInt(r.Field(i), t.Field(i))
-		case reflect.Ptr:
-			err = tag.ValidPtr(r.Field(i), t.Field(i))
-		case reflect.Slice:
-			err = tag.ValidArray(r.Field(i), t.Field(i))
-		case reflect.Array:
-			err = tag.ValidArray(r.Field(i), t.Field(i))
-		default:
-			panic(fmt.Errorf("undefined Type For CheckParam\n to do define type.go"))
-		}
-
-		if nil != err {
-			return CoRaiseNError(NErrorInvalidparams, 2, err.Error())
-		}
-	}
-	return Sucess()
 }

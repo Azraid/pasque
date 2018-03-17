@@ -1,7 +1,8 @@
 package auth
 
 import (
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 
 func ErrorName(code int) string {
 	if code < 100 {
-		return co.CoErrorName(code)
+		return n.CoErrorName(code)
 	}
 
 	switch code {
@@ -30,12 +31,12 @@ func ErrorName(code int) string {
 	return "NErrorUnknown"
 }
 
-func RaiseNError(args ...interface{}) co.NError {
-	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+func RaiseNError(args ...interface{}) n.NError {
+	return n.RaiseNError(ErrorName, args[0], 2, args[1:])
 }
 
 type GetUserLocationMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 	Spn    string
 }
 
@@ -46,7 +47,7 @@ type GetUserLocationMsgR struct {
 }
 
 type VerifySessionMsg struct {
-	UserID    co.TUserID
+	UserID    TUserID
 	SessionID string
 }
 
@@ -58,12 +59,12 @@ type LoginTokenMsg struct {
 }
 
 type LoginTokenMsgR struct {
-	UserID    co.TUserID
+	UserID    TUserID
 	SessionID string
 }
 
 type CreateSessionMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	GateSpn string
 	GateEid string
 	Eid     string //Client Eid를 의미함.
@@ -74,7 +75,7 @@ type CreateSessionMsgR struct {
 }
 
 type LogoutMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	GateSpn string
 }
 

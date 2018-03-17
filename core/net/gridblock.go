@@ -1,17 +1,18 @@
 /********************************************************************************
 * gridblock.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
-	"fmt"
-	"github.com/Azraid/pasque/util"
 	"math/rand"
 	"sync"
+
+	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type FederatedApi struct {
@@ -82,7 +83,7 @@ func (gb *GridBlock) Register(eid string) error {
 
 	for _, v := range gb.buckets {
 		if util.StrCmpI(v, eid) {
-			return fmt.Errorf("%s already exists", eid)
+			return IssueErrorf("%s already exists", eid)
 		}
 	}
 

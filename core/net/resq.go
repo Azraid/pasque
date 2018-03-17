@@ -1,18 +1,19 @@
 /********************************************************************************
 * resq.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
-	"fmt"
-	"github.com/Azraid/pasque/app"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 type roundTrip struct {
@@ -112,11 +113,11 @@ func (q *resQ) Fire(txnNo uint64) {
 func (q *resQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 	h := ParseResHeader(rawHeader)
 	if h == nil {
-		return fmt.Errorf("Response parse error!, %s, %s", string(rawHeader), string(rawBody))
+		return IssueErrorf("Response parse error!, %s, %s", string(rawHeader), string(rawBody))
 	}
 
 	if h.TxnNo <= 0 {
-		return fmt.Errorf("Response no txnNo!, %s, %s", string(rawHeader), string(rawBody))
+		return IssueErrorf("Response no txnNo!, %s, %s", string(rawHeader), string(rawBody))
 	}
 
 	var res ResponseMsg

@@ -1,11 +1,11 @@
 /********************************************************************************
 * conn.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com 
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
 	"errors"

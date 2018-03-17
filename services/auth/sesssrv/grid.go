@@ -4,7 +4,7 @@
 * 원래 세션이라 하면, 다양한 클라이언트 gate - tcgate, webgate,...
 * 의 세션을 한군데에서 관리하는 것을 의미한다
 * 따라서 세션서버에는 다양한 location에서 로그인한 정보들을 담고 있다.
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com 
 * Owned by azraid@gmail.com
 ********************************************************************************/
 

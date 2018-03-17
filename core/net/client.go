@@ -1,16 +1,17 @@
 /********************************************************************************
 * client.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
 	"sync/atomic"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 //client는 Client 인터페이스를 구현한 객체이다.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -11,10 +10,11 @@ import (
 
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 type GateStub interface {
-	co.Stub
+	n.Stub
 	GetUserID() co.TUserID
 }
 
@@ -22,7 +22,7 @@ type Gate struct {
 	listenAddr      string
 	connLock        *sync.Mutex
 	pingMonitorTick *time.Ticker
-	remoter         co.Proxy
+	remoter         n.Proxy
 	ln              net.Listener
 	stbs            map[string]GateStub
 }
@@ -34,14 +34,14 @@ func newGate(listenAddr string) *Gate {
 	srv.listenAddr = listenAddr
 	srv.connLock = new(sync.Mutex)
 	srv.stbs = make(map[string]GateStub)
-	srv.remoter = co.NewProxy(app.Config.Global.Routers, srv)
+	srv.remoter = n.NewProxy(app.Config.Global.Routers, srv)
 	return srv
 }
 
 func (srv *Gate) SendLogout(userID co.TUserID, gateSpn string) error {
-	header := co.ReqHeader{Spn: "Session", Api: "Logout"}
+	header := n.ReqHeader{Spn: "Session", Api: "Logout"}
 	body := auth.LogoutMsg{UserID: userID, GateSpn: gateSpn}
-	out, neterr := co.BuildMsgPack(header, body)
+	out, neterr := n.BuildMsgPack(header, body)
 	if neterr != nil {
 		return neterr
 	}
@@ -52,35 +52,35 @@ func (srv *Gate) SendLogout(userID co.TUserID, gateSpn string) error {
 
 //Deliverer interface 구현. stub에서 호출된다.
 //Router로 보내는 메세지
-func (srv *Gate) RouteRequest(header *co.ReqHeader, msg co.MsgPack) error {
+func (srv *Gate) RouteRequest(header *n.ReqHeader, msg n.MsgPack) error {
 	return srv.remoter.Send(msg)
 }
 
 //Deliverer interface 구현. proxy에서 호출된다.
 //Local Provider로 요청을 보낸다.
-func (srv *Gate) LocalRequest(header *co.ReqHeader, msg co.MsgPack) error {
+func (srv *Gate) LocalRequest(header *n.ReqHeader, msg n.MsgPack) error {
 	if len(header.ToEid) == 0 {
-		return fmt.Errorf("message from Remote, but eid not found from [%+v]", *header)
+		return co.IssueErrorf("message from Remote, but eid not found from [%+v]", *header)
 	}
 
 	return srv.SendDirect(header.ToEid, msg)
 }
 
 //Deliverer interface 구현. stub에서 호출된다.
-func (srv *Gate) RouteResponse(header *co.ResHeader, msg co.MsgPack) error {
+func (srv *Gate) RouteResponse(header *n.ResHeader, msg n.MsgPack) error {
 	return srv.remoter.Send(msg)
 }
 
 //Deliverer interface 구현. stub에서 호출된다.
-func (srv *Gate) LocalResponse(header *co.ResHeader, msg co.MsgPack) error {
-	return srv.SendDirect(co.PeekFromEids(header.ToEids), msg)
+func (srv *Gate) LocalResponse(header *n.ResHeader, msg n.MsgPack) error {
+	return srv.SendDirect(n.PeekFromEids(header.ToEids), msg)
 }
 
 func (srv *Gate) ListenAndServe() (err error) {
 
 	app.DebugLog("start listen... ")
 
-	toplgy := co.Topology{Spn: app.Config.Spn}
+	toplgy := n.Topology{Spn: app.Config.Spn}
 	srv.remoter.Dial(toplgy)
 
 	port := strings.Split(srv.listenAddr, ":")[1]
@@ -107,7 +107,7 @@ func (srv *Gate) close(eid string) {
 	defer srv.connLock.Unlock()
 
 	if stb, ok := srv.stbs[eid]; ok {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(co.ConnStatusConnected) {
+		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(n.ConnStatusConnected) {
 			stb.GetNetIO().Close()
 		}
 
@@ -116,12 +116,12 @@ func (srv *Gate) close(eid string) {
 	}
 }
 
-func (srv *Gate) SendDirect(eid string, mpck co.MsgPack) error {
+func (srv *Gate) SendDirect(eid string, mpck n.MsgPack) error {
 	if v, ok := srv.stbs[eid]; ok {
 		return v.Send(mpck)
 	}
 
-	return fmt.Errorf("%s not found", eid)
+	return co.IssueErrorf("%s not found", eid)
 }
 
 func (srv *Gate) Shutdown() bool {
@@ -141,7 +141,7 @@ func goPingMonitor(srv *Gate) {
 
 		for eid, stb := range srv.stbs {
 			if stb.GetNetIO() != nil &&
-				stb.GetNetIO().IsStatus(co.ConnStatusConnected) &&
+				stb.GetNetIO().IsStatus(n.ConnStatusConnected) &&
 				uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
 				disused = append(disused, eid)
 			}
@@ -154,7 +154,7 @@ func goPingMonitor(srv *Gate) {
 }
 
 //Register is
-func (srv *Gate) register(eid string, rw co.NetIO) co.Stub {
+func (srv *Gate) register(eid string, rw n.NetIO) n.Stub {
 	srv.connLock.Lock()
 	defer srv.connLock.Unlock()
 
@@ -207,15 +207,15 @@ func goServe(srv *Gate) {
 }
 
 func goAccept(srv *Gate, rwc net.Conn) {
-	conn := co.NewNetIO()
+	conn := n.NewNetIO()
 	conn.Register(rwc)
 
 	msgType, rawHeader, rawBody, err := conn.Read()
 	if err != nil {
 		app.ErrorLog("Server Accept err %s", err.Error())
-		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "unknown msg format"},
-			co.AccptBody{})
+		acptMsg, _ := n.BuildMsgPack(
+			n.AccptHeader{ErrCode: n.NErrorParsingError, ErrText: "unknown msg format"},
+			n.AccptBody{})
 
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
@@ -224,11 +224,11 @@ func goAccept(srv *Gate, rwc net.Conn) {
 		return
 	}
 
-	if msgType != co.MsgTypeConnect {
+	if msgType != n.MsgTypeConnect {
 		app.ErrorLog("Server Accept not received connection message, %s", string(rawHeader))
-		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "unknown msgtype"},
-			co.AccptBody{})
+		acptMsg, _ := n.BuildMsgPack(
+			n.AccptHeader{ErrCode: n.NErrorParsingError, ErrText: "unknown msgtype"},
+			n.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -236,12 +236,12 @@ func goAccept(srv *Gate, rwc net.Conn) {
 		return
 	}
 
-	connMsg := co.ParseConnectMsg(rawHeader, rawBody)
+	connMsg := n.ParseConnectMsg(rawHeader, rawBody)
 	if connMsg == nil {
 		app.ErrorLog("Server Accept parse error!, %s", string(rawHeader))
-		acptMsg, _ := co.BuildMsgPack(
-			co.AccptHeader{ErrCode: co.NErrorParsingError, ErrText: "parse error"},
-			co.AccptBody{})
+		acptMsg, _ := n.BuildMsgPack(
+			n.AccptHeader{ErrCode: n.NErrorParsingError, ErrText: "parse error"},
+			n.AccptBody{})
 		if acptMsg != nil {
 			conn.Write(acptMsg.Bytes(), true)
 		}
@@ -251,7 +251,7 @@ func goAccept(srv *Gate, rwc net.Conn) {
 
 	eid := srv.getNewEid()
 	stb := srv.register(eid, conn)
-	acptMsg, _ := co.BuildMsgPack(co.AccptHeader{ErrCode: co.NErrorSucess}, co.AccptBody{})
+	acptMsg, _ := n.BuildMsgPack(n.AccptHeader{ErrCode: n.NErrorSucess}, n.AccptBody{})
 
 	if acptMsg != nil {
 		conn.Write(acptMsg.Bytes(), true)

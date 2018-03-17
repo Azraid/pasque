@@ -5,22 +5,23 @@ import (
 	"fmt"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+
+	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
-func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body JoinRoomMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
 	mode, err := ParseTGMode(body.Mode)
 	if err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError, "GMode error"), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError, "GMode error"), nil)
 		return gridData
 	}
 
@@ -37,7 +38,7 @@ func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 		return g
 	}
 	if err := g.SetPlayer(body.UserID); err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInternal, "set player"), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, "set player"), nil)
 		return g
 	}
 
@@ -47,12 +48,12 @@ func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 }
 
 //GetRoom 전투방 정보에 대한 요청
-func OnGetRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 
 	var body GetRoomMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
@@ -78,12 +79,12 @@ func OnGetRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfac
 	return gridData
 }
 
-func OnLeaveRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 
 	var body LeaveRoomMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
@@ -108,11 +109,11 @@ func OnLeaveRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interf
 	return g
 }
 
-func OnPlayReady(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body PlayReadyMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
@@ -125,7 +126,7 @@ func OnPlayReady(cli co.Client, req *co.RequestMsg, gridData interface{}) interf
 	g := gridData.(*GridData)
 
 	if err := g.SetPlayerStatus(body.UserID, EPSTAT_READY); err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInternal, err.Error()), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, err.Error()), nil)
 		return gridData
 	}
 
@@ -138,23 +139,23 @@ func OnPlayReady(cli co.Client, req *co.RequestMsg, gridData interface{}) interf
 	return g
 }
 
-func OnDrawGroup(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body DrawGroupMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
 	if body.Count < 1 {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInvalidparams, fmt.Sprintf("Count : %d", body.Count)), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInvalidparams, fmt.Sprintf("Count : %d", body.Count)), nil)
 		return gridData
 	}
 
 	dol, err := ParseTDol(body.DolKind)
 	if err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInvalidparams, fmt.Sprintf("DolKind : %s", body.DolKind)), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInvalidparams, fmt.Sprintf("DolKind : %s", body.DolKind)), nil)
 		return gridData
 	}
 
@@ -177,7 +178,7 @@ func OnDrawGroup(cli co.Client, req *co.RequestMsg, gridData interface{}) interf
 
 	p, err := g.GetPlayer(body.UserID)
 	if err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInternal, err.Error()), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, err.Error()), nil)
 
 		return g
 	}
@@ -237,18 +238,18 @@ func OnDrawGroup(cli co.Client, req *co.RequestMsg, gridData interface{}) interf
 	return g
 }
 
-func OnDrawSingle(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body DrawSingleMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
 	dol, err := ParseTDol(body.DolKind)
 	if err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInvalidparams, fmt.Sprintf("DolKind : %s", body.DolKind)), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInvalidparams, fmt.Sprintf("DolKind : %s", body.DolKind)), nil)
 		return gridData
 	}
 
@@ -271,7 +272,7 @@ func OnDrawSingle(cli co.Client, req *co.RequestMsg, gridData interface{}) inter
 
 	p, err := g.GetPlayer(body.UserID)
 	if err != nil {
-		cli.SendResWithError(req, RaiseNError(co.NErrorInternal, err.Error()), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, err.Error()), nil)
 
 		return g
 	}

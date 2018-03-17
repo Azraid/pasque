@@ -40,12 +40,12 @@ type ApiMap struct {
 func (snrio *Scenario) Load(fn string) error {
 	b, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 
 	}
 
 	if err = json.Unmarshal(b, snrio); err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 
 	return nil
@@ -56,20 +56,20 @@ func (snrio *Scenario) Validate(am *ApiMap) error {
 		if pv, ok := am.Apis[v.Api]; ok {
 			if len(v.Response) > 0 {
 				if err := json.Unmarshal(v.Response, pv); err != nil {
-					return fmt.Errorf("API[%s] is wrong, %v", v.Api, err)
+					return IssueErrorf("API[%s] is wrong, %v", v.Api, err)
 				} else {
 					snrio.Steps[i].ParsedMsg = pv
 				}
 			} else {
 				if err := json.Unmarshal(v.Request, pv); err != nil {
-					return fmt.Errorf("API[%s] is wrong, %v", v.Api, err)
+					return IssueErrorf("API[%s] is wrong, %v", v.Api, err)
 				} else {
 					snrio.Steps[i].ParsedMsg = pv
 				}
 			}
 
 		} else {
-			return fmt.Errorf("API[%s] not exists", v.Api)
+			return IssueErrorf("API[%s] not exists", v.Api)
 		}
 	}
 

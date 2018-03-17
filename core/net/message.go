@@ -11,12 +11,14 @@
 *   common한 protocol들을 등록
 ***/
 
-package core
+package net
 
 import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	. "github.com/Azraid/pasque/core"
 )
 
 const (
@@ -367,7 +369,7 @@ func PeekFromEids(eids []string) string {
 func PopFromEids(eids []string) (string, []string, error) {
 	l := len(eids)
 	if l == 0 {
-		return "", nil, fmt.Errorf("nothing at eids")
+		return "", nil, IssueErrorf("nothing at eids")
 	}
 
 	eid := eids[l-1]
@@ -386,7 +388,7 @@ func IsValidMsg(rv reflect.Value) error {
 		fallthrough
 	case reflect.Interface:
 		if !rv.Elem().IsValid() {
-			return fmt.Errorf("nil")
+			return IssueErrorf("nil")
 		}
 
 		return IsValidMsg(rv.Elem())
@@ -406,7 +408,7 @@ func IsValidMsg(rv reflect.Value) error {
 		}
 
 		if len(errText) > 0 {
-			return fmt.Errorf("%s", errText)
+			return IssueErrorf("%s", errText)
 		} else {
 			return nil
 		}
@@ -417,12 +419,12 @@ func IsValidMsg(rv reflect.Value) error {
 		fallthrough
 	case reflect.Slice:
 		if rv.Len() == 0 {
-			return fmt.Errorf("nil")
+			return IssueErrorf("nil")
 		}
 
 	default:
 		if rv.Interface() == 0 || rv.Interface() == nil {
-			return fmt.Errorf("nil")
+			return IssueErrorf("nil")
 		}
 	}
 
@@ -435,7 +437,7 @@ func UnmarshalMsg(raw []byte, body interface{}) error {
 	}
 
 	if err := IsValidMsg(reflect.ValueOf(body)); err != nil {
-		return fmt.Errorf("invalid param, %s", err.Error())
+		return IssueErrorf("invalid param, %s", err.Error())
 	}
 
 	return nil
@@ -447,4 +449,41 @@ func GetNameOfApiMsg(msg interface{}) string {
 		return s[:len(s)-3]
 	}
 	return s
+}
+
+func CheckParam(v interface{}) NError {
+	r := reflect.ValueOf(v)
+	t := reflect.TypeOf(v)
+	if r.Kind() == reflect.Ptr {
+		panic(IssueErrorf("ptr value is not allowed.\n change your code"))
+	}
+
+	var err error
+
+	for i := 0; i < r.NumField(); i++ {
+		tag := SetStructTag(t.Field(i).Tag)
+		switch r.Field(i).Kind() {
+		case reflect.String:
+			err = tag.ValidString(r.Field(i), t.Field(i))
+		case reflect.Uint16:
+			err = tag.ValidInt(r.Field(i), t.Field(i))
+		case reflect.Uint32:
+			err = tag.ValidInt(r.Field(i), t.Field(i))
+		case reflect.Uint64:
+			err = tag.ValidInt(r.Field(i), t.Field(i))
+		case reflect.Ptr:
+			err = tag.ValidPtr(r.Field(i), t.Field(i))
+		case reflect.Slice:
+			err = tag.ValidArray(r.Field(i), t.Field(i))
+		case reflect.Array:
+			err = tag.ValidArray(r.Field(i), t.Field(i))
+		default:
+			panic(IssueErrorf("undefined Type For CheckParam\n to do define type.go"))
+		}
+
+		if nil != err {
+			return CoRaiseNError(NErrorInvalidparams, 2, err.Error())
+		}
+	}
+	return Sucess()
 }

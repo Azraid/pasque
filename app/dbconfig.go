@@ -2,9 +2,10 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/Azraid/pasque/util"
 	"io/ioutil"
+
+	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type TDbConn struct {
@@ -26,7 +27,7 @@ func (c DbConfig) Conn(db *string) (*TDbConn, error) {
 			return &conn, nil
 		}
 	}
-	return nil, fmt.Errorf("Not found [%s] Sql in db.json", *db)
+	return nil, IssueErrorf("Not found [%s] Sql in db.json", *db)
 }
 
 var CfgDb DbConfig
@@ -34,10 +35,10 @@ var CfgDb DbConfig
 func initDbConfig(fn string) error {
 	b, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 	if err = json.Unmarshal(b, &CfgDb); nil != err {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 
 	return nil

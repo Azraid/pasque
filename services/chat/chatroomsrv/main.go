@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/chat"
 )
 
@@ -25,12 +25,12 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	cli := co.NewClient(eid)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(SendChatMsg{}), OnSendChat)
+	cli := n.NewClient(eid)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(SendChatMsg{}), OnSendChat)
 
-	toplgy := co.Topology{
+	toplgy := n.Topology{
 		Spn:           app.Config.Spn,
 		FederatedKey:  "RoomID",
 		FederatedApis: cli.ListGridApis()}

@@ -4,18 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	auth "github.com/Azraid/pasque/services/auth"
 )
 
-var g_userID co.TUserID
+var g_userID TUserID
 
 func DoLoginToken(token string) {
 	fmt.Println("logintoken-", token)
 
 	req := auth.LoginTokenMsg{Token: token}
 	res, err := g_cli.SendReq("Session", "LoginToken", req)
-	if err == nil && res.Header.ErrCode == co.NErrorSucess {
+	if err == nil && res.Header.ErrCode == n.NErrorSucess {
 		fmt.Println("login ok!")
 
 		var rbody auth.LoginTokenMsgR

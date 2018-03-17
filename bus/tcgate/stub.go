@@ -3,7 +3,7 @@
 *
 * client로 message를보낼 경우에는  fromEids에 stub자신의  eid를 붙이지 않는다.
 
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -11,13 +11,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/Azraid/pasque/services/auth"
 
 	"github.com/Azraid/pasque/app"
 	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 //client > stub
@@ -35,11 +35,11 @@ type outContexts struct {
 }
 
 type stub struct {
-	rw         co.NetIO
+	rw         n.NetIO
 	remoteEid  string
 	lastUsed   time.Time
-	unsentQ    co.UnsentQ
-	dlver      co.Deliverer
+	unsentQ    n.UnsentQ
+	dlver      n.Deliverer
 	unsentTick *time.Ticker
 	appStatus  int
 	inq        map[uint64]inContexts
@@ -48,11 +48,11 @@ type stub struct {
 	userID     co.TUserID
 }
 
-func NewStub(eid string, dlver co.Deliverer) GateStub {
-	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: co.AppStatusRunning}
+func NewStub(eid string, dlver n.Deliverer) GateStub {
+	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: n.AppStatusRunning}
 
 	stb.unsentTick = time.NewTicker(time.Second * co.UnsentTimerSec)
-	stb.unsentQ = co.NewUnsentQ(nil, co.TxnTimeoutSec)
+	stb.unsentQ = n.NewUnsentQ(nil, co.TxnTimeoutSec)
 	stb.inq = make(map[uint64]inContexts)
 	stb.outq = make(map[uint64]outContexts)
 	stb.lastTxnNo = 0
@@ -68,7 +68,7 @@ func (stb *stub) newTxnNo() uint64 {
 	return stb.lastTxnNo //이건  atomic으로 안써도 될 듯..
 }
 
-func (stb *stub) GetNetIO() co.NetIO {
+func (stb *stub) GetNetIO() n.NetIO {
 	return stb.rw
 }
 
@@ -76,7 +76,7 @@ func (stb *stub) GetLastUsed() time.Time {
 	return stb.lastUsed
 }
 
-func (stb *stub) ResetConn(rw co.NetIO) {
+func (stb *stub) ResetConn(rw n.NetIO) {
 	if rw != nil {
 		if stb.rw != nil {
 			stb.rw.Close()
@@ -85,22 +85,22 @@ func (stb *stub) ResetConn(rw co.NetIO) {
 		stb.rw = rw
 		stb.unsentQ.Register(rw)
 		stb.lastUsed = time.Now()
-		stb.appStatus = co.AppStatusRunning
+		stb.appStatus = n.AppStatusRunning
 	}
 }
 
 //srv에서 호출하게 됨
-func (stb *stub) Send(mpck co.MsgPack) error {
+func (stb *stub) Send(mpck n.MsgPack) error {
 	switch mpck.MsgType() {
-	case co.MsgTypeRequest:
-		if stb.appStatus == co.AppStatusDying { // server가 죽고 있다. request는 받지를 못함.
+	case n.MsgTypeRequest:
+		if stb.appStatus == n.AppStatusDying { // server가 죽고 있다. request는 받지를 못함.
 			stb.unsentQ.Add(mpck.Bytes())
 			return nil
 		}
 
-		h := co.ParseReqHeader(mpck.Header())
+		h := n.ParseReqHeader(mpck.Header())
 		if h == nil {
-			return fmt.Errorf("parsing error %s", string(mpck.Header()))
+			return co.IssueErrorf("parsing error %s", string(mpck.Header()))
 		}
 
 		txnNo := stb.newTxnNo()
@@ -119,20 +119,20 @@ func (stb *stub) Send(mpck co.MsgPack) error {
 			return err
 		}
 
-	case co.MsgTypeResponse:
+	case n.MsgTypeResponse:
 		//Response 메세지의 경우는 toEids를 떼고 전달해야 한다.
-		h := co.ParseResHeader(mpck.Header())
+		h := n.ParseResHeader(mpck.Header())
 		if h == nil {
-			return fmt.Errorf("parsing error %s", string(mpck.Header()))
+			return co.IssueErrorf("parsing error %s", string(mpck.Header()))
 		}
 
-		if _, _, err := co.PopFromEids(h.ToEids); err != nil {
-			return fmt.Errorf("eid not found %s", string(mpck.Header()))
+		if _, _, err := n.PopFromEids(h.ToEids); err != nil {
+			return co.IssueErrorf("eid not found %s", string(mpck.Header()))
 		} else {
 			//h.ToEids = toEids
 			h.ToEids = []string{}
 			if inc, ok := stb.inq[h.TxnNo]; !ok {
-				return fmt.Errorf("txn not found ", h.TxnNo)
+				return co.IssueErrorf("txn not found ", h.TxnNo)
 			} else {
 				// login session 처리를 한다.
 				if inc.loginTxn && len(stb.userID) == 0 {
@@ -185,7 +185,7 @@ func goStubHandle(stb *stub) {
 		msgType, header, body, err := stb.rw.Read()
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
-			if !stb.rw.IsStatus(co.ConnStatusConnected) {
+			if !stb.rw.IsStatus(n.ConnStatusConnected) {
 				return
 			}
 		}
@@ -193,26 +193,26 @@ func goStubHandle(stb *stub) {
 		stb.lastUsed = time.Now()
 
 		switch msgType {
-		case co.MsgTypePing:
-			pingMsgPack := co.BuildPingMsgPack("")
+		case n.MsgTypePing:
+			pingMsgPack := n.BuildPingMsgPack("")
 			if err := stb.rw.Write(pingMsgPack.Bytes(), true); err != nil {
 				app.ErrorLog("send pong error, %v", err)
 			}
 
-		case co.MsgTypeDie:
-			stb.appStatus = co.AppStatusDying
+		case n.MsgTypeDie:
+			stb.appStatus = n.AppStatusDying
 			app.DebugLog("recv dying message from %s", stb.remoteEid)
 
-		case co.MsgTypeRequest:
-			mpck := co.NewMsgPack(co.MsgTypeRequest, header, body)
-			h := co.ParseReqHeader(header)
+		case n.MsgTypeRequest:
+			mpck := n.NewMsgPack(n.MsgTypeRequest, header, body)
+			h := n.ParseReqHeader(header)
 
 			if h == nil {
 				app.ErrorLog("Request parse error!, %s", string(header))
 
 			} else {
 				//Loopback Request는 router로 보내지 않아도 된다.
-				h.FromEids = co.PushToEids(stb.remoteEid, h.FromEids)
+				h.FromEids = n.PushToEids(stb.remoteEid, h.FromEids)
 
 				loginTxn := false
 				if h.Spn == "Session" && h.Api == "LoginToken" {
@@ -243,7 +243,7 @@ func goStubHandle(stb *stub) {
 					app.ErrorLog("Request parse rebuild error %s", err.Error())
 				} else {
 
-					if len(h.ToEid) > 0 && stb.dlver.(co.ServiceDeliverer).IsLocal(h.ToEid) {
+					if len(h.ToEid) > 0 && stb.dlver.(n.ServiceDeliverer).IsLocal(h.ToEid) {
 						err = stb.dlver.LocalRequest(h, mpck)
 					} else {
 						err = stb.dlver.RouteRequest(h, mpck)
@@ -255,8 +255,8 @@ func goStubHandle(stb *stub) {
 				}
 			}
 
-		case co.MsgTypeResponse:
-			h := co.ParseResHeader(header)
+		case n.MsgTypeResponse:
+			h := n.ParseResHeader(header)
 			if h == nil {
 				app.ErrorLog("Request parse error!, %v, %s", err, string(header))
 			} else {
@@ -269,12 +269,12 @@ func goStubHandle(stb *stub) {
 					h.ToEids = octx.fromEids
 					delete(stb.outq, txnNo)
 
-					mpck := co.NewMsgPack(co.MsgTypeResponse, header, body)
+					mpck := n.NewMsgPack(n.MsgTypeResponse, header, body)
 
 					if err := mpck.ResetHeader(*h); err != nil {
 						app.ErrorLog("Request parse rebuild error %s", err.Error())
 					} else {
-						if len(h.ToEids) == 1 && stb.dlver.(co.ServiceDeliverer).IsLocal(h.ToEids[0]) {
+						if len(h.ToEids) == 1 && stb.dlver.(n.ServiceDeliverer).IsLocal(h.ToEids[0]) {
 							if err := stb.dlver.LocalResponse(h, mpck); err != nil {
 								app.ErrorLog("%v", err)
 							}

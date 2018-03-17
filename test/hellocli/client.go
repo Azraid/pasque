@@ -1,7 +1,7 @@
 /********************************************************************************
 * client.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com 
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -49,19 +49,19 @@ func newClient(remoteAddr string, spn string) *client {
 
 			if msgType, header, body, err := cli.rw.Read(); err != nil {
 				cli.rw.Close()
-				return fmt.Errorf("connect error! %v", err)
+				return IssueErrorf("connect error! %v", err)
 			} else if msgType != co.MsgTypeAccept {
 				cli.rw.Close()
-				return fmt.Errorf("not expected msgtype")
+				return IssueErrorf("not expected msgtype")
 			} else {
 				accptmsg := co.ParseAcceptMsg(header, body)
 				if accptmsg == nil {
 					cli.rw.Close()
-					return fmt.Errorf("accept parse error %v", header)
+					return IssueErrorf("accept parse error %v", header)
 				} else {
 					if accptmsg.Header.ErrCode != co.NErrorSucess {
 						cli.rw.Close()
-						return fmt.Errorf("accept net error %v", accptmsg.Header)
+						return IssueErrorf("accept net error %v", accptmsg.Header)
 					}
 				}
 			}
@@ -123,7 +123,7 @@ func goDispatch(cli *client) {
 			err = cli.OnResponse(msg.Header(), msg.Body())
 
 		default:
-			err = fmt.Errorf("msgtype is wrong")
+			err = IssueErrorf("msgtype is wrong")
 		}
 
 		if err != nil {
@@ -196,7 +196,7 @@ func (cli *client) newTxnNo() uint64 {
 func (cli *client) OnRequest(rawHeader []byte, rawBody []byte) error {
 	h := co.ParseReqHeader(rawHeader)
 	if h == nil {
-		return fmt.Errorf("Request parse error!, %s", string(rawHeader))
+		return IssueErrorf("Request parse error!, %s", string(rawHeader))
 	}
 
 	msg := &co.RequestMsg{Header: *h, Body: rawBody}

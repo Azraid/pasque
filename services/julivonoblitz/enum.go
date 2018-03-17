@@ -1,7 +1,7 @@
 package julivonoblitz
 
 import (
-	"fmt"
+	. "github.com/Azraid/pasque/core"
 )
 
 const DEFAULT_TICK_MS = 40
@@ -36,7 +36,7 @@ func ParseTGMode(s string) (TGMode, error) {
 	case "PE":
 		return EGMODE_PE, nil
 	default:
-		return EGMODE_SP, fmt.Errorf("non type")
+		return EGMODE_SP, IssueErrorf("non type")
 	}
 }
 
@@ -288,7 +288,7 @@ func ParseTCnst(s string) (TCnst, error) {
 		return ECNST_GROUP_RAND_MAX, nil
 	}
 
-	return ECNST_GROUP_RAND_MAX, fmt.Errorf("none type")
+	return ECNST_GROUP_RAND_MAX, IssueErrorf("none type")
 }
 
 func (v TCnst) String() string {
@@ -612,7 +612,7 @@ func ParseTDol(s string) (TDol, error) {
 		return EDOL_FAIL, nil
 	}
 
-	return EDOL_FAIL, fmt.Errorf("non type")
+	return EDOL_FAIL, IssueErrorf("non type")
 }
 
 const (

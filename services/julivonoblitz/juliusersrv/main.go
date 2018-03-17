@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
@@ -27,15 +27,15 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	cli := co.NewClient(eid)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(CreateRoomMsg{}), OnCreateRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayRead)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
+	cli := n.NewClient(eid)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(CreateRoomMsg{}), OnCreateRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayRead)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
 
-	toplgy := co.Topology{
+	toplgy := n.Topology{
 		Spn:           app.Config.Spn,
 		FederatedKey:  "UserID",
 		FederatedApis: cli.ListGridApis()}

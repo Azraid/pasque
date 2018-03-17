@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/auth"
 )
 
@@ -27,13 +27,13 @@ func main() {
 
 	loadUserAuthDB(app.App.ConfigPath + "/userauthdb.json")
 
-	cli := co.NewClient(eid)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(LogoutMsg{}), OnLogout)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(CreateSessionMsg{}), OnCreateSession)
-	cli.RegisterGridHandler(co.GetNameOfApiMsg(GetUserLocationMsg{}), OnGetUserLocation)
-	cli.RegisterRandHandler(co.GetNameOfApiMsg(LoginTokenMsg{}), OnLoginToken)
+	cli := n.NewClient(eid)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(LogoutMsg{}), OnLogout)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(CreateSessionMsg{}), OnCreateSession)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(GetUserLocationMsg{}), OnGetUserLocation)
+	cli.RegisterRandHandler(n.GetNameOfApiMsg(LoginTokenMsg{}), OnLoginToken)
 
-	toplgy := co.Topology{
+	toplgy := n.Topology{
 		Spn:           app.Config.Spn,
 		FederatedKey:  "UserID",
 		FederatedApis: cli.ListGridApis()}

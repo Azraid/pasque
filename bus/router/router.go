@@ -1,17 +1,16 @@
 /********************************************************************************
  server.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
 package main
 
 import (
-	"fmt"
-
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core/net"
 	"github.com/Azraid/pasque/util"
 )
 
@@ -43,7 +42,7 @@ func (srv *router) LocalRequest(header *ReqHeader, mpck MsgPack) error {
 		return srv.SendRandom(header.Spn, mpck)
 	}
 
-	return fmt.Errorf("can not send message, no route info")
+	return IssueErrorf("can not send message, no route info")
 }
 
 //router는 local이건 remote건 내부로 던진다.
@@ -61,9 +60,9 @@ func (srv *router) OnAccept(eid string, toplgy *Topology) error {
 		if util.StrCmpI(spn, toplgy.Spn) {
 			return nil
 		} else {
-			return fmt.Errorf("[%s] is different from config", toplgy.Spn)
+			return IssueErrorf("[%s] is different from config", toplgy.Spn)
 		}
 	}
 
-	return fmt.Errorf("unknown eid [%s]", eid)
+	return IssueErrorf("unknown eid [%s]", eid)
 }

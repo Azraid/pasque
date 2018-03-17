@@ -1,17 +1,17 @@
 /********************************************************************************
 * multiplex.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 type netIO struct {
@@ -45,7 +45,7 @@ func (muxio *multiplexerIO) Broadcast(b []byte) {
 func (muxio *multiplexerIO) Write(b []byte, isLogging bool) error {
 	l := len(muxio.ios)
 	if l == 0 {
-		return fmt.Errorf("no io net list")
+		return IssueErrorf("no io net list")
 	}
 
 	// 이부분은 activelist를 관리하기 귀찮아서 만든 로직임.
@@ -117,19 +117,19 @@ func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node)
 
 			if msgType, header, body, err := nio.rw.Read(); err != nil {
 				nio.rw.Close()
-				return fmt.Errorf("connect error! %v", err)
+				return IssueErrorf("connect error! %v", err)
 			} else if msgType != MsgTypeAccept {
 				nio.rw.Close()
-				return fmt.Errorf("not expected msgtype")
+				return IssueErrorf("not expected msgtype")
 			} else {
 				accptmsg := ParseAcceptMsg(header, body)
 				if accptmsg == nil {
 					nio.rw.Close()
-					return fmt.Errorf("accept parse error %v", header)
+					return IssueErrorf("accept parse error %v", header)
 				} else {
 					if accptmsg.Header.ErrCode != NErrorSucess {
 						nio.rw.Close()
-						return fmt.Errorf("accept net error %v", accptmsg.Header)
+						return IssueErrorf("accept net error %v", accptmsg.Header)
 					}
 				}
 			}
@@ -189,7 +189,7 @@ func goDispatch(muxio *multiplexerIO) {
 			err = muxio.disp.OnResponse(msg.Header(), msg.Body())
 
 		default:
-			err = fmt.Errorf("msgtype is wrong")
+			err = IssueErrorf("msgtype is wrong")
 		}
 
 		if err != nil {

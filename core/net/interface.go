@@ -1,7 +1,7 @@
 /********************************************************************************
 * interface.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -15,7 +15,7 @@
 *  Body Length는 10문자 고정
  */
 
-package core
+package net
 
 import (
 	"net"

@@ -1,25 +1,25 @@
 /********************************************************************************
 * resq.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
 package main
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 type roundTrip struct {
-	req   *co.RequestMsg
-	res   chan *co.ResponseMsg
+	req   *n.RequestMsg
+	res   chan *n.ResponseMsg
 	stamp time.Time
 }
 
@@ -47,7 +47,7 @@ func newResQ(cli *client, timeoutSec uint32) *resQ {
 		cli:        cli,
 		timeoutSec: timeoutSec,
 		rtTick:     time.NewTicker(time.Second * 1)}
-	q.rtMaps = make([]roundTripMap, co.TxnMapSize)
+	q.rtMaps = make([]roundTripMap, TxnMapSize)
 
 	for k, _ := range q.rtMaps {
 		q.rtMaps[k].maps = make(map[uint64]*roundTrip)
@@ -58,7 +58,7 @@ func newResQ(cli *client, timeoutSec uint32) *resQ {
 }
 
 func (q resQ) hash(txnNo uint64) uint32 {
-	return uint32(txnNo) % co.TxnMapSize
+	return uint32(txnNo) % TxnMapSize
 }
 
 //Final 서비스를 종료한다.
@@ -80,7 +80,7 @@ func (q *resQ) find(txnNo uint64) *roundTrip {
 	return nil
 }
 
-func (q *resQ) addRoundTrip(txnNo uint64, req *co.RequestMsg, res chan *co.ResponseMsg) {
+func (q *resQ) addRoundTrip(txnNo uint64, req *n.RequestMsg, res chan *n.ResponseMsg) {
 	rtM := q.rtMaps[q.hash(txnNo)]
 	rtM.lock.Lock()
 	defer rtM.lock.Unlock()
@@ -99,29 +99,29 @@ func (q *resQ) delRoundTrip(txnNo uint64) *roundTrip {
 	return nil
 }
 
-func (q *resQ) Push(txnNo uint64, req *co.RequestMsg, res chan *co.ResponseMsg) {
+func (q *resQ) Push(txnNo uint64, req *n.RequestMsg, res chan *n.ResponseMsg) {
 	q.addRoundTrip(txnNo, req, res)
 }
 
 func (q *resQ) Fire(txnNo uint64) {
 	if rt := q.delRoundTrip(txnNo); rt != nil {
-		var res co.ResponseMsg
-		res.Header = co.ResHeader{TxnNo: txnNo, ErrCode: co.NErrorTimeout, ErrText: "Internal Expired"}
+		var res n.ResponseMsg
+		res.Header = n.ResHeader{TxnNo: txnNo, ErrCode: n.NErrorTimeout, ErrText: "Internal Expired"}
 		rt.res <- &res
 	}
 }
 
 func (q *resQ) Dispatch(rawHeader []byte, rawBody []byte) error {
-	h := co.ParseResHeader(rawHeader)
+	h := n.ParseResHeader(rawHeader)
 	if h == nil {
-		return fmt.Errorf("Response parse error!, %s, %s", string(rawHeader), string(rawBody))
+		return IssueErrorf("Response parse error!, %s, %s", string(rawHeader), string(rawBody))
 	}
 
 	if h.TxnNo <= 0 {
-		return fmt.Errorf("Response no txnNo!, %s, %s", string(rawHeader), string(rawBody))
+		return IssueErrorf("Response no txnNo!, %s, %s", string(rawHeader), string(rawBody))
 	}
 
-	var res co.ResponseMsg
+	var res n.ResponseMsg
 	res.Header = *h
 	res.Body = rawBody
 	if rt := q.delRoundTrip(h.TxnNo); rt != nil {

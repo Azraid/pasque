@@ -1,14 +1,16 @@
 /********************************************************************************
 * proxy.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
-import "github.com/Azraid/pasque/app"
-import "fmt"
+import (
+	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
+)
 
 //proxy는 proxy 인터페이스를 구현한 객체이다.
 type proxy struct {
@@ -44,7 +46,7 @@ func (prx *proxy) Send(msg MsgPack) error {
 func (prx *proxy) OnRequest(header []byte, body []byte) error {
 	h := ParseReqHeader(header)
 	if h == nil {
-		return fmt.Errorf("paring request error! %s", string(header))
+		return IssueErrorf("paring request error! %s", string(header))
 
 	} else {
 		msg := NewMsgPack(MsgTypeRequest, header, body)
@@ -59,7 +61,7 @@ func (prx *proxy) OnRequest(header []byte, body []byte) error {
 func (prx *proxy) OnResponse(header []byte, body []byte) error {
 	h := ParseResHeader(header)
 	if h == nil {
-		return fmt.Errorf("paring response error! %s", string(header))
+		return IssueErrorf("paring response error! %s", string(header))
 	} else {
 		msg := NewMsgPack(MsgTypeResponse, header, body)
 		if err := prx.dlver.LocalResponse(h, msg); err != nil {

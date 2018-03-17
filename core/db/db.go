@@ -358,7 +358,7 @@ func (p DbPool) Exec(query string, args ...interface{}) (int64, error) {
 
 func InitDb(dbName string, handler func(p *DbPool)) error {
 	if db, err := InitDbPool(dbName, &app.CfgDb); nil != err {
-		return fmt.Errorf("db initialization fail.... %s", err.Error())
+		return IssueErrorf("db initialization fail.... %s", err.Error())
 	} else {
 		handler(db)
 	}

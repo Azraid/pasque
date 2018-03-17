@@ -1,7 +1,7 @@
 /********************************************************************************
 * client.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -12,7 +12,8 @@ import (
 	"sync/atomic"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 
 func ErrorName(code int) string {
 	if code < 100 {
-		return co.CoErrorName(code)
+		return n.CoErrorName(code)
 	}
 
 	switch code {
@@ -32,21 +33,21 @@ func ErrorName(code int) string {
 	return "NErrorUnknown"
 }
 
-func RaiseNError(args ...interface{}) co.NError {
-	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+func RaiseNError(args ...interface{}) n.NError {
+	return n.RaiseNError(ErrorName, args[0], 2, args[1:])
 }
 
 //client는 Client 인터페이스를 구현한 객체이다.
 type client struct {
 	lastTxnNo    uint64
 	resQ         *resQ
-	rw           co.NetIO
-	dial         co.Dialer
-	msgC         chan co.MsgPack
-	randHandlers map[string]func(cli *client, msg *co.RequestMsg)
+	rw           n.NetIO
+	dial         n.Dialer
+	msgC         chan n.MsgPack
+	randHandlers map[string]func(cli *client, msg *n.RequestMsg)
 }
 
-func (cli *client) Dispatch(msg co.MsgPack) {
+func (cli *client) Dispatch(msg n.MsgPack) {
 	cli.msgC <- msg
 }
 
@@ -54,14 +55,14 @@ func newClient(remoteAddr string, spn string) *client {
 	cli := &client{}
 	cli.lastTxnNo = 0
 
-	cli.rw = co.NewNetIO()
-	cli.msgC = make(chan co.MsgPack)
-	cli.randHandlers = make(map[string]func(cli *client, msg *co.RequestMsg))
-	cli.resQ = newResQ(cli, co.TxnTimeoutSec)
+	cli.rw = n.NewNetIO()
+	cli.msgC = make(chan n.MsgPack)
+	cli.randHandlers = make(map[string]func(cli *client, msg *n.RequestMsg))
+	cli.resQ = newResQ(cli, TxnTimeoutSec)
 
-	cli.dial = co.NewDialer(cli.rw, remoteAddr,
+	cli.dial = n.NewDialer(cli.rw, remoteAddr,
 		func() error { //onConnected
-			connMsgPack, _ := co.BuildMsgPack(co.ConnHeader{}, co.ConnBody{Spn: spn})
+			connMsgPack, _ := n.BuildMsgPack(n.ConnHeader{}, n.ConnBody{Spn: spn})
 
 			if err := cli.rw.Write(connMsgPack.Bytes(), true); err != nil {
 				cli.dial.CheckAndRedial()
@@ -70,19 +71,19 @@ func newClient(remoteAddr string, spn string) *client {
 
 			if msgType, header, body, err := cli.rw.Read(); err != nil {
 				cli.rw.Close()
-				return fmt.Errorf("connect error! %v", err)
-			} else if msgType != co.MsgTypeAccept {
+				return IssueErrorf("connect error! %v", err)
+			} else if msgType != n.MsgTypeAccept {
 				cli.rw.Close()
-				return fmt.Errorf("not expected msgtype")
+				return IssueErrorf("not expected msgtype")
 			} else {
-				accptmsg := co.ParseAcceptMsg(header, body)
+				accptmsg := n.ParseAcceptMsg(header, body)
 				if accptmsg == nil {
 					cli.rw.Close()
-					return fmt.Errorf("accept parse error %v", header)
+					return IssueErrorf("accept parse error %v", header)
 				} else {
-					if accptmsg.Header.ErrCode != co.NErrorSucess {
+					if accptmsg.Header.ErrCode != n.NErrorSucess {
 						cli.rw.Close()
-						return fmt.Errorf("accept net error %v", accptmsg.Header)
+						return IssueErrorf("accept net error %v", accptmsg.Header)
 					}
 				}
 			}
@@ -92,7 +93,7 @@ func newClient(remoteAddr string, spn string) *client {
 			return nil
 		},
 		func() error {
-			pingMsgPack := co.BuildPingMsgPack("")
+			pingMsgPack := n.BuildPingMsgPack("")
 			if pingMsgPack == nil {
 				panic("error ping message buld")
 			}
@@ -118,16 +119,16 @@ func goNetRead(cli *client) {
 
 	for {
 		msgType, header, body, err := cli.rw.Read()
-		mpck := co.NewMsgPack(msgType, header, body)
+		mpck := n.NewMsgPack(msgType, header, body)
 
 		if err != nil {
 			app.ErrorLog("%+v %s", cli.rw, err.Error())
-			if !cli.rw.IsStatus(co.ConnStatusConnected) {
+			if !cli.rw.IsStatus(n.ConnStatusConnected) {
 				return
 			}
 		}
 
-		if mpck.MsgType() == co.MsgTypeRequest || mpck.MsgType() == co.MsgTypeResponse {
+		if mpck.MsgType() == n.MsgTypeRequest || mpck.MsgType() == n.MsgTypeResponse {
 			cli.Dispatch(mpck)
 		}
 	}
@@ -141,14 +142,14 @@ func goDispatch(cli *client) {
 	for msg := range cli.msgC {
 		var err error
 		switch msg.MsgType() {
-		case co.MsgTypeRequest:
+		case n.MsgTypeRequest:
 			err = cli.OnRequest(msg.Header(), msg.Body())
 
-		case co.MsgTypeResponse:
+		case n.MsgTypeResponse:
 			err = cli.OnResponse(msg.Header(), msg.Body())
 
 		default:
-			err = fmt.Errorf("msgtype is wrong")
+			err = IssueErrorf("msgtype is wrong")
 		}
 
 		if err != nil {
@@ -157,22 +158,22 @@ func goDispatch(cli *client) {
 	}
 }
 
-func (cli *client) RegisterRandHandler(api string, handler func(cli *client, msg *co.RequestMsg)) {
+func (cli *client) RegisterRandHandler(api string, handler func(cli *client, msg *n.RequestMsg)) {
 	cli.randHandlers[api] = handler
 }
 
-func (cli *client) SendReq(spn string, api string, body interface{}) (res *co.ResponseMsg, err error) {
+func (cli *client) SendReq(spn string, api string, body interface{}) (res *n.ResponseMsg, err error) {
 
 	txnNo := cli.newTxnNo()
 
-	header := co.ReqHeader{Spn: spn, Api: api, TxnNo: txnNo}
-	out, neterr := co.BuildMsgPack(header, body)
+	header := n.ReqHeader{Spn: spn, Api: api, TxnNo: txnNo}
+	out, neterr := n.BuildMsgPack(header, body)
 	if neterr != nil {
 		return nil, neterr
 	}
 
-	req := &co.RequestMsg{Header: header, Body: out.Body()}
-	resC := make(chan *co.ResponseMsg)
+	req := &n.RequestMsg{Header: header, Body: out.Body()}
+	resC := make(chan *n.ResponseMsg)
 	cli.resQ.Push(txnNo, req, resC)
 
 	cli.rw.Write(out.Bytes(), true)
@@ -182,14 +183,14 @@ func (cli *client) SendReq(spn string, api string, body interface{}) (res *co.Re
 	return res, nil
 }
 
-func (cli *client) SendRes(req *co.RequestMsg, body interface{}) (err error) {
-	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: co.NErrorSucess}
-	out, e := co.BuildMsgPack(header, body)
+func (cli *client) SendRes(req *n.RequestMsg, body interface{}) (err error) {
+	header := n.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: n.NErrorSucess}
+	out, e := n.BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(co.NError); ok {
+		if neterr, ok := e.(n.NError); ok {
 			header.SetError(neterr)
-			if out, e = co.BuildMsgPack(header, nil); e != nil {
+			if out, e = n.BuildMsgPack(header, nil); e != nil {
 				return e
 			}
 		}
@@ -198,14 +199,14 @@ func (cli *client) SendRes(req *co.RequestMsg, body interface{}) (err error) {
 	return cli.rw.Write(out.Bytes(), true)
 }
 
-func (cli *client) SendResWithError(req *co.RequestMsg, nerr co.NError, body interface{}) (err error) {
-	header := co.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: nerr.Code(), ErrText: nerr.Error()}
-	out, e := co.BuildMsgPack(header, body)
+func (cli *client) SendResWithError(req *n.RequestMsg, nerr n.NError, body interface{}) (err error) {
+	header := n.ResHeader{TxnNo: req.Header.TxnNo, ErrCode: nerr.Code(), ErrText: nerr.Error()}
+	out, e := n.BuildMsgPack(header, body)
 
 	if e != nil {
-		if neterr, ok := e.(co.NError); ok {
+		if neterr, ok := e.(n.NError); ok {
 			header.SetError(neterr)
-			if out, e = co.BuildMsgPack(header, nil); e != nil {
+			if out, e = n.BuildMsgPack(header, nil); e != nil {
 				return e
 			}
 		}
@@ -219,19 +220,19 @@ func (cli *client) newTxnNo() uint64 {
 }
 
 func (cli *client) OnRequest(rawHeader []byte, rawBody []byte) error {
-	h := co.ParseReqHeader(rawHeader)
+	h := n.ParseReqHeader(rawHeader)
 	if h == nil {
-		return fmt.Errorf("Request parse error!, %s", string(rawHeader))
+		return IssueErrorf("Request parse error!, %s", string(rawHeader))
 	}
 
-	msg := &co.RequestMsg{Header: *h, Body: rawBody}
+	msg := &n.RequestMsg{Header: *h, Body: rawBody}
 
 	handler, ok := cli.randHandlers[msg.Header.Api]
 	if ok {
 		handler(cli, msg)
 	} else {
 		app.ErrorLog("not implement api %v", msg.Header)
-		nerr := RaiseNError(co.NErrorNotImplemented, fmt.Sprintf("%s not implemented", msg.Header.Api))
+		nerr := RaiseNError(n.NErrorNotImplemented, fmt.Sprintf("%s not implemented", msg.Header.Api))
 		cli.SendResWithError(msg, nerr, nil)
 	}
 

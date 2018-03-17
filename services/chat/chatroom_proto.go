@@ -1,7 +1,8 @@
 package chat
 
 import (
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 const (
@@ -10,7 +11,7 @@ const (
 
 func ErrorName(code int) string {
 	if code < 100 {
-		return co.CoErrorName(code)
+		return n.CoErrorName(code)
 	}
 
 	switch code {
@@ -21,13 +22,13 @@ func ErrorName(code int) string {
 	return "NErrorUnknown"
 }
 
-func RaiseNError(args ...interface{}) co.NError {
-	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+func RaiseNError(args ...interface{}) n.NError {
+	return n.RaiseNError(ErrorName, args[0], 2, args[1:])
 }
 
 type JoinRoomMsg struct {
 	RoomID string
-	UserID co.TUserID
+	UserID TUserID
 }
 
 type JoinRoomMsgR struct {
@@ -38,5 +39,5 @@ type GetRoomMsg struct {
 }
 
 type GetRoomMsgR struct {
-	UserIDs []co.TUserID
+	UserIDs []TUserID
 }

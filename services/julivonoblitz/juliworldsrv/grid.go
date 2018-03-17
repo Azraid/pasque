@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/Azraid/pasque/app"
 
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
@@ -103,7 +102,7 @@ func CreateGridData(key string, mode TGMode, gridData interface{}) *GridData {
 	return gridData.(*GridData)
 }
 
-func (g *GridData) SetPlayer(userID co.TUserID) error {
+func (g *GridData) SetPlayer(userID TUserID) error {
 	if g.p1 == nil {
 		g.p1 = newPlayer(userID)
 		return nil
@@ -122,10 +121,10 @@ func (g *GridData) SetPlayer(userID co.TUserID) error {
 		return nil
 	}
 
-	return fmt.Errorf("UserID is not matched")
+	return IssueErrorf("UserID is not matched")
 }
 
-func (g *GridData) GetPlayer(userID co.TUserID) (*Player, error) {
+func (g *GridData) GetPlayer(userID TUserID) (*Player, error) {
 	if g.p1 != nil && g.p1.userID == userID {
 		return g.p1, nil
 	}
@@ -134,10 +133,10 @@ func (g *GridData) GetPlayer(userID co.TUserID) (*Player, error) {
 		return g.p2, nil
 	}
 
-	return nil, fmt.Errorf("Not found Player")
+	return nil, IssueErrorf("Not found Player")
 }
 
-func (g *GridData) SetPlayerStatus(userID co.TUserID, status int) error {
+func (g *GridData) SetPlayerStatus(userID TUserID, status int) error {
 	if p, err := g.GetPlayer(userID); err != nil {
 		return err
 	} else {
@@ -146,7 +145,7 @@ func (g *GridData) SetPlayerStatus(userID co.TUserID, status int) error {
 	}
 }
 
-func (g *GridData) RemovePlayer(userID co.TUserID) {
+func (g *GridData) RemovePlayer(userID TUserID) {
 	if g.p1 != nil && g.p1.userID == userID {
 		g.p1 = nil
 		g.GameStat = EGROOM_STAT_END

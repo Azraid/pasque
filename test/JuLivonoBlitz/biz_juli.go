@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	juli "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
@@ -186,7 +186,7 @@ func DoDrawGroup() {
 	}
 }
 
-func OnCShapeList(cli *client, req *co.RequestMsg) {
+func OnCShapeList(cli *client, req *n.RequestMsg) {
 	var body juli.CShapeListMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
@@ -214,25 +214,25 @@ func OnCShapeList(cli *client, req *co.RequestMsg) {
 	}
 }
 
-func OnCPlayStart(cli *client, req *co.RequestMsg) {
+func OnCPlayStart(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CPlayStartMsgR{})
 }
 
-func OnCPlayEnd(cli *client, req *co.RequestMsg) {
+func OnCPlayEnd(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CPlayEndMsgR{})
 }
 
-func OnCGroupResultFall(cli *client, req *co.RequestMsg) {
+func OnCGroupResultFall(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFallMsgR{})
 
 }
 
-func OnCSingleResultFall(cli *client, req *co.RequestMsg) {
+func OnCSingleResultFall(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFallMsgR{})
 
 }
 
-func OnCSingleResultFirm(cli *client, req *co.RequestMsg) {
+func OnCSingleResultFirm(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
 
 	if g_auto {
@@ -240,7 +240,7 @@ func OnCSingleResultFirm(cli *client, req *co.RequestMsg) {
 	}
 }
 
-func OnCGroupResultFirm(cli *client, req *co.RequestMsg) {
+func OnCGroupResultFirm(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
 	if g_auto {
 		go DoDrawGroup()
@@ -248,7 +248,7 @@ func OnCGroupResultFirm(cli *client, req *co.RequestMsg) {
 
 }
 
-func OnCBlocksFirm(cli *client, req *co.RequestMsg) {
+func OnCBlocksFirm(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
 
 	if g_auto {
@@ -256,11 +256,11 @@ func OnCBlocksFirm(cli *client, req *co.RequestMsg) {
 	}
 }
 
-func OnCLinesClear(cli *client, req *co.RequestMsg) {
+func OnCLinesClear(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CLinesClearMsgR{})
 }
 
-func OnCGameEnd(cli *client, req *co.RequestMsg) {
+func OnCGameEnd(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CGameEndMsgR{})
 	os.Exit(1)
 }

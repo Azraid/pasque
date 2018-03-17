@@ -1,11 +1,11 @@
 /********************************************************************************
 * error.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
 	"fmt"
@@ -19,11 +19,6 @@ type nerror struct {
 }
 
 type FErrorName func(code int) string
-
-func IssueError(text string) error {
-	_, file, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%s;%s:%d", text, file, line)
-}
 
 //RaiseNError(code, runtimeSkip = 1, data...)
 func RaiseNError(ename FErrorName, args ...interface{}) NError {

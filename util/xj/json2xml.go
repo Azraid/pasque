@@ -9,7 +9,7 @@ import (
 func Json2Xml(j []byte) (b []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("parse error %v", r)
+			err = IssueErrorf("parse error %v", r)
 		}
 	}()
 

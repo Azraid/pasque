@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	"github.com/Azraid/pasque/services/chat"
 )
 
@@ -64,7 +64,7 @@ func DoJoinRoom(roomID string) {
 	}
 }
 
-func OnRecvChat(cli *client, req *co.RequestMsg) {
+func OnRecvChat(cli *client, req *n.RequestMsg) {
 	var body chat.RecvChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())

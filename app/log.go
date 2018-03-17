@@ -1,7 +1,7 @@
 /********************************************************************************
 * log.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -15,6 +15,8 @@ import (
 	"os"
 	"runtime"
 	"time"
+
+	. "github.com/Azraid/pasque/core"
 )
 
 type logWriteCloser struct {
@@ -50,7 +52,7 @@ func (lwc *logWriteCloser) Write(p []byte) (int, error) {
 			lwc.fp = nfp
 			lwc.w = bufio.NewWriter(lwc.fp)
 		} else {
-			return 0, fmt.Errorf("can not open log file%s", fn)
+			return 0, IssueErrorf("can not open log file%s", fn)
 		}
 	}
 
@@ -83,7 +85,7 @@ var logDConn *net.UDPConn
 
 func connectLogD() error {
 	if len(Config.Global.LogDAddr) == 0 {
-		return fmt.Errorf("logDAddr is wrong")
+		return IssueErrorf("logDAddr is wrong")
 	}
 
 	addr, err := net.ResolveUDPAddr("udp", Config.Global.LogDAddr)

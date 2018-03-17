@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	"github.com/Azraid/pasque/services/auth"
 	. "github.com/Azraid/pasque/services/julivonoblitz"
 )
 
 const GameSpn = "Julivonoblitz.Tcgate"
 
-func getUserLocation(userID co.TUserID) (string, string, string, string, error) {
+func getUserLocation(userID TUserID) (string, string, string, string, error) {
 	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameSpn}
 
-	res, err := g_cli.SendReq("Session", co.GetNameOfApiMsg(req), req)
+	res, err := g_cli.SendReq("Session", n.GetNameOfApiMsg(req), req)
 	if err != nil {
 		return "", "", "", "", err
 	}
@@ -27,15 +28,15 @@ func getUserLocation(userID co.TUserID) (string, string, string, string, error) 
 	return GameSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
 }
 
-func SendPlayStart(userID co.TUserID) {
+func SendPlayStart(userID TUserID) {
 	req := CPlayStartMsg{
 		UserID: userID,
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -44,7 +45,7 @@ func SendPlayStart(userID co.TUserID) {
 	}
 }
 
-func SendShapeList(userID co.TUserID, shapes []TCnst) {
+func SendShapeList(userID TUserID, shapes []TCnst) {
 	req := CShapeListMsg{UserID: userID}
 	req.Count = len(shapes)
 	req.Shapes = make([]string, len(shapes))
@@ -54,9 +55,9 @@ func SendShapeList(userID co.TUserID, shapes []TCnst) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -81,9 +82,9 @@ func SendGroupResultFall(p *Player, dol string, routes []POS, count int, grpID i
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -101,9 +102,9 @@ func SendGroupResultFirm(p *Player, dol string, routes []POS, count int) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -120,9 +121,9 @@ func SendSingleResultFall(p *Player, dol string, pos POS) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -139,9 +140,9 @@ func SendSingleResultFirm(p *Player, dol string, pos POS) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -158,9 +159,9 @@ func SendLinesClear(p *Player) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -184,9 +185,9 @@ func SendBlocksFirm(p *Player, blocks []*SingleInfo, count int) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 
@@ -202,9 +203,9 @@ func SendGameEnd(p *Player, status string) {
 	}
 
 	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, co.GetNameOfApiMsg(req), req); err != nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != co.NErrorSucess {
+		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
 		}
 

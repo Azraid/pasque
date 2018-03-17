@@ -2,17 +2,18 @@
 * reqq.go
 * request 요청이 inbound로 들어왔을때, 이에 대한 트랜잭션 관리를 한다.
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
 	"fmt"
 	"sync"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 type reqQ struct {
@@ -37,7 +38,7 @@ func newReqQ(cli *client) *reqQ {
 func (q *reqQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 	h := ParseReqHeader(rawHeader)
 	if h == nil {
-		return fmt.Errorf("Request parse error!, %s", string(rawHeader))
+		return IssueErrorf("Request parse error!, %s", string(rawHeader))
 	}
 
 	msg := &RequestMsg{Header: *h, Body: rawBody}

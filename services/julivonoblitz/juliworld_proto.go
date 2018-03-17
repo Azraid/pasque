@@ -1,7 +1,8 @@
 package julivonoblitz
 
 import (
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 func ErrorName(code int) string {
 	if code < 100 {
-		return co.CoErrorName(code)
+		return n.CoErrorName(code)
 	}
 
 	switch code {
@@ -43,8 +44,8 @@ func PrintNError(code int) string {
 	return ErrorName(code)
 }
 
-func RaiseNError(args ...interface{}) co.NError {
-	return co.RaiseNError(ErrorName, args[0], 2, args[1:])
+func RaiseNError(args ...interface{}) n.NError {
+	return n.RaiseNError(ErrorName, args[0], 2, args[1:])
 }
 
 type POS struct {
@@ -54,7 +55,7 @@ type POS struct {
 
 type JoinRoomMsg struct {
 	RoomID string
-	UserID co.TUserID
+	UserID TUserID
 	Mode   string
 }
 
@@ -68,13 +69,13 @@ type GetRoomMsg struct {
 type GetRoomMsgR struct {
 	Mode    string
 	Players [2]struct {
-		UserID co.TUserID
+		UserID TUserID
 		Index  int
 	}
 }
 
 type PlayReadyMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 	RoomID string
 }
 
@@ -82,7 +83,7 @@ type PlayReadyMsgR struct {
 }
 
 type DrawGroupMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	Count   int
 	Routes  []POS
@@ -90,11 +91,11 @@ type DrawGroupMsg struct {
 }
 
 type DrawGroupMsgR struct {
-	UserID co.TUserID
+	UserID TUserID
 }
 
 type DrawSingleMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	DrawPos POS
 	RoomID  string
@@ -104,21 +105,21 @@ type DrawSingleMsgR struct {
 }
 
 type CPlayStartMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 }
 
 type CPlayStartMsgR struct {
 }
 
 type CPlayEndMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 }
 
 type CPlayEndMsgR struct {
 }
 
 type CShapeListMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 	Count  int
 	Shapes []string
 }
@@ -127,7 +128,7 @@ type CShapeListMsgR struct {
 }
 
 type CGroupResultFallMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	Count   int
 	Routes  []POS
@@ -139,7 +140,7 @@ type CGroupResultFallMsgR struct {
 }
 
 type CSingleResultFallMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	DrawPos POS
 }
@@ -148,7 +149,7 @@ type CSingleResultFallMsgR struct {
 }
 
 type CSingleResultFirmMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	DrawPos POS
 }
@@ -158,7 +159,7 @@ type CSingleResultFirmMsgR struct {
 
 //바로 굳을때 사용함.
 type CGroupResultFirmMsg struct {
-	UserID  co.TUserID
+	UserID  TUserID
 	DolKind string
 	Count   int
 	Routes  []POS
@@ -169,7 +170,7 @@ type CGroupResultFirmMsgR struct {
 }
 
 type CBlocksFirmMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 	GrpID  int
 	Count  int
 	Routes []POS
@@ -180,7 +181,7 @@ type CBlocksFirmMsgR struct {
 }
 
 type CLinesClearMsg struct {
-	UserID      co.TUserID
+	UserID      TUserID
 	Count       int
 	LineIndexes []int
 }
@@ -189,7 +190,7 @@ type CLinesClearMsgR struct {
 }
 
 type CGameEndMsg struct {
-	UserID co.TUserID
+	UserID TUserID
 	Status string
 }
 

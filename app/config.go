@@ -1,7 +1,7 @@
 /********************************************************************************
 * Config.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/Azraid/pasque/core"
 )
 
 const (
@@ -94,7 +96,7 @@ func (pa *portAssigner) Add(port int) {
 
 func (pa *portAssigner) Next() string {
 	if len(pa.ports) <= pa.pos {
-		panic(fmt.Errorf("out of range"))
+		panic(IssueErrorf("out of range"))
 	}
 
 	pa.pos++
@@ -183,16 +185,16 @@ func LoadConfig(fn string, eid string, spn string) error {
 
 	b, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 
 	if err = json.Unmarshal(b, &cfg.Global); err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 
 	var p cport
 	if err = json.Unmarshal(b, &p); err != nil {
-		return fmt.Errorf("%s, read config file error, %v", fn, err)
+		return IssueErrorf("%s, read config file error, %v", fn, err)
 	}
 
 	getPortAssigner := func(prange []string) portAssigner {

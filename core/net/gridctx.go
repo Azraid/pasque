@@ -6,14 +6,16 @@
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
-	"github.com/Azraid/pasque/util"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type gridContext struct {

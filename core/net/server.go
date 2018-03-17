@@ -1,11 +1,11 @@
 /********************************************************************************
 * Server.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
 	"fmt"
@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/util"
 )
 
@@ -184,7 +185,7 @@ func (srv *Server) SendDirect(eid string, mpck MsgPack) error {
 		return to.Send(mpck)
 	}
 
-	return fmt.Errorf("%s not found", eid)
+	return IssueErrorf("%s not found", eid)
 }
 
 func (srv *Server) SendRandom(spn string, mpck MsgPack) error {
@@ -201,7 +202,7 @@ func (srv *Server) SendRandom(spn string, mpck MsgPack) error {
 		}
 	}
 
-	return fmt.Errorf("%s not found", spn)
+	return IssueErrorf("%s not found", spn)
 }
 
 func (srv *Server) Shutdown() bool {

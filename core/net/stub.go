@@ -1,17 +1,17 @@
 /********************************************************************************
 * clistb.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
-package core
+package net
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 type stub struct {
@@ -66,11 +66,11 @@ func (stb *stub) Send(mpck MsgPack) error {
 		//Response 메세지의 경우는 toEids를 떼고 전달해야 한다.
 		h := ParseResHeader(mpck.Header())
 		if h == nil {
-			return fmt.Errorf("parsing error %s", string(mpck.Header()))
+			return IssueErrorf("parsing error %s", string(mpck.Header()))
 		}
 
 		if _, toEids, err := PopFromEids(h.ToEids); err != nil {
-			return fmt.Errorf("eid not found %s", string(mpck.Header()))
+			return IssueErrorf("eid not found %s", string(mpck.Header()))
 		} else {
 			h.ToEids = toEids
 			if err := mpck.ResetHeader(*h); err != nil {

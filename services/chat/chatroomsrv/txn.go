@@ -5,16 +5,17 @@ import (
 	"time"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	. "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/chat"
 )
 
-func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body JoinRoomMsg
 
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
@@ -30,19 +31,19 @@ func OnJoinRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfa
 }
 
 //GetRoom 채팅방의 정보에 대한 요청
-func OnGetRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 
 	var body GetRoomMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 
 	gd := getGridData(req.Header.Key, gridData)
 
 	res := GetRoomMsgR{}
-	res.UserIDs = make([]co.TUserID, len(gd.Members))
+	res.UserIDs = make([]TUserID, len(gd.Members))
 
 	i := 0
 	for k, _ := range gd.Members {
@@ -58,12 +59,12 @@ func OnGetRoom(cli co.Client, req *co.RequestMsg, gridData interface{}) interfac
 }
 
 //SendChat 채팅 메세지 요청
-func OnSendChat(cli co.Client, req *co.RequestMsg, gridData interface{}) interface{} {
+func OnSendChat(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 
 	var body SendChatMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
-		cli.SendResWithError(req, RaiseNError(co.NErrorParsingError), nil)
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
 		return gridData
 	}
 

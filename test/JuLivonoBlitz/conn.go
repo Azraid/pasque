@@ -1,7 +1,7 @@
 /********************************************************************************
 * conn.go
 *
-* Written by azraid@gmail.com (2016-07-26)
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 
 	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	n "github.com/Azraid/pasque/core/net"
 )
 
 const (
@@ -34,10 +34,10 @@ type conn struct {
 	lock   *sync.Mutex
 }
 
-func NewNetIO() co.NetIO {
+func NewNetIO() n.NetIO {
 	return &conn{
 		eid:    "unknown",
-		status: co.ConnStatusDisconnected,
+		status: n.ConnStatusDisconnected,
 		lock:   new(sync.Mutex)}
 }
 
@@ -51,14 +51,14 @@ func (c *conn) Unlock() {
 
 func (c *conn) Register(rwc net.Conn) {
 	c.rwc = rwc
-	atomic.StoreInt32(&c.status, co.ConnStatusConnected)
+	atomic.StoreInt32(&c.status, n.ConnStatusConnected)
 }
 
 func (c *conn) Close() error {
 	c.Lock()
 	defer c.Unlock()
 
-	atomic.SwapInt32(&c.status, co.ConnStatusDisconnected)
+	atomic.SwapInt32(&c.status, n.ConnStatusDisconnected)
 	return c.rwc.Close()
 }
 
@@ -67,7 +67,7 @@ func (c *conn) IsStatus(status int32) bool {
 }
 
 func (c *conn) Write(b []byte, isLogging bool) error {
-	if atomic.LoadInt32(&c.status) != co.ConnStatusConnected {
+	if atomic.LoadInt32(&c.status) != n.ConnStatusConnected {
 		return errors.New("connection closed")
 	}
 
@@ -93,8 +93,8 @@ func (c *conn) Read() (byte, []byte, []byte, error) {
 	msgType, header, body, err := c.readFrom()
 	if err != nil {
 		// 읽어서 없애버린다.
-		if c.IsStatus(co.ConnStatusConnected) {
-			data := make([]byte, co.MaxBufferLength)
+		if c.IsStatus(n.ConnStatusConnected) {
+			data := make([]byte, n.MaxBufferLength)
 			c.rwc.Read(data)
 		}
 	}
@@ -104,7 +104,7 @@ func (c *conn) Read() (byte, []byte, []byte, error) {
 
 //Read 함수는 읽기 가능한 상황에서만 계속 읽는다.
 func (c *conn) readFrom() (msgType byte, header []byte, body []byte, err error) {
-	data := make([]byte, co.MaxBufferLength)
+	data := make([]byte, n.MaxBufferLength)
 
 InitRead:
 	for {
@@ -116,15 +116,15 @@ InitRead:
 		switch data[0] {
 		case '/':
 			continue InitRead
-		case co.MsgTypeConnect:
+		case n.MsgTypeConnect:
 			break InitRead
-		case co.MsgTypeAccept:
+		case n.MsgTypeAccept:
 			break InitRead
-		case co.MsgTypePing:
+		case n.MsgTypePing:
 			break InitRead
-		case co.MsgTypeRequest:
+		case n.MsgTypeRequest:
 			break InitRead
-		case co.MsgTypeResponse:
+		case n.MsgTypeResponse:
 			break InitRead
 
 		default:
@@ -138,7 +138,7 @@ InitRead:
 	//--Header---------------------------------------------------------------
 	// [len]{} 형태의 데이타(header, body)를 파싱한다. 이는 sdata로 담는다.
 	modeHeader := true
-	var n int
+	var nl int
 	offset := 1
 	lenlen := 5
 
@@ -147,13 +147,13 @@ InitRead:
 		l := 0
 
 		for i := 0; i < lenlen; {
-			if n, err = c.rwc.Read(sdata); err != nil {
+			if nl, err = c.rwc.Read(sdata); err != nil {
 				c.Close()
 				app.PacketLog("<-%s\r\n", string(data[:offset]))
 				return msgType, nil, nil, err
 			}
-			i += n
-			offset += n
+			i += nl
+			offset += nl
 		}
 
 		if l, err = strconv.Atoi(string(sdata)); err != nil {
@@ -167,13 +167,13 @@ InitRead:
 
 		sdata = data[offset : offset+l]
 		for i := 0; i < l; {
-			if n, err = c.rwc.Read(sdata); err != nil {
+			if nl, err = c.rwc.Read(sdata); err != nil {
 				c.Close()
 				app.PacketLog("<-%s\r\n", string(data[:offset]))
 				return msgType, nil, nil, err
 			}
-			i += n
-			offset += n
+			i += nl
+			offset += nl
 		}
 
 		if !modeHeader {
@@ -181,7 +181,7 @@ InitRead:
 			return msgType, header, sdata, nil
 		}
 
-		if msgType == co.MsgTypePing {
+		if msgType == n.MsgTypePing {
 			//app.PacketLog("<-%s\r\n", string(data[:offset+1]))
 			return msgType, sdata[:l], nil, nil
 		}

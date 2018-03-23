@@ -1,7 +1,7 @@
 /********************************************************************************
 * conn.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -30,46 +30,51 @@ type conn struct {
 	eid    string
 	rwc    net.Conn
 	status int32
-	lock   *sync.Mutex
+	lock   *sync.RWMutex
 }
 
 func NewNetIO() NetIO {
 	return &conn{
 		eid:    "unknown",
 		status: ConnStatusDisconnected,
-		lock:   new(sync.Mutex)}
-}
-
-func (c *conn) Lock() {
-	c.lock.Lock()
-}
-
-func (c *conn) Unlock() {
-	c.lock.Unlock()
+		lock:   new(sync.RWMutex)}
 }
 
 func (c *conn) Register(rwc net.Conn) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	c.rwc = rwc
 	atomic.StoreInt32(&c.status, ConnStatusConnected)
 }
 
-func (c *conn) Close() error {
-	c.Lock()
-	defer c.Unlock()
+func (c *conn) Close() {
+	go func() {
+		c.lock.Lock()
+		defer c.lock.Unlock()
 
-	atomic.SwapInt32(&c.status, ConnStatusDisconnected)
-	return c.rwc.Close()
+		atomic.SwapInt32(&c.status, ConnStatusDisconnected)
+		c.rwc.Close()
+	}()
 }
 
-func (c *conn) IsStatus(status int32) bool {
-	return atomic.LoadInt32(&c.status) == status
+// func (c *conn) IsStatus(status int32) bool {
+// 	return atomic.LoadInt32(&c.status) == status
+// }
+
+func (c conn) IsConnected() bool {
+	if atomic.LoadInt32(&c.status) == ConnStatusConnected {
+		return true
+	}
+	return false
 }
 
 func (c *conn) Write(b []byte, isLogging bool) error {
 	if atomic.LoadInt32(&c.status) != ConnStatusConnected {
 		return errors.New("connection closed")
 	}
-
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	n, err := c.rwc.Write(b)
 
 	if err != nil {
@@ -92,7 +97,7 @@ func (c *conn) Read() (byte, []byte, []byte, error) {
 	msgType, header, body, err := c.readFrom()
 	if err != nil {
 		// 읽어서 없애버린다.
-		if c.IsStatus(ConnStatusConnected) {
+		if c.IsConnected() {
 			data := make([]byte, MaxBufferLength)
 			c.rwc.Read(data)
 		}

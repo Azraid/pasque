@@ -1,7 +1,7 @@
 /********************************************************************************
 * connpoint.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	. "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 )
 
 type dialer struct {
@@ -36,7 +36,7 @@ func (dial *dialer) set(remoteAddr string) {
 }
 
 func (dial *dialer) CheckAndRedial() {
-	if dial.rw.IsStatus(ConnStatusDisconnected) {
+	if !dial.rw.IsConnected() {
 		go goDial(dial)
 	}
 }
@@ -49,14 +49,12 @@ func (dial *dialer) dial() error {
 		dial.dialing = dialNotdialing
 	}()
 
-	dial.rw.Lock()
-	defer dial.rw.Unlock()
-
-	if dial.rw.IsStatus(ConnStatusConnected) {
+	if dial.rw.IsConnected() {
 		return nil
 	}
 
 	rwc, err := net.DialTimeout("tcp", dial.remoteAddr, time.Second*DialTimeoutSec)
+
 	if err != nil {
 		app.ErrorLog("connect to %s,", dial.remoteAddr, err.Error())
 		dial.CheckAndRedial()
@@ -81,7 +79,7 @@ func goDial(dial *dialer) {
 
 func goPing(dial *dialer) {
 	for _ = range dial.pingTick.C {
-		if !dial.rw.IsStatus(ConnStatusConnected) {
+		if !dial.rw.IsConnected() {
 			dial.CheckAndRedial()
 			return
 		}

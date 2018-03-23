@@ -8,7 +8,11 @@
 package net
 
 import (
+	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
+	"unsafe"
 
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
@@ -17,11 +21,12 @@ import (
 type stub struct {
 	rw         NetIO
 	remoteEid  string
-	lastUsed   time.Time
+	lastUsed   unsafe.Pointer
 	unsentQ    UnsentQ
 	dlver      Deliverer
 	unsentTick *time.Ticker
 	appStatus  int
+	lock       *sync.RWMutex
 }
 
 func NewStub(eid string, dlver Deliverer) Stub {
@@ -29,18 +34,50 @@ func NewStub(eid string, dlver Deliverer) Stub {
 
 	stb.unsentTick = time.NewTicker(time.Second * UnsentTimerSec)
 	stb.unsentQ = NewUnsentQ(nil, TxnTimeoutSec)
+	stb.lock = new(sync.RWMutex)
 	return stb
 }
 
-func (stb *stub) GetNetIO() NetIO {
-	return stb.rw
+func (stb *stub) SetLastUsed() {
+	t := time.Now()
+	atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
 }
 
 func (stb *stub) GetLastUsed() time.Time {
-	return stb.lastUsed
+	t := atomic.LoadPointer(&stb.lastUsed)
+	return *(*time.Time)(t)
+}
+
+func (stb stub) String() string {
+	return fmt.Sprintf("%s", stb.remoteEid)
+}
+
+func (stb *stub) IsConnected() bool {
+	stb.lock.RLock()
+	defer stb.lock.RUnlock()
+
+	if stb.rw != nil {
+		return stb.rw.IsConnected()
+	}
+
+	return false
+}
+
+func (stb *stub) Close() {
+	go func() {
+		stb.lock.RLock()
+		defer stb.lock.RUnlock()
+
+		if stb.rw != nil {
+			stb.rw.Close()
+		}
+	}()
 }
 
 func (stb *stub) ResetConn(rw NetIO) {
+	stb.lock.Lock()
+	defer stb.lock.Unlock()
+
 	if rw != nil {
 		if stb.rw != nil {
 			stb.rw.Close()
@@ -48,7 +85,7 @@ func (stb *stub) ResetConn(rw NetIO) {
 
 		stb.rw = rw
 		stb.unsentQ.Register(rw)
-		stb.lastUsed = time.Now()
+		stb.SetLastUsed()
 		stb.appStatus = AppStatusRunning
 	}
 }
@@ -110,12 +147,12 @@ func goStubHandle(stb *stub) {
 		msgType, header, body, err := stb.rw.Read()
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
-			if !stb.rw.IsStatus(ConnStatusConnected) {
+			if !stb.rw.IsConnected() {
 				return
 			}
 		}
 
-		stb.lastUsed = time.Now()
+		stb.SetLastUsed()
 
 		switch msgType {
 		case MsgTypePing:

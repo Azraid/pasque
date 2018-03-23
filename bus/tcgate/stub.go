@@ -11,7 +11,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
+	"unsafe"
 
 	"github.com/Azraid/pasque/services/auth"
 
@@ -35,9 +39,10 @@ type outContexts struct {
 }
 
 type stub struct {
-	rw         n.NetIO
-	remoteEid  string
-	lastUsed   time.Time
+	rw        n.NetIO
+	remoteEid string
+	//lastUsed   time.Time
+	lastUsed   unsafe.Pointer
 	unsentQ    n.UnsentQ
 	dlver      n.Deliverer
 	unsentTick *time.Ticker
@@ -46,6 +51,17 @@ type stub struct {
 	outq       map[uint64]outContexts
 	lastTxnNo  uint64
 	userID     co.TUserID
+	lock       *sync.RWMutex
+}
+
+func (stb *stub) SetLastUsed() {
+	t := time.Now()
+	atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
+}
+
+func (stb *stub) GetLastUsed() time.Time {
+	t := atomic.LoadPointer(&stb.lastUsed)
+	return *(*time.Time)(t)
 }
 
 func NewStub(eid string, dlver n.Deliverer) GateStub {
@@ -56,6 +72,7 @@ func NewStub(eid string, dlver n.Deliverer) GateStub {
 	stb.inq = make(map[uint64]inContexts)
 	stb.outq = make(map[uint64]outContexts)
 	stb.lastTxnNo = 0
+	stb.lock = new(sync.RWMutex)
 	return stb
 }
 
@@ -68,15 +85,36 @@ func (stb *stub) newTxnNo() uint64 {
 	return stb.lastTxnNo //이건  atomic으로 안써도 될 듯..
 }
 
-func (stb *stub) GetNetIO() n.NetIO {
-	return stb.rw
+func (stb stub) String() string {
+	return fmt.Sprintf("%s", stb.remoteEid)
 }
 
-func (stb *stub) GetLastUsed() time.Time {
-	return stb.lastUsed
+func (stb *stub) IsConnected() bool {
+	stb.lock.RLock()
+	defer stb.lock.RUnlock()
+
+	if stb.rw != nil {
+		return stb.rw.IsConnected()
+	}
+
+	return false
+}
+
+func (stb *stub) Close() {
+	go func() {
+		stb.lock.RLock()
+		defer stb.lock.RUnlock()
+
+		if stb.rw != nil {
+			stb.rw.Close()
+		}
+	}()
 }
 
 func (stb *stub) ResetConn(rw n.NetIO) {
+	stb.lock.Lock()
+	defer stb.lock.Unlock()
+
 	if rw != nil {
 		if stb.rw != nil {
 			stb.rw.Close()
@@ -84,7 +122,7 @@ func (stb *stub) ResetConn(rw n.NetIO) {
 
 		stb.rw = rw
 		stb.unsentQ.Register(rw)
-		stb.lastUsed = time.Now()
+		stb.SetLastUsed()
 		stb.appStatus = n.AppStatusRunning
 	}
 }
@@ -185,12 +223,12 @@ func goStubHandle(stb *stub) {
 		msgType, header, body, err := stb.rw.Read()
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
-			if !stb.rw.IsStatus(n.ConnStatusConnected) {
+			if !stb.rw.IsConnected() {
 				return
 			}
 		}
 
-		stb.lastUsed = time.Now()
+		stb.SetLastUsed()
 
 		switch msgType {
 		case n.MsgTypePing:

@@ -41,29 +41,29 @@ func NewNetIO() n.NetIO {
 		lock:   new(sync.Mutex)}
 }
 
-func (c *conn) Lock() {
-	c.lock.Lock()
-}
+func (c *conn) Close() {
+	go func() {
+		c.lock.Lock()
+		defer c.lock.Unlock()
 
-func (c *conn) Unlock() {
-	c.lock.Unlock()
+		atomic.SwapInt32(&c.status, n.ConnStatusDisconnected)
+		c.rwc.Close()
+	}()
 }
 
 func (c *conn) Register(rwc net.Conn) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	c.rwc = rwc
 	atomic.StoreInt32(&c.status, n.ConnStatusConnected)
 }
 
-func (c *conn) Close() error {
-	c.Lock()
-	defer c.Unlock()
-
-	atomic.SwapInt32(&c.status, n.ConnStatusDisconnected)
-	return c.rwc.Close()
-}
-
-func (c *conn) IsStatus(status int32) bool {
-	return atomic.LoadInt32(&c.status) == status
+func (c conn) IsConnected() bool {
+	if atomic.LoadInt32(&c.status) == n.ConnStatusConnected {
+		return true
+	}
+	return false
 }
 
 func (c *conn) Write(b []byte, isLogging bool) error {
@@ -93,7 +93,7 @@ func (c *conn) Read() (byte, []byte, []byte, error) {
 	msgType, header, body, err := c.readFrom()
 	if err != nil {
 		// 읽어서 없애버린다.
-		if c.IsStatus(n.ConnStatusConnected) {
+		if c.IsConnected() {
 			data := make([]byte, n.MaxBufferLength)
 			c.rwc.Read(data)
 		}

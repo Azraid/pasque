@@ -22,12 +22,12 @@ import (
 type routeTable struct {
 	stbs  map[string]Stub
 	actvs util.RingSet
-	lock  *sync.Mutex
+	lock  *sync.RWMutex
 }
 
 type Server struct {
 	listenAddr      string
-	connLock        *sync.Mutex
+	connLock        *sync.RWMutex
 	rtTable         map[string]*routeTable
 	pingMonitorTick *time.Ticker
 	dlver           Deliverer //실제 Deliver를 구현한 자기 자신이 된다.
@@ -37,7 +37,7 @@ type Server struct {
 
 func newRouteTable() *routeTable {
 	rt := &routeTable{}
-	rt.lock = new(sync.Mutex)
+	rt.lock = new(sync.RWMutex)
 	rt.stbs = make(map[string]Stub)
 	rt.actvs = util.NewRingSet(false)
 
@@ -46,7 +46,7 @@ func newRouteTable() *routeTable {
 
 func (srv *Server) Init(listenAddr string, dlver Deliverer, fdr Federator) {
 	srv.listenAddr = listenAddr
-	srv.connLock = new(sync.Mutex)
+	srv.connLock = new(sync.RWMutex)
 	srv.rtTable = make(map[string]*routeTable)
 	srv.dlver = dlver
 	srv.fdr = fdr
@@ -133,7 +133,7 @@ func (srv *Server) register(spn string, eid string, rw NetIO) Stub {
 			defer srv.rtTable[ospn].lock.Unlock()
 
 			if v, ok := srv.rtTable[ospn].stbs[eid]; ok {
-				v.GetNetIO().Close()
+				v.Close()
 				delete(srv.rtTable[ospn].stbs, eid)
 			}
 		} else if rw != nil {
@@ -160,7 +160,7 @@ func (srv *Server) register(spn string, eid string, rw NetIO) Stub {
 		}
 	}
 
-	if srv.rtTable[spn].stbs[eid].GetNetIO() != nil && srv.rtTable[spn].stbs[eid].GetNetIO().IsStatus(ConnStatusConnected) {
+	if srv.rtTable[spn].stbs[eid].IsConnected() {
 		srv.rtTable[spn].actvs.Add(eid)
 	}
 
@@ -172,8 +172,8 @@ func (srv *Server) close(eid string) {
 	defer srv.connLock.Unlock()
 
 	if stb, spn, ok := srv.find(eid); ok {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) {
-			stb.GetNetIO().Close()
+		if stb.IsConnected() {
+			stb.Close()
 		}
 
 		srv.rtTable[spn].actvs.Remove(eid)
@@ -195,9 +195,7 @@ func (srv *Server) SendRandom(spn string, mpck MsgPack) error {
 		} else {
 			//active list가 없다면, 아무데나 넣는다.
 			for _, v := range rt.stbs {
-				if v.GetNetIO() != nil {
-					return v.Send(mpck)
-				}
+				return v.Send(mpck)
 			}
 		}
 	}
@@ -224,7 +222,7 @@ func goPingMonitor(srv *Server) {
 
 		for _, v := range srv.rtTable {
 			for eid, stb := range v.stbs {
-				if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) && uint32(now.Sub(stb.GetLastUsed()).Seconds()) > PingTimeoutSec {
+				if stb.IsConnected() && uint32(now.Sub(stb.GetLastUsed()).Seconds()) > PingTimeoutSec {
 					disused = append(disused, eid)
 				}
 			}
@@ -296,9 +294,9 @@ func goAccept(srv *Server, rwc net.Conn) {
 	if !ok { //이것은 초기에 만들어지지 않았으므로 Provider가 아니다.
 		stb = srv.register(connMsg.Body.Spn, connMsg.Header.Eid, nil)
 	} else {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(ConnStatusConnected) {
-			app.ErrorLog("[%+v] already established", stb.GetNetIO())
-			acptMsg := BuildAcceptMsgPack(CoRaiseNError(NErrorFederationError, 1, fmt.Sprintf("[%+v] already established", stb.GetNetIO())), "", "")
+		if stb.IsConnected() {
+			app.ErrorLog("[%s] already established", stb.String())
+			acptMsg := BuildAcceptMsgPack(CoRaiseNError(NErrorFederationError, 1, fmt.Sprintf("[%s] already established", stb.String())), "", "")
 			if acptMsg != nil {
 				conn.Write(acptMsg.Bytes(), true)
 			}

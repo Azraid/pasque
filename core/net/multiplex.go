@@ -36,7 +36,7 @@ func (muxio *multiplexerIO) Dispatch(msg MsgPack) {
 
 func (muxio *multiplexerIO) Broadcast(b []byte) {
 	for i := range muxio.ios {
-		if muxio.ios[i].rw != nil && muxio.ios[i].rw.IsStatus(ConnStatusConnected) {
+		if muxio.ios[i].rw != nil && muxio.ios[i].rw.IsConnected() {
 			muxio.ios[i].rw.Write(b, false)
 		}
 	}
@@ -52,7 +52,7 @@ func (muxio *multiplexerIO) Write(b []byte, isLogging bool) error {
 	seq = (seq + 1) % l
 
 	for i := seq; i < l; i++ {
-		if ok := muxio.ios[i].rw.IsStatus(ConnStatusConnected); ok {
+		if ok := muxio.ios[i].rw.IsConnected(); ok {
 			if err := muxio.ios[i].rw.Write(b, isLogging); err != nil {
 				muxio.ios[i].dial.CheckAndRedial()
 			} else {
@@ -62,7 +62,7 @@ func (muxio *multiplexerIO) Write(b []byte, isLogging bool) error {
 	}
 
 	for i := 0; i < seq; i++ {
-		if ok := muxio.ios[i].rw.IsStatus(ConnStatusConnected); ok {
+		if ok := muxio.ios[i].rw.IsConnected(); ok {
 			if err := muxio.ios[i].rw.Write(b, isLogging); err != nil {
 				muxio.ios[i].dial.CheckAndRedial()
 			} else {
@@ -167,7 +167,7 @@ func goNetRead(muxio *multiplexerIO, nio *netIO) {
 		mpck.msgType, mpck.header, mpck.body, err = nio.rw.Read()
 		if err != nil {
 			app.ErrorLog("%+v %s", nio.rw, err.Error())
-			if !nio.rw.IsStatus(ConnStatusConnected) {
+			if !nio.rw.IsConnected() {
 				return
 			}
 		}

@@ -37,7 +37,7 @@ func (dial *dialer) set(remoteAddr string) {
 }
 
 func (dial *dialer) CheckAndRedial() {
-	if dial.rw.IsStatus(n.ConnStatusDisconnected) {
+	if !dial.rw.IsConnected() {
 		go goDial(dial)
 	}
 }
@@ -50,10 +50,7 @@ func (dial *dialer) dial() error {
 		dial.dialing = dialNotdialing
 	}()
 
-	dial.rw.Lock()
-	defer dial.rw.Unlock()
-
-	if dial.rw.IsStatus(n.ConnStatusConnected) {
+	if dial.rw.IsConnected() {
 		return nil
 	}
 
@@ -82,7 +79,7 @@ func goDial(dial *dialer) {
 
 func goPing(dial *dialer) {
 	for _ = range dial.pingTick.C {
-		if !dial.rw.IsStatus(n.ConnStatusConnected) {
+		if !dial.rw.IsConnected() {
 			dial.CheckAndRedial()
 			return
 		}

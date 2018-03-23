@@ -123,7 +123,7 @@ func goNetRead(cli *client) {
 
 		if err != nil {
 			app.ErrorLog("%+v %s", cli.rw, err.Error())
-			if !cli.rw.IsStatus(n.ConnStatusConnected) {
+			if !cli.rw.IsConnected() {
 				return
 			}
 		}

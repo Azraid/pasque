@@ -51,11 +51,12 @@ type NError interface {
 
 type WriteCloser interface {
 	Write(b []byte, isLogging bool) error
-	Close() error
-	IsStatus(status int32) bool
+	Close()
+	//IsStatus(status int32) bool
+	IsConnected() bool
 	Register(rwc net.Conn)
-	Lock()
-	Unlock()
+	// Lock()
+	// Unlock()
 }
 
 type NetIO interface {
@@ -105,10 +106,13 @@ type Stub interface {
 	ResetConn(rw NetIO)
 	Send(mpck MsgPack) error
 	//	RecvReq(header []byte, body []byte) error
-	GetNetIO() NetIO
+	//GetNetIO() NetIO
 	GetLastUsed() time.Time
 	Go()
 	SendAll()
+	IsConnected() bool
+	Close()
+	String() string
 }
 
 // Router와 Gate는 모두 server를 상속받는다.

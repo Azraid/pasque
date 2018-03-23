@@ -1,20 +1,22 @@
 /********************************************************************************
 * const.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
 package core
 
 const (
-	RedialSec                  = 2
-	DialTimeoutSec             = 10
+	RedialSec                  = 10
+	DialTimeoutSec             = 5
 	PingTimerSec               = 20
 	PingTimeoutSec             = 30
 	TxnTimeoutSec              = 25
 	TxnMapSize                 = 16
 	UnsentTimerSec             = 10
+	ReadTimeoutSec             = 32
+	WriteTimeoutSec            = 32
 	GridContextTimeoutSec      = 3600
 	GridTxnRelaxedCount        = 2
 	GridContextCleanTimeoutSec = 300

@@ -107,8 +107,8 @@ func (srv *Gate) close(eid string) {
 	defer srv.connLock.Unlock()
 
 	if stb, ok := srv.stbs[eid]; ok {
-		if stb.GetNetIO() != nil && stb.GetNetIO().IsStatus(n.ConnStatusConnected) {
-			stb.GetNetIO().Close()
+		if stb.IsConnected() {
+			stb.Close()
 		}
 
 		srv.SendLogout(stb.GetUserID(), app.Config.Spn)
@@ -140,8 +140,7 @@ func goPingMonitor(srv *Gate) {
 		now := time.Now()
 
 		for eid, stb := range srv.stbs {
-			if stb.GetNetIO() != nil &&
-				stb.GetNetIO().IsStatus(n.ConnStatusConnected) &&
+			if stb.IsConnected() &&
 				uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
 				disused = append(disused, eid)
 			}

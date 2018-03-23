@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Azraid/pasque/app"
-	n "github.com/Azraid/pasque/core/net"
 )
 
 var g_cli *client
@@ -44,7 +43,7 @@ func main() {
 	g_cli.RegisterRandHandler("CLinesClear", OnCLinesClear)
 	g_cli.RegisterRandHandler("CGameEnd", OnCGameEnd)
 
-	for !g_cli.rw.IsStatus(n.ConnStatusConnected) {
+	for !g_cli.rw.IsConnected() {
 		time.Sleep(1 * time.Second)
 	}
 

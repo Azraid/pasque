@@ -15,7 +15,7 @@ if ["$1" = "bg" ]; then
 	xterm -e ./julivonoblitz 127.0.0.1:37701 Julivonoblitz Julivonoblitz.Tcgate &
 
 else
-#	xterm -e ./router Router.1 &
+	xterm -e ./router Router.1 &
 	xterm -e ./sgate Session.Gate.1 &
 	xterm -e ./sgate ChatRoom.Gate.1 &
 	xterm -e ./sgate ChatUser.Gate.1 &

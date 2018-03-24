@@ -166,7 +166,7 @@ func goNetRead(muxio *multiplexerIO, nio *netIO) {
 
 		mpck.msgType, mpck.header, mpck.body, err = nio.rw.Read()
 		if err != nil {
-			app.ErrorLog("%+v %s", nio.rw, err.Error())
+			app.ErrorLog("%s", err.Error())
 			if !nio.rw.IsConnected() {
 				return
 			}

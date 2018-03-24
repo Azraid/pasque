@@ -9,24 +9,25 @@ package net
 
 import (
 	"net"
-	"sync/atomic"
 	"time"
 
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type dialer struct {
-	pingTick    *time.Ticker
-	rw          WriteCloser
-	remoteAddr  string
-	dialing     int32
+	pingTick   *time.Ticker
+	rw         WriteCloser
+	remoteAddr string
+	//dialing     int32
 	onConnected func() error
 	ping        func() error
+	once        util.Once
 }
 
 func NewDialer(rw WriteCloser, remoteAddr string, onConnected func() error, ping func() error) Dialer {
-	dial := &dialer{rw: rw, remoteAddr: remoteAddr, dialing: dialNotdialing, onConnected: onConnected, ping: ping}
+	dial := &dialer{rw: rw, remoteAddr: remoteAddr, onConnected: onConnected, ping: ping}
 	dial.pingTick = time.NewTicker(time.Second * PingTimerSec)
 	return dial
 }
@@ -42,12 +43,12 @@ func (dial *dialer) CheckAndRedial() {
 }
 
 func (dial *dialer) dial() error {
-	if ok := atomic.CompareAndSwapInt32(&dial.dialing, dialNotdialing, dialDialing); !ok {
-		return nil
-	}
-	defer func() {
-		dial.dialing = dialNotdialing
-	}()
+	// if ok := atomic.CompareAndSwapInt32(&dial.dialing, dialNotdialing, dialDialing); !ok {
+	// 	return nil
+	// }
+	// defer func() {
+	// 	dial.dialing = dialNotdialing
+	// }()
 
 	if dial.rw.IsConnected() {
 		return nil
@@ -74,7 +75,13 @@ func (dial *dialer) dial() error {
 
 func goDial(dial *dialer) {
 	time.Sleep(RedialSec * time.Second)
-	dial.dial()
+
+	if ok := dial.once.Do(
+		func() {
+			dial.dial()
+		}); ok {
+		dial.once.Reset()
+	}
 }
 
 func goPing(dial *dialer) {

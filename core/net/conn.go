@@ -62,7 +62,7 @@ func (c *conn) Close() {
 // 	return atomic.LoadInt32(&c.status) == status
 // }
 
-func (c conn) IsConnected() bool {
+func (c *conn) IsConnected() bool {
 	if atomic.LoadInt32(&c.status) == ConnStatusConnected {
 		return true
 	}

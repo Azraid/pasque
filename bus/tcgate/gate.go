@@ -13,18 +13,12 @@ import (
 	n "github.com/Azraid/pasque/core/net"
 )
 
-type GateStub interface {
-	n.Stub
-	GetUserID() co.TUserID
-}
-
 type Gate struct {
 	listenAddr      string
-	connLock        *sync.Mutex
 	pingMonitorTick *time.Ticker
 	remoter         n.Proxy
 	ln              net.Listener
-	stbs            map[string]GateStub
+	stbs            *sync.Map
 }
 
 //NewGate
@@ -32,8 +26,7 @@ func newGate(listenAddr string) *Gate {
 	srv := &Gate{}
 
 	srv.listenAddr = listenAddr
-	srv.connLock = new(sync.Mutex)
-	srv.stbs = make(map[string]GateStub)
+	srv.stbs = new(sync.Map)
 	srv.remoter = n.NewProxy(app.Config.Global.Routers, srv)
 	return srv
 }
@@ -77,7 +70,6 @@ func (srv *Gate) LocalResponse(header *n.ResHeader, msg n.MsgPack) error {
 }
 
 func (srv *Gate) ListenAndServe() (err error) {
-
 	app.DebugLog("start listen... ")
 
 	toplgy := n.Topology{Spn: app.Config.Spn}
@@ -103,22 +95,18 @@ func (srv *Gate) getNewEid() string {
 }
 
 func (srv *Gate) close(eid string) {
-	srv.connLock.Lock()
-	defer srv.connLock.Unlock()
-
-	if stb, ok := srv.stbs[eid]; ok {
-		if stb.IsConnected() {
-			stb.Close()
-		}
-
-		srv.SendLogout(stb.GetUserID(), app.Config.Spn)
-		delete(srv.stbs, eid)
+	if v, ok := srv.stbs.Load(eid); ok {
+		stb := v.(GateStub)
+	//	srv.SendLogout(stb.GetUserID(), app.Config.Spn)
+		stb.Close()
+		srv.stbs.Delete(eid)
 	}
 }
 
 func (srv *Gate) SendDirect(eid string, mpck n.MsgPack) error {
-	if v, ok := srv.stbs[eid]; ok {
-		return v.Send(mpck)
+	if v, ok := srv.stbs.Load(eid); ok {
+		stb := v.(GateStub)
+		return stb.Send(mpck)
 	}
 
 	return co.IssueErrorf("%s not found", eid)
@@ -127,10 +115,16 @@ func (srv *Gate) SendDirect(eid string, mpck n.MsgPack) error {
 func (srv *Gate) Shutdown() bool {
 	srv.ln.Close()
 
-	for kk, _ := range srv.stbs {
-		srv.close(kk)
-	}
+	srv.stbs.Range(
+		func(k, v interface{}) bool {
+			stb := v.(GateStub)
+			//srv.SendLogout(stb.GetUserID(), app.Config.Spn)
+			stb.Close()
 
+			return false
+		})
+
+	srv.stbs = new(sync.Map)
 	return true
 }
 
@@ -139,12 +133,16 @@ func goPingMonitor(srv *Gate) {
 		var disused []string
 		now := time.Now()
 
-		for eid, stb := range srv.stbs {
-			if stb.IsConnected() &&
-				uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
-				disused = append(disused, eid)
-			}
-		}
+		srv.stbs.Range(
+			func(k, v interface{}) bool {
+				stb := v.(GateStub)
+				if stb.IsConnected() &&
+					uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
+					disused = append(disused, k.(string))
+				}
+
+				return false
+			})
 
 		for _, eid := range disused {
 			srv.close(eid)
@@ -153,18 +151,13 @@ func goPingMonitor(srv *Gate) {
 }
 
 //Register is
-func (srv *Gate) register(eid string, rw n.NetIO) n.Stub {
-	srv.connLock.Lock()
-	defer srv.connLock.Unlock()
-
-	if v, ok := srv.stbs[eid]; ok {
-		v.ResetConn(rw)
-	} else {
-		srv.stbs[eid] = NewStub(eid, srv)
-		srv.stbs[eid].ResetConn(rw)
-	}
-
-	return srv.stbs[eid]
+func (srv *Gate) register(eid string, rw n.NetIO) GateStub {
+	stb, _ := srv.stbs.LoadOrStore(eid, NewStub(eid, srv,
+		func(userID co.TUserID) {
+			srv.SendLogout(userID, app.Config.Spn)
+		}))
+	stb.(GateStub).ResetConn(rw)
+	return stb.(GateStub)
 }
 
 func (srv *Gate) serve() error {

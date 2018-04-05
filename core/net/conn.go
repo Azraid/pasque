@@ -27,15 +27,16 @@ const (
 // net.Conn 연결을 담당하는 것은 conn를 소유한 Client와 Server가 그 책임을 진다.
 // Client와 서버의 역할에 따른 BM이 복잡하므로 역할을 상위로 위임한다.
 type conn struct {
-	eid    string
-	rwc    net.Conn
-	status int32
-	lock   *sync.RWMutex
+	//	eid    string
+	rwc     net.Conn
+	status  int32
+	lock    *sync.RWMutex
+	onClose func()
 }
 
 func NewNetIO() NetIO {
 	return &conn{
-		eid:    "unknown",
+		//	eid:    "unknown",
 		status: ConnStatusDisconnected,
 		lock:   new(sync.RWMutex)}
 }
@@ -48,19 +49,26 @@ func (c *conn) Register(rwc net.Conn) {
 	atomic.StoreInt32(&c.status, ConnStatusConnected)
 }
 
+func (c *conn) AddCloseEvent(onClose func()) {
+	c.onClose = onClose
+}
+
 func (c *conn) Close() {
 	go func() {
 		c.lock.Lock()
 		defer c.lock.Unlock()
 
-		atomic.SwapInt32(&c.status, ConnStatusDisconnected)
-		c.rwc.Close()
+		if atomic.SwapInt32(&c.status, ConnStatusDisconnected) == ConnStatusConnected {
+			if c.onClose != nil {
+				c.onClose()
+			}
+		}
+
+		if c.rwc != nil {
+			c.rwc.Close()
+		}
 	}()
 }
-
-// func (c *conn) IsStatus(status int32) bool {
-// 	return atomic.LoadInt32(&c.status) == status
-// }
 
 func (c *conn) IsConnected() bool {
 	if atomic.LoadInt32(&c.status) == ConnStatusConnected {

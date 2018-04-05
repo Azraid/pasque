@@ -52,16 +52,14 @@ type NError interface {
 type WriteCloser interface {
 	Write(b []byte, isLogging bool) error
 	Close()
-	//IsStatus(status int32) bool
 	IsConnected() bool
 	Register(rwc net.Conn)
-	// Lock()
-	// Unlock()
 }
 
 type NetIO interface {
 	WriteCloser
 	Read() (byte, []byte, []byte, error)
+	AddCloseEvent(onClose func())
 }
 
 type NetWriter interface {

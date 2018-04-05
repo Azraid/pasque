@@ -10,7 +10,7 @@
         "Immediate" : true,
         "Error":true,
         "Info":true,
-        "Debug":true,
+        "Debug":false,
         "Packet":true
     },
 

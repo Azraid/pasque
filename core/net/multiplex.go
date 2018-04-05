@@ -12,67 +12,52 @@ import (
 
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
+	"github.com/Azraid/pasque/util"
 )
 
 type netIO struct {
-	index int
-	rw    NetIO
-	dial  Dialer
+	//index int
+	rw   NetIO
+	dial Dialer
 }
 
 type multiplexerIO struct {
-	ios     map[int]*netIO
+	ios     util.RandSet
 	lock    *sync.RWMutex
 	disp    Dispatcher
 	msgC    chan MsgPack
 	unsentQ UnsentQ
 }
 
-var seq int
-
 func (muxio *multiplexerIO) Dispatch(msg MsgPack) {
 	muxio.msgC <- msg
 }
 
 func (muxio *multiplexerIO) Broadcast(b []byte) {
-	for i := range muxio.ios {
-		if muxio.ios[i].rw != nil && muxio.ios[i].rw.IsConnected() {
-			muxio.ios[i].rw.Write(b, false)
-		}
-	}
+	muxio.ios.Range(
+		func(v interface{}) bool {
+			nio := v.(*netIO)
+			if nio.rw != nil && nio.rw.IsConnected() {
+				nio.rw.Write(b, false)
+			}
+
+			return true
+		})
+
 }
 
 func (muxio *multiplexerIO) Write(b []byte, isLogging bool) error {
-	l := len(muxio.ios)
-	if l == 0 {
+	if muxio.ios.Length() == 0 {
 		return IssueErrorf("no io net list")
 	}
 
-	// 이부분은 activelist를 관리하기 귀찮아서 만든 로직임.
-	seq = (seq + 1) % l
+	nio := muxio.ios.AnyOne().(*netIO)
 
-	for i := seq; i < l; i++ {
-		if ok := muxio.ios[i].rw.IsConnected(); ok {
-			if err := muxio.ios[i].rw.Write(b, isLogging); err != nil {
-				muxio.ios[i].dial.CheckAndRedial()
-			} else {
-				return nil
-			}
-		}
+	if err := nio.rw.Write(b, isLogging); err != nil {
+		nio.dial.CheckAndRedial()
+		muxio.unsentQ.Add(b)
+		return err
 	}
-
-	for i := 0; i < seq; i++ {
-		if ok := muxio.ios[i].rw.IsConnected(); ok {
-			if err := muxio.ios[i].rw.Write(b, isLogging); err != nil {
-				muxio.ios[i].dial.CheckAndRedial()
-			} else {
-				return nil
-			}
-		}
-	}
-
-	app.DebugLog("no active netIO..")
-	muxio.unsentQ.Add(b)
 
 	return nil
 }
@@ -82,27 +67,28 @@ func (muxio *multiplexerIO) Close() {
 }
 
 func (muxio *multiplexerIO) Dial() {
-	for _, v := range muxio.ios {
-		v.dial.CheckAndRedial()
-	}
+	muxio.ios.Range(func(v interface{}) bool {
+		v.(*netIO).dial.CheckAndRedial()
+		return true
+	})
 }
 
 func newMultiplexerIO(eid string, remotes []app.Node, toplgy *Topology, disp Dispatcher) *multiplexerIO {
 	muxio := &multiplexerIO{disp: disp}
 	muxio.msgC = make(chan MsgPack)
 	muxio.lock = new(sync.RWMutex)
-	muxio.ios = make(map[int]*netIO)
+	muxio.ios = util.NewRandSet()
 	muxio.unsentQ = NewUnsentQ(muxio, TxnTimeoutSec)
 
-	for i, rnodes := range remotes {
-		muxio.ios[i] = newNetIO(i, muxio, toplgy, rnodes)
+	for _, rnodes := range remotes {
+		muxio.ios.Add(newNetIO(muxio, toplgy, rnodes))
 	}
 
 	return muxio
 }
 
-func newNetIO(index int, muxio *multiplexerIO, toplgy *Topology, rnode app.Node) *netIO {
-	nio := &netIO{index: index, rw: NewNetIO()}
+func newNetIO(muxio *multiplexerIO, toplgy *Topology, rnode app.Node) *netIO {
+	nio := &netIO{rw: NewNetIO()}
 	nio.dial = NewDialer(nio.rw, rnode.ListenAddr,
 		func() error { //onConnected
 			connMsgPack := BuildConnectMsgPack(app.App.Eid, *toplgy)
@@ -154,10 +140,8 @@ func goNetRead(muxio *multiplexerIO, nio *netIO) {
 	defer func() {
 		if r := recover(); r != nil {
 			app.Dump(r)
-			nio.rw.Close()
+			//	nio.rw.Close()
 		}
-
-		nio.dial.CheckAndRedial()
 	}()
 
 	for {

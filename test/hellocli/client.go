@@ -89,7 +89,7 @@ func goNetRead(cli *client) {
 	defer func() {
 		if r := recover(); r != nil {
 			app.Dump(r)
-			cli.rw.Close()
+		//	cli.rw.Close()
 		}
 
 		cli.dial.CheckAndRedial()

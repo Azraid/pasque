@@ -8,7 +8,7 @@
 package core
 
 const (
-	RedialSec                  = 10
+	RedialSec                  = 6
 	DialTimeoutSec             = 5
 	PingTimerSec               = 20
 	PingTimeoutSec             = 30

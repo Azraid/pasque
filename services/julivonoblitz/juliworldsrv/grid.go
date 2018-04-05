@@ -255,7 +255,6 @@ func goPlay(g *GridData, beforeT time.Time) {
 
 	//beforeT := time.Now()
 	for _ = range g.tick.C {
-
 		elapsed := time.Now().Sub(beforeT)
 		if elapsed.Nanoseconds() > procTimer.Nanoseconds() {
 			if gap := (elapsed.Nanoseconds() - procTimer.Nanoseconds()) / int64(time.Millisecond); gap > 100 {

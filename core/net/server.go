@@ -20,10 +20,8 @@ import (
 )
 
 type routeTable struct {
-	//stbs  map[string]Stub
 	actvs util.RingSet
-	//lock  *sync.RWMutex
-	stbs *sync.Map
+	stbs  *sync.Map
 }
 
 func (rt *routeTable) find(eid string) (Stub, bool) {
@@ -48,9 +46,7 @@ func (rt *routeTable) loadOrStore(eid string, rw NetIO, dlver Deliverer) Stub {
 }
 
 type Server struct {
-	listenAddr string
-	connLock   *sync.RWMutex
-	//rtTable         map[string]*routeTable
+	listenAddr      string
 	rtTable         *sync.Map
 	pingMonitorTick *time.Ticker
 	dlver           Deliverer //실제 Deliver를 구현한 자기 자신이 된다.
@@ -60,17 +56,15 @@ type Server struct {
 
 func newRouteTable() *routeTable {
 	rt := &routeTable{}
-	//rt.lock = new(sync.RWMutex)
-	//rt.stbs = make(sync.Map)
 	rt.stbs = new(sync.Map)
-	rt.actvs = util.NewRingSet(false)
+	rt.actvs = util.NewRingSet()
 
 	return rt
 }
 
 func (srv *Server) Init(listenAddr string, dlver Deliverer, fdr Federator) {
 	srv.listenAddr = listenAddr
-	srv.connLock = new(sync.RWMutex)
+
 	//srv.rtTable = make(map[string]*routeTable)
 	srv.rtTable = new(sync.Map)
 	srv.dlver = dlver
@@ -125,16 +119,6 @@ func (srv *Server) serve() error {
 		}
 	}
 }
-
-// func (srv Server) find(eid string) (Stub, string, bool) {
-// 	for k, v := range srv.rtTable {
-// 		if vv, ok := v.stbs.Load(eid); ok {
-// 			return vv.(Stub), k, true
-// 		}
-// 	}
-
-// 	return nil, "", false
-// }
 
 func (srv *Server) find(eid string) (Stub, bool) {
 	var stb Stub

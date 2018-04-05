@@ -72,21 +72,22 @@ func newPlayer(userID co.TUserID) *Player {
 }
 
 func (p *Player) PrintSvrMatrix() {
-	fmt.Println("---------------------------------------")
+	app.DebugLog("---------------------------------------")
 
 	for y := p.ymax; y >= 0; y-- {
+		l := ""
 		for x := 0; x < p.xsize; x++ {
-
 			switch p.svrMatrix[x][y].dolStat {
 			case EDSTAT_FALL:
-				fmt.Printf("%02d[*],", p.svrMatrix[x][y].objID)
+				l += fmt.Sprintf("%02d[*],", p.svrMatrix[x][y].objID)
+				//app.DebugLog("%02d[*],", p.svrMatrix[x][y].objID)
 			case EDSTAT_FIRM:
-				fmt.Printf("%02d[O],", p.svrMatrix[x][y].objID)
+				l += fmt.Sprintf("%02d[O],", p.svrMatrix[x][y].objID)
 			default:
-				fmt.Printf("%02d[ ],", p.svrMatrix[x][y].objID)
+				l += fmt.Sprintf("%02d[ ],", p.svrMatrix[x][y].objID)
 			}
 		}
-		fmt.Println("")
+		app.DebugLog(l)
 	}
 }
 
@@ -520,9 +521,6 @@ func (p *Player) CheckNoRoom() bool {
 // Update Frame
 // 서버가 너무 느려 1프레임에 1셀을 넘어가는 속도는 고려되지 않았음!!!
 func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
-
-	//p.PrintSvrMatrix()
-	//fmt.Println(p.playTimeMs)
 	if int(p.playTimeMs/1000) != int((p.playTimeMs+elapsedTimeMs)/1000) {
 		p.PrintSvrMatrix()
 	}

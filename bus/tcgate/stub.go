@@ -24,6 +24,11 @@ import (
 	n "github.com/Azraid/pasque/core/net"
 )
 
+type GateStub interface {
+	n.Stub
+	GetUserID() co.TUserID
+}
+
 //client > stub
 type inContexts struct {
 	orgTxn   uint64
@@ -38,10 +43,11 @@ type outContexts struct {
 	fromEids []string
 }
 
+type OnClose func(userID co.TUserID)
+
 type stub struct {
-	rw        n.NetIO
-	remoteEid string
-	//lastUsed   time.Time
+	rw         n.NetIO
+	remoteEid  string
 	lastUsed   unsafe.Pointer
 	unsentQ    n.UnsentQ
 	dlver      n.Deliverer
@@ -52,6 +58,20 @@ type stub struct {
 	lastTxnNo  uint64
 	userID     co.TUserID
 	lock       *sync.RWMutex
+	onClose    OnClose
+}
+
+func NewStub(eid string, dlver n.Deliverer, onClose OnClose) GateStub {
+	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: n.AppStatusRunning}
+
+	stb.unsentTick = time.NewTicker(time.Second * co.UnsentTimerSec)
+	stb.unsentQ = n.NewUnsentQ(nil, co.TxnTimeoutSec)
+	stb.inq = make(map[uint64]inContexts)
+	stb.outq = make(map[uint64]outContexts)
+	stb.lastTxnNo = 0
+	stb.lock = new(sync.RWMutex)
+	stb.onClose = onClose
+	return stb
 }
 
 func (stb *stub) SetLastUsed() {
@@ -62,18 +82,6 @@ func (stb *stub) SetLastUsed() {
 func (stb *stub) GetLastUsed() time.Time {
 	t := atomic.LoadPointer(&stb.lastUsed)
 	return *(*time.Time)(t)
-}
-
-func NewStub(eid string, dlver n.Deliverer) GateStub {
-	stb := &stub{remoteEid: eid, dlver: dlver, appStatus: n.AppStatusRunning}
-
-	stb.unsentTick = time.NewTicker(time.Second * co.UnsentTimerSec)
-	stb.unsentQ = n.NewUnsentQ(nil, co.TxnTimeoutSec)
-	stb.inq = make(map[uint64]inContexts)
-	stb.outq = make(map[uint64]outContexts)
-	stb.lastTxnNo = 0
-	stb.lock = new(sync.RWMutex)
-	return stb
 }
 
 func (stb stub) GetUserID() co.TUserID {
@@ -124,6 +132,12 @@ func (stb *stub) ResetConn(rw n.NetIO) {
 		stb.unsentQ.Register(rw)
 		stb.SetLastUsed()
 		stb.appStatus = n.AppStatusRunning
+
+		stb.rw.AddCloseEvent(func() {
+			if len(string(stb.userID)) > 0 {
+				stb.onClose(stb.userID)
+			}
+		})
 	}
 }
 
@@ -211,11 +225,11 @@ func goStubHandle(stb *stub) {
 	defer func() {
 		if r := recover(); r != nil {
 			app.Dump(r)
-			stb.rw.Close()
+			//		stb.rw.Close()
 		}
 	}()
 
-	if stb == nil {
+	if stb == nil || stb.rw == nil {
 		return
 	}
 
@@ -224,6 +238,11 @@ func goStubHandle(stb *stub) {
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
 			if !stb.rw.IsConnected() {
+				return
+			}
+
+			if err.Error() == "EOF" {
+				stb.Close()
 				return
 			}
 		}

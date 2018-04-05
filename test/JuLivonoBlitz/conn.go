@@ -28,10 +28,11 @@ const (
 // net.Conn 연결을 담당하는 것은 conn를 소유한 Client와 Server가 그 책임을 진다.
 // Client와 서버의 역할에 따른 BM이 복잡하므로 역할을 상위로 위임한다.
 type conn struct {
-	eid    string
-	rwc    net.Conn
-	status int32
-	lock   *sync.Mutex
+	eid     string
+	rwc     net.Conn
+	status  int32
+	lock    *sync.Mutex
+	onClose func()
 }
 
 func NewNetIO() n.NetIO {
@@ -39,6 +40,10 @@ func NewNetIO() n.NetIO {
 		eid:    "unknown",
 		status: n.ConnStatusDisconnected,
 		lock:   new(sync.Mutex)}
+}
+
+func (c *conn) AddCloseEvent(onClose func()) {
+	c.onClose = onClose
 }
 
 func (c *conn) Close() {

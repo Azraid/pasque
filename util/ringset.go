@@ -1,13 +1,11 @@
 /********************************************************************************
 * ringset.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
 package util
-
-import "sync"
 
 type RingSet interface {
 	Remove(value interface{})
@@ -18,37 +16,37 @@ type RingSet interface {
 type ringSet struct {
 	values []interface{}
 	p      int
-	lock   *sync.Mutex
+	//lock   *sync.Mutex
 }
 
-func NewRingSet(threadSafe bool) RingSet {
+func NewRingSet() RingSet {
 	rs := &ringSet{}
 
-	if threadSafe {
-		rs.lock = new(sync.Mutex)
-	}
+	// if threadSafe {
+	// 	rs.lock = new(sync.Mutex)
+	// }
 
 	return rs
 }
 
 func (rs *ringSet) Add(value interface{}) {
-	if rs.lock != nil {
-		rs.lock.Lock()
-		defer rs.lock.Unlock()
-	}
+	// if rs.lock != nil {
+	// 	rs.lock.Lock()
+	// 	defer rs.lock.Unlock()
+	// }
 
-	if i := rs.Find(value); i < 0 {
+	if _, ok := rs.Find(value); !ok {
 		rs.values = append(rs.values, value)
 	}
 }
 
 func (rs *ringSet) Remove(value interface{}) {
-	if rs.lock != nil {
-		rs.lock.Lock()
-		defer rs.lock.Unlock()
-	}
+	// if rs.lock != nil {
+	// 	rs.lock.Lock()
+	// 	defer rs.lock.Unlock()
+	// }
 
-	if i := rs.Find(value); i >= 0 {
+	if i, ok := rs.Find(value); ok {
 		if i == 0 {
 			rs.values = rs.values[1:]
 		} else if len(rs.values) == i+1 {
@@ -59,14 +57,14 @@ func (rs *ringSet) Remove(value interface{}) {
 	}
 }
 
-func (rs ringSet) Find(value interface{}) int {
+func (rs *ringSet) Find(value interface{}) (int, bool) {
 	for i, v := range rs.values {
 		if v == value {
-			return i
+			return i, true
 		}
 	}
 
-	return -1
+	return -1, false
 }
 
 func (rs *ringSet) Next() interface{} {
@@ -75,6 +73,7 @@ func (rs *ringSet) Next() interface{} {
 	}
 
 	rs.p++
+
 	if rs.p >= len(rs.values) {
 		rs.p = 0
 	}

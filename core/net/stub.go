@@ -135,7 +135,7 @@ func goStubHandle(stb *stub) {
 	defer func() {
 		if r := recover(); r != nil {
 			app.Dump(r)
-			stb.rw.Close()
+			//	stb.rw.Close()
 		}
 	}()
 
@@ -148,6 +148,11 @@ func goStubHandle(stb *stub) {
 		if err != nil {
 			app.ErrorLog("%s, %s", stb.remoteEid, err.Error())
 			if !stb.rw.IsConnected() {
+				return
+			}
+
+			if err.Error() == "EOF" {
+				stb.Close()
 				return
 			}
 		}

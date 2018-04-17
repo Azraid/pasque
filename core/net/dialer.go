@@ -43,13 +43,7 @@ func (dial *dialer) CheckAndRedial() {
 }
 
 func (dial *dialer) dial() error {
-	// if ok := atomic.CompareAndSwapInt32(&dial.dialing, dialNotdialing, dialDialing); !ok {
-	// 	return nil
-	// }
-	// defer func() {
-	// 	dial.dialing = dialNotdialing
-	// }()
-
+	
 	if dial.rw.IsConnected() {
 		return nil
 	}

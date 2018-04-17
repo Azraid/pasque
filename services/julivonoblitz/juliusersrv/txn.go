@@ -19,11 +19,13 @@ func OnCreateRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	}
 
 	roomID := GenerateGuid().String()
-	if r, err := cli.SendReq("JuliWorld", "JoinRoom", JoinRoomMsg{
+	r, err := cli.SendReq("JuliWorld", "JoinRoom", JoinRoomMsg{
 		RoomID: roomID,
 		UserID: body.UserID,
 		Mode:   body.Mode,
-	}); err != nil {
+	})
+
+	if err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gridData
 	} else if r.Header.ErrCode != n.NErrorSucess {
@@ -31,10 +33,18 @@ func OnCreateRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 		return gridData
 	}
 
+	var rbody JoinRoomMsgR
+	if err := json.Unmarshal(r.Body, &rbody); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
+		return gridData
+	}
+
 	gd := CreateGridData(req.Header.Key, gridData)
 	gd.RoomID = roomID
+	gd.PlayerNo = rbody.PlayerNo
 
-	cli.SendRes(req, CreateRoomMsgR{RoomID: roomID})
+	cli.SendRes(req, CreateRoomMsgR{RoomID: roomID, PlNo: rbody.PlayerNo})
 	return gd
 }
 
@@ -47,11 +57,13 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		return gridData
 	}
 
-	if r, err := cli.SendReq("JuliWorld", "JoinRoom", JoinRoomMsg{
+	r, err := cli.SendReq("JuliWorld", "JoinRoom", JoinRoomMsg{
 		RoomID: body.RoomID,
 		UserID: body.UserID,
 		Mode:   body.Mode,
-	}); err != nil {
+	})
+
+	if err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gridData
 	} else if r.Header.ErrCode != n.NErrorSucess {
@@ -59,10 +71,18 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		return gridData
 	}
 
+	var rbody JoinRoomMsgR
+	if err := json.Unmarshal(r.Body, &rbody); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
+		return gridData
+	}
+
 	gd := CreateGridData(req.Header.Key, gridData)
 	gd.RoomID = body.RoomID
+	gd.PlayerNo = rbody.PlayerNo
 
-	cli.SendRes(req, JoinRoomMsgR{})
+	cli.SendRes(req, JoinRoomMsgR{PlayerNo: gd.PlayerNo})
 	return gd
 }
 
@@ -79,12 +99,21 @@ func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 		gd := gridData.(*GridData)
 		body.RoomID = gd.RoomID
 
-		cli.SendReq("JuliWorld", "LeaveRoom", body)
+		r, err := cli.SendReq("JuliWorld", "LeaveRoom", body)
+
+		if err != nil {
+			var rbody LeaveRoomMsgR
+			if err := json.Unmarshal(r.Body, &rbody); err != nil {
+				app.ErrorLog(err.Error())
+				cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
+				return gridData
+			}
+			cli.SendRes(req, rbody)
+			return gridData
+		}
 	}
 
-	rbody := LeaveRoomMsgR{}
-	cli.SendRes(req, rbody)
-
+	cli.SendRes(req, LeaveRoomMsgR{})
 	return gridData
 }
 

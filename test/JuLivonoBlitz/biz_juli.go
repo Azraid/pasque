@@ -65,6 +65,19 @@ func DoCreateGameRoom(mode string) {
 	}
 }
 
+func DoJoinGame(roomID string) {
+	req := juli.JoinRoomMsg{RoomID: roomID, Mode: strings.ToUpper("PP")}
+	if res, err := g_cli.SendReq("JuliUser", "JoinRoom", req); err == nil {
+		var rbody juli.JoinRoomMsgR
+
+		if err := json.Unmarshal(res.Body, &rbody); err == nil {
+			g_gameRoomID = roomID
+		} else {
+			fmt.Println("CreateGameRoom fail", err.Error())
+		}
+	}
+}
+
 func DoPlayReady() {
 	req := juli.PlayReadyMsg{}
 

@@ -11,6 +11,7 @@ type CreateRoomMsg struct {
 
 type CreateRoomMsgR struct {
 	RoomID string
+	PlNo   int
 }
 
 type LeaveRoomMsg struct {

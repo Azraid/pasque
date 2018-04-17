@@ -7,7 +7,8 @@ type GameRoom struct {
 }
 
 type GridData struct {
-	RoomID string
+	RoomID   string
+	PlayerNo int
 }
 
 func CreateGridData(key string, gridData interface{}) *GridData {

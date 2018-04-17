@@ -28,12 +28,12 @@ func getUserLocation(userID TUserID) (string, string, string, string, error) {
 	return GameSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
 }
 
-func SendPlayStart(userID TUserID) {
+func SendPlayStart(targetUserID TUserID, p *Player) {
 	req := CPlayStartMsg{
-		UserID: userID,
+		UserID: p.userID,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -45,8 +45,8 @@ func SendPlayStart(userID TUserID) {
 	}
 }
 
-func SendShapeList(userID TUserID, shapes []TCnst) {
-	req := CShapeListMsg{UserID: userID}
+func SendShapeList(targetUserID TUserID, p *Player, shapes []TCnst) {
+	req := CShapeListMsg{UserID: p.userID, PlNo: p.playerNo}
 	req.Count = len(shapes)
 	req.Shapes = make([]string, len(shapes))
 
@@ -54,7 +54,7 @@ func SendShapeList(userID TUserID, shapes []TCnst) {
 		req.Shapes[k] = v.String()
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -66,9 +66,10 @@ func SendShapeList(userID TUserID, shapes []TCnst) {
 	}
 }
 
-func SendGroupResultFall(p *Player, dol string, routes []POS, count int, grpID int) {
+func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []POS, count int, grpID int) {
 	req := CGroupResultFallMsg{
 		UserID:  p.userID,
+		PlNo:    p.playerNo,
 		DolKind: dol,
 		Routes:  routes,
 		Count:   count,
@@ -81,7 +82,7 @@ func SendGroupResultFall(p *Player, dol string, routes []POS, count int, grpID i
 		req.ObjIDs[k] = v.objID
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -93,15 +94,16 @@ func SendGroupResultFall(p *Player, dol string, routes []POS, count int, grpID i
 	}
 }
 
-func SendGroupResultFirm(p *Player, dol string, routes []POS, count int) {
+func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []POS, count int) {
 	req := CGroupResultFirmMsg{
 		UserID:  p.userID,
+		PlNo:    p.playerNo,
 		DolKind: dol,
 		Routes:  routes,
 		Count:   count,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -113,14 +115,15 @@ func SendGroupResultFirm(p *Player, dol string, routes []POS, count int) {
 	}
 }
 
-func SendSingleResultFall(p *Player, dol string, pos POS) {
+func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) {
 	req := CSingleResultFallMsg{
 		UserID:  p.userID,
+		PlNo:    p.playerNo,
 		DolKind: dol,
 		DrawPos: pos,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -132,14 +135,15 @@ func SendSingleResultFall(p *Player, dol string, pos POS) {
 	}
 }
 
-func SendSingleResultFirm(p *Player, dol string, pos POS) {
+func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) {
 	req := CSingleResultFirmMsg{
 		UserID:  p.userID,
+		PlNo:    p.playerNo,
 		DolKind: dol,
 		DrawPos: pos,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -151,14 +155,15 @@ func SendSingleResultFirm(p *Player, dol string, pos POS) {
 	}
 }
 
-func SendLinesClear(p *Player) {
+func SendLinesClear(targetUserID TUserID, p *Player) {
 	req := CLinesClearMsg{
 		UserID:      p.userID,
+		PlNo:        p.playerNo,
 		LineIndexes: p.burstLines,
 		Count:       len(p.burstLines),
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -170,9 +175,10 @@ func SendLinesClear(p *Player) {
 	}
 }
 
-func SendBlocksFirm(p *Player, blocks []*SingleInfo, count int) {
+func SendBlocksFirm(targetUserID TUserID, p *Player, blocks []*SingleInfo, count int) {
 	req := CBlocksFirmMsg{
 		UserID: p.userID,
+		PlNo:   p.playerNo,
 		Count:  count,
 	}
 
@@ -184,7 +190,7 @@ func SendBlocksFirm(p *Player, blocks []*SingleInfo, count int) {
 		req.ObjIDs[i] = blocks[i].objID
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
@@ -196,13 +202,14 @@ func SendBlocksFirm(p *Player, blocks []*SingleInfo, count int) {
 	}
 }
 
-func SendGameEnd(p *Player, status string) {
+func SendGameEnd(targetUserID TUserID, p *Player, status string) {
 	req := CGameEndMsg{
 		UserID: p.userID,
+		PlNo:   p.playerNo,
 		Status: status,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(p.userID); err == nil {
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
 		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {

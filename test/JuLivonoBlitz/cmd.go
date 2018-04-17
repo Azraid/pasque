@@ -11,6 +11,7 @@ func printUsage() {
 	fmt.Println("help")
 	fmt.Println("login [user01-token]")
 	fmt.Println("game [SP/PP/PE]")
+	fmt.Println("joingame [roomID]")
 	fmt.Println("play")
 	fmt.Println("d/draw")
 	fmt.Println("createroom")
@@ -70,6 +71,12 @@ func command(args ...string) bool {
 			DoCreateGameRoom("SP")
 		}
 		return true
+
+	case "joingame":
+		if len(args) == 2 {
+			DoJoinGame(args[1])
+			return true
+		}
 
 	case "play":
 		DoPlayReady()

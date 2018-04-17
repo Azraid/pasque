@@ -37,14 +37,13 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzGameModeMissMatch, "GMode error"), nil)
 		return g
 	}
-	if err := g.SetPlayer(body.UserID); err != nil {
+	if p, err := g.SetPlayer(body.UserID); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, "set player"), nil)
 		return g
+	} else {
+		cli.SendRes(req, JoinRoomMsgR{PlayerNo: p.playerNo})
+		return g
 	}
-
-	cli.SendRes(req, JoinRoomMsgR{})
-
-	return g
 }
 
 //GetRoom 전투방 정보에 대한 요청
@@ -106,6 +105,7 @@ func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 		app.ErrorLog(err.Error())
 	}
 	//todo noti... counter part
+
 	return g
 }
 
@@ -220,17 +220,26 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	if !firm {
 		p.ShiftCnstQ()
-		SendGroupResultFall(p, body.DolKind, body.Routes, body.Count, grpID)
+		SendGroupResultFall(p.userID, p, body.DolKind, body.Routes, body.Count, grpID)
+		if p.other != nil {
+			SendGroupResultFall(p.other.userID, p, body.DolKind, body.Routes, body.Count, grpID)
+		}
 		return g
 	}
 
 	p.ReleaseGroup(grpID)
 	p.ShiftCnstQ()
-	SendGroupResultFirm(p, body.DolKind, body.Routes, body.Count)
+	SendGroupResultFirm(p.userID, p, body.DolKind, body.Routes, body.Count)
+	if p.other != nil {
+		SendGroupResultFirm(p.other.userID, p, body.DolKind, body.Routes, body.Count)
+	}
 	p.GetSvrBlockBurstCnt(body.Routes, body.Count)
 
 	if p.HasBurstLine() {
-		SendLinesClear(p)
+		SendLinesClear(p.userID, p)
+		if p.other != nil {
+			SendLinesClear(p.other.userID, p)
+		}
 		p.ClearLines()
 		p.SlideAllDown()
 	}
@@ -297,17 +306,26 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	if !p.IsBlockFirm(POS{X: body.DrawPos.X, Y: body.DrawPos.Y - 1}) {
 		p.ActivateSvrBlock(body.DrawPos, -1, dol, false)
 		p.ShiftCnstQ()
-		SendSingleResultFall(p, body.DolKind, body.DrawPos)
+		SendSingleResultFall(p.userID, p, body.DolKind, body.DrawPos)
+		if p.other != nil {
+			SendSingleResultFall(p.other.userID, p, body.DolKind, body.DrawPos)
+		}
 		return g
 	}
 
 	p.ShiftCnstQ()
-	SendSingleResultFirm(p, body.DolKind, body.DrawPos)
+	SendSingleResultFirm(p.userID, p, body.DolKind, body.DrawPos)
+	if p.other != nil {
+		SendSingleResultFirm(p.other.userID, p, body.DolKind, body.DrawPos)
+	}
 
 	if p.TestOneLineClear(body.DrawPos.Y) {
 		p.ResetBurstLine()
 		p.AddBusrtLine(body.DrawPos.Y)
-		SendLinesClear(p)
+		SendLinesClear(p.userID, p)
+		if p.other != nil {
+			SendLinesClear(p.other.userID, p)
+		}
 
 		p.ClearLines()
 		p.SlideAllDown()

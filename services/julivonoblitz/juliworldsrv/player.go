@@ -38,6 +38,7 @@ var _playerOption = playerOption{
 
 type Player struct {
 	userID         co.TUserID
+	playerNo       int
 	stat           int
 	xsize          int
 	xmax           int
@@ -55,8 +56,7 @@ type Player struct {
 	blockInfos   []*SingleInfo
 
 	svrMatrix [][]*ServerBlock
-	//svrBlocks []*ServerBlock
-
+	
 	checkBurstLine []bool
 	burstLines     []int
 	slidingOff     []int
@@ -65,8 +65,8 @@ type Player struct {
 	other          *Player
 }
 
-func newPlayer(userID co.TUserID) *Player {
-	p := &Player{stat: EPSTAT_INIT, userID: userID}
+func newPlayer(userID co.TUserID, playerNo int) *Player {
+	p := &Player{stat: EPSTAT_INIT, userID: userID, playerNo: playerNo}
 
 	return p
 }
@@ -80,7 +80,6 @@ func (p *Player) PrintSvrMatrix() {
 			switch p.svrMatrix[x][y].dolStat {
 			case EDSTAT_FALL:
 				l += fmt.Sprintf("%02d[*],", p.svrMatrix[x][y].objID)
-				//app.DebugLog("%02d[*],", p.svrMatrix[x][y].objID)
 			case EDSTAT_FIRM:
 				l += fmt.Sprintf("%02d[O],", p.svrMatrix[x][y].objID)
 			default:
@@ -118,7 +117,6 @@ func (p *Player) Init(width int, height int, other *Player) {
 		p.svrMatrix[k] = make([]*ServerBlock, p.ysize)
 	}
 
-	//p.svrBlocks = make([]*ServerBlock, p.xsize*p.ysize)
 	p.checkBurstLine = make([]bool, p.ysize)
 	p.burstLines = make([]int, 0, p.ysize)
 	p.slidingOff = make([]int, p.xsize)
@@ -127,7 +125,6 @@ func (p *Player) Init(width int, height int, other *Player) {
 	for y := 0; y < p.ysize; y++ {
 		for x := 0; x < p.xsize; x++ {
 			p.svrMatrix[x][y] = newServerBlock(i, POS{X: x, Y: y})
-			//p.svrBlocks[i] = p.svrMatrix[x][y]
 			i++
 		}
 	}
@@ -256,7 +253,6 @@ func (p *Player) ActivateSvrBlock(pos POS, grpID int, dolKind TDol, firm bool) b
 	}
 
 	p.svrMatrix[pos.X][pos.Y].posY = _playerOption.posHalf
-	//p.svrMatrix[pos.X][pos.Y].atTimeMs = time.Now()
 	p.svrMatrix[pos.X][pos.Y].fallWaitTimeMs = _playerOption.tmFallWaitMs
 
 	p.activeBlockCnt++
@@ -574,24 +570,28 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 	}
 
 	if p.blockInfoCnt > 0 { //p.blockInfoCnt 가 필요한지 ??
-		SendBlocksFirm(p, p.blockInfos, p.blockInfoCnt)
+		SendBlocksFirm(p.userID, p, p.blockInfos, p.blockInfoCnt)
+		if p.other != nil {
+			SendBlocksFirm(p.other.userID, p, p.blockInfos, p.blockInfoCnt)
+		}
+
 		p.PrintSvrMatrix()
 	}
 
 	if len(p.burstLines) > 0 {
-		SendLinesClear(p)
+		SendLinesClear(p.userID, p)
+		if p.other != nil {
+			SendLinesClear(p.other.userID, p)
+		}
 		p.ClearLines()
 		p.SlideAllDown()
 	}
 
 	// TODO: Check KO
 	if p.CheckNoRoom() {
-		if mode == EGMODE_PP {
-			SendGameEnd(p, TEnd(EEND_LKO).String())
-			SendGameEnd(p.other, TEnd(EEND_WKO).String())
-		} else {
-			SendGameEnd(p, TEnd(EEND_LKO).String())
+		SendGameEnd(p.userID, p, TEnd(EEND_LKO).String())
+		if p.other != nil {
+			SendGameEnd(p.other.userID, p, TEnd(EEND_LKO).String())
 		}
 	}
-
 }

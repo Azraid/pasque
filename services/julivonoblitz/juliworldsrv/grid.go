@@ -23,12 +23,10 @@ func newSingleInfo() *SingleInfo {
 
 type ServerBlock struct {
 	SingleInfo
-	grpID   int
-	dolStat TDStat
-	posY    float32
-	//atTime       time.Time
+	grpID          int
+	dolStat        TDStat
+	posY           float32
 	fallWaitTimeMs int64
-	//Number         int
 }
 
 func newServerBlock(objID int, pos POS) *ServerBlock {
@@ -38,10 +36,9 @@ func newServerBlock(objID int, pos POS) *ServerBlock {
 			drawPos: pos,
 			dolKind: EDOL_NORMAL_MAX,
 		},
-		grpID:   -1,
-		dolStat: EDSTAT_NONE,
-		posY:    0,
-		//		atTime:       0,
+		grpID:          -1,
+		dolStat:        EDSTAT_NONE,
+		posY:           0,
 		fallWaitTimeMs: 0,
 	}
 
@@ -102,26 +99,26 @@ func CreateGridData(key string, mode TGMode, gridData interface{}) *GridData {
 	return gridData.(*GridData)
 }
 
-func (g *GridData) SetPlayer(userID TUserID) error {
+func (g *GridData) SetPlayer(userID TUserID) (*Player, error) {
 	if g.p1 == nil {
-		g.p1 = newPlayer(userID)
-		return nil
+		g.p1 = newPlayer(userID, 1)
+		return g.p1, nil
 	}
 
 	if g.p1.userID == userID {
-		return nil
+		return g.p1, nil
 	}
 
 	if g.p2 == nil {
-		g.p2 = newPlayer(userID)
-		return nil
+		g.p2 = newPlayer(userID, 2)
+		return g.p2, nil
 	}
 
 	if g.p2.userID == userID {
-		return nil
+		return g.p2, nil
 	}
 
-	return IssueErrorf("UserID is not matched")
+	return nil, IssueErrorf("UserID is not matched")
 }
 
 func (g *GridData) GetPlayer(userID TUserID) (*Player, error) {
@@ -246,11 +243,11 @@ func goPlay(g *GridData, beforeT time.Time) {
 	if g.Mode == EGMODE_PP {
 		//	SendPlayStart(g.p1.userID)
 		//	SendPlayStart(g.p2.userID)
-		SendShapeList(g.p1.userID, g.p1.cnstList)
-		SendShapeList(g.p2.userID, g.p2.cnstList)
+		SendShapeList(g.p1.userID, g.p1, g.p1.cnstList)
+		SendShapeList(g.p2.userID, g.p2, g.p2.cnstList)
 	} else {
 		//	SendPlayStart(g.p1.userID)
-		SendShapeList(g.p1.userID, g.p1.cnstList)
+		SendShapeList(g.p1.userID, g.p1, g.p1.cnstList)
 	}
 
 	//beforeT := time.Now()

@@ -60,6 +60,7 @@ type JoinRoomMsg struct {
 }
 
 type JoinRoomMsgR struct {
+	PlayerNo int
 }
 
 type GetRoomMsg struct {
@@ -106,6 +107,7 @@ type DrawSingleMsgR struct {
 
 type CPlayStartMsg struct {
 	UserID TUserID
+	PlNo   int
 }
 
 type CPlayStartMsgR struct {
@@ -113,6 +115,7 @@ type CPlayStartMsgR struct {
 
 type CPlayEndMsg struct {
 	UserID TUserID
+	PlNo   int
 }
 
 type CPlayEndMsgR struct {
@@ -120,6 +123,7 @@ type CPlayEndMsgR struct {
 
 type CShapeListMsg struct {
 	UserID TUserID
+	PlNo   int
 	Count  int
 	Shapes []string
 }
@@ -129,6 +133,7 @@ type CShapeListMsgR struct {
 
 type CGroupResultFallMsg struct {
 	UserID  TUserID
+	PlNo    int
 	DolKind string
 	Count   int
 	Routes  []POS
@@ -141,6 +146,7 @@ type CGroupResultFallMsgR struct {
 
 type CSingleResultFallMsg struct {
 	UserID  TUserID
+	PlNo    int
 	DolKind string
 	DrawPos POS
 }
@@ -150,6 +156,7 @@ type CSingleResultFallMsgR struct {
 
 type CSingleResultFirmMsg struct {
 	UserID  TUserID
+	PlNo    int
 	DolKind string
 	DrawPos POS
 }
@@ -160,6 +167,7 @@ type CSingleResultFirmMsgR struct {
 //바로 굳을때 사용함.
 type CGroupResultFirmMsg struct {
 	UserID  TUserID
+	PlNo    int
 	DolKind string
 	Count   int
 	Routes  []POS
@@ -171,6 +179,7 @@ type CGroupResultFirmMsgR struct {
 
 type CBlocksFirmMsg struct {
 	UserID TUserID
+	PlNo   int
 	GrpID  int
 	Count  int
 	Routes []POS
@@ -182,6 +191,7 @@ type CBlocksFirmMsgR struct {
 
 type CLinesClearMsg struct {
 	UserID      TUserID
+	PlNo        int
 	Count       int
 	LineIndexes []int
 }
@@ -189,8 +199,20 @@ type CLinesClearMsg struct {
 type CLinesClearMsgR struct {
 }
 
+type CDamagedMsg struct {
+	UserID TUserID
+	PlNo   int
+	Count  int
+	Dmgs   []int
+	HP     int
+}
+
+type CDamagedMsgR struct {
+}
+
 type CGameEndMsg struct {
 	UserID TUserID
+	PlNo   int
 	Status string
 }
 

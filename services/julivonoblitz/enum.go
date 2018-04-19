@@ -5,6 +5,7 @@ import (
 )
 
 const DEFAULT_TICK_MS = 40
+const DEFAULT_HP = 1000
 
 const (
 	EGMODE_SP = iota

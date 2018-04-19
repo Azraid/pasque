@@ -46,7 +46,7 @@ func SendPlayStart(targetUserID TUserID, p *Player) {
 }
 
 func SendShapeList(targetUserID TUserID, p *Player, shapes []TCnst) {
-	req := CShapeListMsg{UserID: p.userID, PlNo: p.playerNo}
+	req := CShapeListMsg{UserID: p.userID, PlNo: p.plNo}
 	req.Count = len(shapes)
 	req.Shapes = make([]string, len(shapes))
 
@@ -69,7 +69,7 @@ func SendShapeList(targetUserID TUserID, p *Player, shapes []TCnst) {
 func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []POS, count int, grpID int) {
 	req := CGroupResultFallMsg{
 		UserID:  p.userID,
-		PlNo:    p.playerNo,
+		PlNo:    p.plNo,
 		DolKind: dol,
 		Routes:  routes,
 		Count:   count,
@@ -97,7 +97,7 @@ func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []P
 func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []POS, count int) {
 	req := CGroupResultFirmMsg{
 		UserID:  p.userID,
-		PlNo:    p.playerNo,
+		PlNo:    p.plNo,
 		DolKind: dol,
 		Routes:  routes,
 		Count:   count,
@@ -118,7 +118,7 @@ func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []P
 func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) {
 	req := CSingleResultFallMsg{
 		UserID:  p.userID,
-		PlNo:    p.playerNo,
+		PlNo:    p.plNo,
 		DolKind: dol,
 		DrawPos: pos,
 	}
@@ -138,7 +138,7 @@ func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) 
 func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) {
 	req := CSingleResultFirmMsg{
 		UserID:  p.userID,
-		PlNo:    p.playerNo,
+		PlNo:    p.plNo,
 		DolKind: dol,
 		DrawPos: pos,
 	}
@@ -158,7 +158,7 @@ func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) 
 func SendLinesClear(targetUserID TUserID, p *Player) {
 	req := CLinesClearMsg{
 		UserID:      p.userID,
-		PlNo:        p.playerNo,
+		PlNo:        p.plNo,
 		LineIndexes: p.burstLines,
 		Count:       len(p.burstLines),
 	}
@@ -178,7 +178,7 @@ func SendLinesClear(targetUserID TUserID, p *Player) {
 func SendBlocksFirm(targetUserID TUserID, p *Player, blocks []*SingleInfo, count int) {
 	req := CBlocksFirmMsg{
 		UserID: p.userID,
-		PlNo:   p.playerNo,
+		PlNo:   p.plNo,
 		Count:  count,
 	}
 
@@ -202,10 +202,31 @@ func SendBlocksFirm(targetUserID TUserID, p *Player, blocks []*SingleInfo, count
 	}
 }
 
+func SendDamaged(targetUserID TUserID, p *Player, damages []int) {
+	req := CDamagedMsg{
+		UserID: p.userID,
+		PlNo:   p.plNo,
+		Count:  len(damages),
+		Dmgs:   damages,
+		HP:     p.hp,
+	}
+
+	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
+		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+			app.ErrorLog(err.Error())
+		} else if res.Header.ErrCode != n.NErrorSucess {
+			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		}
+
+	} else {
+		app.ErrorLog(err.Error())
+	}
+}
+
 func SendGameEnd(targetUserID TUserID, p *Player, status string) {
 	req := CGameEndMsg{
 		UserID: p.userID,
-		PlNo:   p.playerNo,
+		PlNo:   p.plNo,
 		Status: status,
 	}
 

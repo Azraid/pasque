@@ -38,7 +38,10 @@ var _playerOption = playerOption{
 
 type Player struct {
 	userID         co.TUserID
-	playerNo       int
+	plNo           int
+	hp             int
+	comboCnt       int
+	attackDmg      int //==damage
 	stat           int
 	xsize          int
 	xmax           int
@@ -56,7 +59,7 @@ type Player struct {
 	blockInfos   []*SingleInfo
 
 	svrMatrix [][]*ServerBlock
-	
+
 	checkBurstLine []bool
 	burstLines     []int
 	slidingOff     []int
@@ -65,8 +68,8 @@ type Player struct {
 	other          *Player
 }
 
-func newPlayer(userID co.TUserID, playerNo int) *Player {
-	p := &Player{stat: EPSTAT_INIT, userID: userID, playerNo: playerNo}
+func newPlayer(userID co.TUserID, plNo int) *Player {
+	p := &Player{stat: EPSTAT_INIT, userID: userID, plNo: plNo}
 
 	return p
 }
@@ -92,6 +95,8 @@ func (p *Player) PrintSvrMatrix() {
 
 func (p *Player) Init(width int, height int, other *Player) {
 	p.stat = EPSTAT_INIT
+	p.hp = DEFAULT_HP
+	p.comboCnt = 0
 	p.xsize = width
 	p.xmax = width - 1
 	p.ysize = height
@@ -154,7 +159,6 @@ func (p *Player) ShiftCnstQ() {
 	}
 
 	p.cnstOff = 0
-
 }
 
 func (p Player) GetCurrentCnst() TCnst {
@@ -431,6 +435,61 @@ func (p *Player) ClearLines() {
 			p.ClearSvrBlock(POS{X: x, Y: y})
 		}
 	}
+
+	p.attack(burstCnt)
+}
+
+func (p *Player) attack(burstCnt int) {
+	if p.other == nil {
+		return
+	}
+
+	baseDmg := func() int {
+		switch burstCnt {
+		case 0:
+			return 0
+		case 1:
+			return 7
+		case 2:
+			return 15
+		case 3:
+			return 23
+		default:
+			return 40
+		}
+	}()
+	var dmgs []int
+	dmgs = append(dmgs, baseDmg)
+
+	addDmg := func() int {
+		switch p.comboCnt {
+		case 1:
+			return 0
+		case 2:
+			return int(float32(p.attackDmg) * 0.1)
+		case 3:
+			return int(float32(p.attackDmg) * 0.2)
+		default:
+			return int(float32(p.attackDmg) * float32(p.comboCnt) * 0.1)
+		}
+	}()
+
+	dmgs = append(dmgs, addDmg)
+
+	p.attackDmg = 0
+	for _, dmg := range dmgs {
+		p.other.hp -= dmg
+		p.attackDmg += dmg
+	}
+
+	if p.other.hp < 0 {
+		p.other.hp = 0
+	}
+
+	SendDamaged(p.userID, p.other, dmgs)
+	SendDamaged(p.other.userID, p.other, dmgs)
+
+	p.comboCnt++
 }
 
 func (p Player) IsBurstLine(y int) bool {
@@ -489,8 +548,6 @@ func (p *Player) AddFirmBlockInfo(info SingleInfo) {
 
 	*p.blockInfos[p.blockInfoCnt] = info
 	p.blockInfoCnt++
-	//blockInfos[blockInfoCnt].dolKind = info.dolKind;
-	//blockInfos[blockInfoCnt].drawPos = info.drawPos;
 }
 
 func (p *Player) CheckNoRoom() bool {
@@ -585,6 +642,10 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 		}
 		p.ClearLines()
 		p.SlideAllDown()
+	} else {
+		if p.blockInfoCnt > 0 {
+			p.comboCnt = 0
+		}
 	}
 
 	// TODO: Check KO

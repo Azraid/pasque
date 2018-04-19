@@ -170,7 +170,7 @@ func (g *GridData) TryStart() {
 	} else if g.Mode == EGMODE_PE && g.p1.stat == EPSTAT_READY {
 		g.initGame()
 		go goPlay(g, time.Now())
-	} else if g.p1.stat == EPSTAT_READY && g.p2.stat == EPSTAT_READY {
+	} else if g.p1.stat == EPSTAT_READY && g.p2 != nil && g.p2.stat == EPSTAT_READY {
 		g.initGame()
 		go goPlay(g, time.Now())
 	}
@@ -227,7 +227,7 @@ func (g *GridData) initGame() {
 	g.p1.SetCnstList(g.opt.cnsts)
 	if g.Mode == EGMODE_PP {
 		g.p2.Init(g.opt.xsize, g.opt.ysize, g.p1)
-		g.p1.SetCnstList(g.opt.cnsts)
+		g.p2.SetCnstList(g.opt.cnsts)
 	}
 
 	g.GameStat = EGROOM_STAT_READY

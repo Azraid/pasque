@@ -42,9 +42,9 @@ func OnCreateRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 
 	gd := CreateGridData(req.Header.Key, gridData)
 	gd.RoomID = roomID
-	gd.PlayerNo = rbody.PlayerNo
+	gd.PlNo = rbody.PlNo
 
-	cli.SendRes(req, CreateRoomMsgR{RoomID: roomID, PlNo: rbody.PlayerNo})
+	cli.SendRes(req, CreateRoomMsgR{RoomID: roomID, PlNo: rbody.PlNo})
 	return gd
 }
 
@@ -80,9 +80,9 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 
 	gd := CreateGridData(req.Header.Key, gridData)
 	gd.RoomID = body.RoomID
-	gd.PlayerNo = rbody.PlayerNo
+	gd.PlNo = rbody.PlNo
 
-	cli.SendRes(req, JoinRoomMsgR{PlayerNo: gd.PlayerNo})
+	cli.SendRes(req, JoinRoomMsgR{PlNo: gd.PlNo})
 	return gd
 }
 

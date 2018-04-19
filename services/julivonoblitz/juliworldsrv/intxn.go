@@ -41,7 +41,7 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, "set player"), nil)
 		return g
 	} else {
-		cli.SendRes(req, JoinRoomMsgR{PlayerNo: p.playerNo})
+		cli.SendRes(req, JoinRoomMsgR{PlNo: p.plNo})
 		return g
 	}
 }

@@ -60,7 +60,7 @@ type JoinRoomMsg struct {
 }
 
 type JoinRoomMsgR struct {
-	PlayerNo int
+	PlNo int
 }
 
 type GetRoomMsg struct {

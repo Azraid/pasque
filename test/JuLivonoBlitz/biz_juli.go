@@ -47,18 +47,18 @@ func (p CnstMngr) GetCnstSize() int {
 	return len(p.cnstList)
 }
 
+var g_plNo int
 var g_gameRoomID string
 var g_cnst CnstMngr
 
 func DoCreateGameRoom(mode string) {
-
-	//fmt.Println("create room,", mode)
 	req := juli.CreateRoomMsg{Mode: strings.ToUpper(mode)}
 	if res, err := g_cli.SendReq("JuliUser", "CreateRoom", req); err == nil {
 		var rbody juli.CreateRoomMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err == nil {
 			g_gameRoomID = rbody.RoomID
+			g_plNo = rbody.PlNo
 		} else {
 			fmt.Println("CreateGameRoom fail", err.Error())
 		}
@@ -72,6 +72,7 @@ func DoJoinGame(roomID string) {
 
 		if err := json.Unmarshal(res.Body, &rbody); err == nil {
 			g_gameRoomID = roomID
+			g_plNo = rbody.PlNo
 		} else {
 			fmt.Println("CreateGameRoom fail", err.Error())
 		}
@@ -207,6 +208,11 @@ func OnCShapeList(cli *client, req *n.RequestMsg) {
 		return
 	}
 
+	if g_plNo != body.PlNo {
+		g_cli.SendRes(req, juli.CShapeListMsgR{})
+		return
+	}
+
 	g_cnst.cnstList = make([]juli.TCnst, body.Count)
 	var err error
 	for k, v := range body.Shapes {
@@ -237,15 +243,25 @@ func OnCPlayEnd(cli *client, req *n.RequestMsg) {
 
 func OnCGroupResultFall(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CGroupResultFallMsgR{})
-
 }
 
 func OnCSingleResultFall(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CSingleResultFallMsgR{})
-
 }
 
 func OnCSingleResultFirm(cli *client, req *n.RequestMsg) {
+	var body juli.CSingleResultFirmMsg
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
+		return
+	}
+
+	if g_plNo != body.PlNo {
+		g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
+		return
+	}
+
 	g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
 
 	if g_auto {
@@ -254,14 +270,37 @@ func OnCSingleResultFirm(cli *client, req *n.RequestMsg) {
 }
 
 func OnCGroupResultFirm(cli *client, req *n.RequestMsg) {
+	var body juli.CGroupResultFirmMsg
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
+		return
+	}
+
+	if g_plNo != body.PlNo {
+		g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
+		return
+	}
+
 	g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
 	if g_auto {
 		go DoDrawGroup()
 	}
-
 }
 
 func OnCBlocksFirm(cli *client, req *n.RequestMsg) {
+	var body juli.CBlocksFirmMsg
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
+		return
+	}
+
+	if g_plNo != body.PlNo {
+		g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
+		return
+	}
+
 	g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
 
 	if g_auto {

@@ -6,7 +6,7 @@ import (
 	"github.com/Azraid/pasque/app"
 	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/auth"
-	juli "github.com/Azraid/pasque/services/julivonoblitz"
+	juli "github.com/Azraid/pasque/services/juli"
 )
 
 func OnGetUserLocation(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {

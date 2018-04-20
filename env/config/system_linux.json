@@ -64,15 +64,25 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "JuliWorldSrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"26699"                                            }
+                    {   "Eid" : "JuliWorldSrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"auto"                                            }
+                ]
+           },
+	   {   "Spn" : "Match", 
+                "Gates" : [
+                    {   "Eid" : "Match.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                ],
+                
+                "Providers" : [
+                    {   "Eid" : "MatchSrv.1",          "Exec" : "match",    		"ConsolePort":"auto"                                            }
                 ]
            }
+
     ],
         
     "TcNodes" : [
-            {   "Spn" : "Julivonoblitz.Tcgate", 
+            {   "Spn" : "Juli.Tcgate", 
                 "Gates" : [
-                    {   "Eid" : "Julivonoblitz.Tcgate.1", "ListenAddr": "127.0.0.1:8815",     "ConsolePort":"26698"    }
+                    {   "Eid" : "Juli.Tcgate.1", "ListenAddr": "127.0.0.1:8815",     "ConsolePort":"26698"    }
                 ]
             }
     ]

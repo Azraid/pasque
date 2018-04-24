@@ -28,17 +28,10 @@ func main() {
 	app.InitApp(eid, "", workPath)
 
 	g_cli = n.NewClient(eid)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayReady)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
+	g_cli.RegisterRandHandler(n.GetNameOfApiMsg(MatchPlayMsg{}), OnMatchPlay)
+	g_cli.RegisterRandHandler(n.GetNameOfApiMsg(LeaveWaitingMsg{}), OnLeaveWaiting)
 
-	toplgy := n.Topology{
-		Spn:           app.Config.Spn,
-		FederatedKey:  "RoomID",
-		FederatedApis: g_cli.ListGridApis()}
+	toplgy := n.Topology{Spn: app.Config.Spn}
 
 	g_cli.Dial(toplgy)
 

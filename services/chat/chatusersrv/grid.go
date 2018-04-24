@@ -21,3 +21,4 @@ func getGridData(key co.TUserID, gridData interface{}) *GridData {
 
 	return gridData.(*GridData)
 }
+

@@ -49,6 +49,10 @@ func (e nerror) Code() int {
 	return e.code
 }
 
+func (e nerror) IsSuccess() bool {
+	return e.code == NErrorSucess
+}
+
 func Sucess() NError {
 	return nerror{code: NErrorSucess, text: "Sucess"}
 }

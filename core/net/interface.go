@@ -47,6 +47,7 @@ type GridData interface {
 type NError interface {
 	Code() int
 	Error() string
+	IsSuccess() bool
 }
 
 type WriteCloser interface {

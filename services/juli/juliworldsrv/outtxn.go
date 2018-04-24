@@ -29,41 +29,9 @@ func getUserLocation(userID TUserID) (string, string, string, string, error) {
 }
 
 func SendPlayStart(targetUserID TUserID, p *Player) {
-	req := CPlayStartMsg{
-		UserID: p.userID,
-	}
+	req := CPlayStartMsg{UserID: p.userID}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
-		}
-
-	} else {
-		app.ErrorLog(err.Error())
-	}
-}
-
-func SendShapeList(targetUserID TUserID, p *Player, shapes []TCnst) {
-	req := CShapeListMsg{UserID: p.userID, PlNo: p.plNo}
-	req.Count = len(shapes)
-	req.Shapes = make([]string, len(shapes))
-
-	for k, v := range shapes {
-		req.Shapes[k] = v.String()
-	}
-
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
-		}
-
-	} else {
-		app.ErrorLog(err.Error())
-	}
+	g_cli.SendReq("JuliUser", n.GetNameOfApiMsg(req), req)
 }
 
 func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []POS, count int, grpID int) {
@@ -223,21 +191,12 @@ func SendDamaged(targetUserID TUserID, p *Player, damages []int) {
 	}
 }
 
-func SendGameEnd(targetUserID TUserID, p *Player, status string) {
-	req := CGameEndMsg{
+func SendCPlayEnd(targetUserID TUserID, p *Player, status TEnd) {
+	req := CPlayEndMsg{
 		UserID: p.userID,
 		PlNo:   p.plNo,
-		Status: status,
+		Status: status.String(),
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
-		}
-
-	} else {
-		app.ErrorLog(err.Error())
-	}
+	g_cli.SendNoti("JuliUser", n.GetNameOfApiMsg(req), req)
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Azraid/pasque/app"
-
+	. "github.com/Azraid/pasque/core"
 	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/juli"
 )
@@ -34,7 +34,7 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 	}()
 
 	if g.Mode != mode {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzGameModeMissMatch, "GMode error"), nil)
+		cli.SendResWithError(req, RaiseNError(NErrorjuliGameModeMissMatch, "GMode error"), nil)
 		return g
 	}
 	if p, err := g.SetPlayer(body.UserID); err != nil {
@@ -48,7 +48,6 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 
 //GetRoom 전투방 정보에 대한 요청
 func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
-
 	var body GetRoomMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
@@ -57,7 +56,7 @@ func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{
 	}
 
 	if gridData == nil {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
 			nil)
 		return gridData
 	}
@@ -66,10 +65,10 @@ func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{
 	res := GetRoomMsgR{Mode: g.Mode.String()}
 
 	res.Players[0].UserID = g.p1.userID
-	res.Players[0].Index = 0
+	res.Players[0].PlNo = g.p1.plNo
 
 	res.Players[1].UserID = g.p2.userID
-	res.Players[1].Index = 1
+	res.Players[1].PlNo = g.p2.plNo
 
 	if err := cli.SendRes(req, res); err != nil {
 		app.ErrorLog(err.Error())
@@ -78,8 +77,21 @@ func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{
 	return gridData
 }
 
-func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
+func doCPlayEnd(cli n.Client, userID TUserID, status TEnd) n.NError {
+	req := CPlayEndMsg{
+		UserID: userID,
+		Status: status.String(),
+	}
 
+	err := cli.SendNoti("JuliUser", n.GetNameOfApiMsg(req), req)
+	if err != nil {
+		return RaiseNError(n.NErrorInternal, err.Error())
+	}
+
+	return RaiseNError(n.NErrorSucess)
+}
+
+func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body LeaveRoomMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
@@ -88,7 +100,7 @@ func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	}
 
 	if gridData == nil {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
 			nil)
 		return gridData
 	}
@@ -97,15 +109,22 @@ func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	g.Lock()
 	defer g.Unlock()
 
+	if p, err := g.GetPlayer(body.UserID); err == nil {
+		if p.other != nil {
+			doCPlayEnd(cli, p.other.userID, EEND_CANCEL)
+		}
+	}
+
 	g.RemovePlayer(body.UserID)
+	if g.IsNull() {
+		g = nil
+	}
 
 	res := GetRoomMsgR{}
 
 	if err := cli.SendRes(req, res); err != nil {
 		app.ErrorLog(err.Error())
 	}
-	//todo noti... counter part
-
 	return g
 }
 
@@ -118,19 +137,34 @@ func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	}
 
 	if gridData == nil {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
 			nil)
 		return gridData
 	}
 
 	g := gridData.(*GridData)
+	g.Lock()
+	defer g.Unlock()
 
-	if err := g.SetPlayerStatus(body.UserID, EPSTAT_READY); err != nil {
+	if err := g.PlayReady(body.UserID); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, err.Error()), nil)
 		return gridData
 	}
 
-	if err := cli.SendRes(req, PlayReadyMsgR{}); err != nil {
+	p, err := g.GetPlayer(body.UserID)
+	if err != nil {
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal, err.Error()), nil)
+		return g
+	}
+
+	res := PlayReadyMsgR{}
+	res.Count = p.cnstList
+	res.Shapes = make([]string, len(p.cnstList))
+	for k, v := range p.cnstList {
+		res.Shapes[k] = v.String()
+	}
+
+	if err := cli.SendRes(req, res); err != nil {
 		app.ErrorLog(err.Error())
 	}
 
@@ -160,7 +194,7 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	}
 
 	if gridData == nil {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
 			nil)
 		return gridData
 	}
@@ -168,7 +202,7 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	g := gridData.(*GridData)
 
 	if g.GameStat != EGROOM_STAT_PLAY_READY && g.GameStat != EGROOM_STAT_PLAYING {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
 
 		return g
 	}
@@ -185,14 +219,14 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	for i := 0; i < body.Count; i++ {
 		if !p.ValidIndex(body.Routes[i]) {
-			cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzInvalidIndex, fmt.Sprintf("UserID:%s", body.UserID)),
+			cli.SendResWithError(req, RaiseNError(NErrorjuliInvalidIndex, fmt.Sprintf("UserID:%s", body.UserID)),
 				nil)
 
 			return g
 		}
 
 		if !p.AbleToGenerate(body.Routes[i]) {
-			cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotEmptySpace, fmt.Sprintf("UserID:%s", body.UserID)),
+			cli.SendResWithError(req, RaiseNError(NErrorjuliNotEmptySpace, fmt.Sprintf("UserID:%s", body.UserID)),
 				nil)
 
 			return g
@@ -201,7 +235,7 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	grpID := p.GetFreeGroupID()
 	if grpID < 0 {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzResourceFull, fmt.Sprintf("UserID:%s", body.UserID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliResourceFull, fmt.Sprintf("UserID:%s", body.UserID)),
 			nil)
 
 		return g
@@ -263,7 +297,7 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	}
 
 	if gridData == nil {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, fmt.Sprintf("roomID[%s]", body.RoomID)),
 			nil)
 		return gridData
 	}
@@ -271,7 +305,7 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	g := gridData.(*GridData)
 
 	if g.GameStat != EGROOM_STAT_PLAY_READY && g.GameStat != EGROOM_STAT_PLAYING {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
 
 		return g
 	}
@@ -287,14 +321,14 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	}
 
 	if !p.ValidIndex(body.DrawPos) {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzInvalidIndex),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliInvalidIndex),
 			nil)
 
 		return g
 	}
 
 	if !p.AbleToGenerate(body.DrawPos) {
-		cli.SendResWithError(req, RaiseNError(NErrorJulivonoblitzNotEmptySpace),
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotEmptySpace),
 			nil)
 
 		return g

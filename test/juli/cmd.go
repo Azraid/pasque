@@ -26,7 +26,7 @@ func autoCommand(token string) {
 
 	DoLoginToken(token)
 	DoCreateGameRoom("SP")
-	DoPlayReady()
+	DoGameReady()
 }
 
 func command(args ...string) bool {
@@ -79,7 +79,7 @@ func command(args ...string) bool {
 		}
 
 	case "play":
-		DoPlayReady()
+		DoGameReady()
 
 	case "d":
 		fallthrough

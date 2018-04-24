@@ -1,4 +1,4 @@
-package julivonoblitz
+package juli
 
 import (
 	. "github.com/Azraid/pasque/core"
@@ -6,13 +6,14 @@ import (
 )
 
 const (
-	NErrorJulivonoblitzNotFoundRoomID    = 13000
-	NErrorJulivonoblitzNotPlaying        = 13100
-	NErrorJulivonoblitzServerBusy        = 13101
-	NErrorJulivonoblitzResourceFull      = 13102
-	NErrorJulivonoblitzInvalidIndex      = 13103
-	NErrorJulivonoblitzNotEmptySpace     = 13104
-	NErrorJulivonoblitzGameModeMissMatch = 13105
+	NErrorjuliNotFoundRoomID    = 13000
+	NErrorjuliNotPlaying        = 13100
+	NErrorjuliServerBusy        = 13101
+	NErrorjuliResourceFull      = 13102
+	NErrorjuliInvalidIndex      = 13103
+	NErrorjuliNotEmptySpace     = 13104
+	NErrorjuliGameModeMissMatch = 13105
+	NErrorjuliGameRunning       = 13106
 )
 
 func ErrorName(code int) string {
@@ -21,20 +22,22 @@ func ErrorName(code int) string {
 	}
 
 	switch code {
-	case NErrorJulivonoblitzNotFoundRoomID:
-		return "NErrorJulivonoblitzNotFoundRoomID"
-	case NErrorJulivonoblitzNotPlaying:
-		return "NErrorJulivonoblitzNotPlaying"
-	case NErrorJulivonoblitzServerBusy:
-		return "NErrorJulivonoblitzServerBusy"
-	case NErrorJulivonoblitzResourceFull:
-		return "NErrorJulivonoblitzResourceFull"
-	case NErrorJulivonoblitzInvalidIndex:
-		return "NErrorJulivonoblitzInvalidIndex"
-	case NErrorJulivonoblitzNotEmptySpace:
-		return "NErrorJulivonoblitzNotEmptySpace"
-	case NErrorJulivonoblitzGameModeMissMatch:
-		return "NErrorJulivonoblitzGameModeMissMatch"
+	case NErrorjuliNotFoundRoomID:
+		return "NErrorjuliNotFoundRoomID"
+	case NErrorjuliNotPlaying:
+		return "NErrorjuliNotPlaying"
+	case NErrorjuliServerBusy:
+		return "NErrorjuliServerBusy"
+	case NErrorjuliResourceFull:
+		return "NErrorjuliResourceFull"
+	case NErrorjuliInvalidIndex:
+		return "NErrorjuliInvalidIndex"
+	case NErrorjuliNotEmptySpace:
+		return "NErrorjuliNotEmptySpace"
+	case NErrorjuliGameModeMissMatch:
+		return "NErrorjuliGameModeMissMatch"
+	case NErrorjuliGameRunning:
+		return "NErrorjuliGameRunning"
 	}
 
 	return "NErrorUnknown"
@@ -53,36 +56,57 @@ type POS struct {
 	Y int
 }
 
+//JoinInMsg of /juliuser
+type JoinInMsg struct {
+	UserID TUserID
+	Mode   string
+}
+type JoinInMsgR struct {
+	Nick  string
+	Grade int
+}
+
+//LeaveRoomMsg of /juliuser, /juliworld  cli -> juliuesr ->juliworld
+type LeaveRoomMsg struct {
+	UserID TUserID
+	RoomID string
+}
+type LeaveRoomMsgR struct {
+}
+
+//JoinRoomMsg of /juliworld
 type JoinRoomMsg struct {
 	RoomID string
 	UserID TUserID
 	Mode   string
 }
-
 type JoinRoomMsgR struct {
 	PlNo int
 }
 
+//JoinRoomMsg of /juliworld
 type GetRoomMsg struct {
 	RoomID string
 }
-
 type GetRoomMsgR struct {
 	Mode    string
 	Players [2]struct {
 		UserID TUserID
-		Index  int
+		PlNo   int
 	}
 }
 
+//PlayReadyMsg of /juliuser, /juliworld
 type PlayReadyMsg struct {
 	UserID TUserID
 	RoomID string
 }
-
 type PlayReadyMsgR struct {
+	Count  int
+	Shapes []string
 }
 
+//DrawGroupMsg of /juliuser, /juliworld
 type DrawGroupMsg struct {
 	UserID  TUserID
 	DolKind string
@@ -90,45 +114,41 @@ type DrawGroupMsg struct {
 	Routes  []POS
 	RoomID  string
 }
-
 type DrawGroupMsgR struct {
 	UserID TUserID
 }
 
+//DrawSingleMsgR of /juliuser, /juliworld
 type DrawSingleMsg struct {
 	UserID  TUserID
 	DolKind string
 	DrawPos POS
 	RoomID  string
 }
-
 type DrawSingleMsgR struct {
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
+//CMatchUpMsg of /jliuser
+type CMatchUpMsg struct {
+	UserID   TUserID
+	RoomID   string
+	PlNo     int
+	Opponent struct {
+		UserID TUserID
+		Nick   string
+		Grade  int
+	}
+}
+type CMatchUpMsgR struct {
 }
 
 type CPlayStartMsg struct {
 	UserID TUserID
-	PlNo   int
 }
 
 type CPlayStartMsgR struct {
-}
-
-type CPlayEndMsg struct {
-	UserID TUserID
-	PlNo   int
-}
-
-type CPlayEndMsgR struct {
-}
-
-type CShapeListMsg struct {
-	UserID TUserID
-	PlNo   int
-	Count  int
-	Shapes []string
-}
-
-type CShapeListMsgR struct {
 }
 
 type CGroupResultFallMsg struct {
@@ -210,11 +230,12 @@ type CDamagedMsg struct {
 type CDamagedMsgR struct {
 }
 
-type CGameEndMsg struct {
+//CPlayEnd  juliworld -> juliuser -> cli
+type CPlayEndMsg struct {
 	UserID TUserID
 	PlNo   int
 	Status string
 }
 
-type CGameEndMsgR struct {
+type CPlayEndMsgR struct {
 }

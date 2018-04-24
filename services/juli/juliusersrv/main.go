@@ -28,10 +28,10 @@ func main() {
 	app.InitApp(eid, "", workPath)
 
 	cli := n.NewClient(eid)
-	cli.RegisterGridHandler(n.GetNameOfApiMsg(CreateRoomMsg{}), OnCreateRoom)
-	cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinInMsg{}), OnJoinIn)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(CPlayStartMsg{}), OnCPlayStart)
+	cli.RegisterGridHandler(n.GetNameOfApiMsg(CPlayEndMsg{}), OnCPlayEnd)
 	cli.RegisterGridHandler(n.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
-	cli.RegisterGridHandler(n.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayRead)
 	cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
 	cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
 

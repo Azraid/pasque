@@ -1,4 +1,4 @@
-package julivonoblitz
+package juli
 
 import (
 	. "github.com/Azraid/pasque/core"
@@ -48,9 +48,7 @@ const (
 )
 
 const (
-	EGROOM_STAT_NONE = iota
-	EGROOM_STAT_INIT
-	EGROOM_STAT_READY
+	EGROOM_STAT_INIT = iota
 	EGROOM_STAT_PLAY_READY
 	EGROOM_STAT_PLAYING
 	EGROOM_STAT_END
@@ -60,12 +58,8 @@ type TGStat int
 
 func (v TGStat) String() string {
 	switch v {
-	case EGROOM_STAT_NONE:
-		return "NONE"
 	case EGROOM_STAT_INIT:
 		return "INIT"
-	case EGROOM_STAT_READY:
-		return "READY"
 	case EGROOM_STAT_PLAY_READY:
 		return "PLAY_READY"
 	case EGROOM_STAT_PLAYING:
@@ -79,12 +73,8 @@ func (v TGStat) String() string {
 
 func ParseTGStat(s string) TGStat {
 	switch s {
-	case "NONE":
-		return EGROOM_STAT_NONE
 	case "INIT":
 		return EGROOM_STAT_INIT
-	case "READY":
-		return EGROOM_STAT_READY
 	case "PLAY_READY":
 		return EGROOM_STAT_PLAY_READY
 	case "PLAYING":
@@ -664,6 +654,7 @@ const (
 	EEND_LKO
 	EEND_DRAW
 	EEND_RANK
+	EEND_SYSERR
 )
 
 type TEnd int
@@ -684,6 +675,8 @@ func (v TEnd) String() string {
 		return "DRAW"
 	case EEND_RANK:
 		return "RANK"
+	case EEND_SYSERR:
+		return "SYSERR"
 	case EEND_NONE:
 		return "NONE"
 	default:

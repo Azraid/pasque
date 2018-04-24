@@ -88,95 +88,15 @@ type GridData struct {
 
 var procTimer time.Duration = time.Millisecond * DEFAULT_TICK_MS
 
-func CreateGridData(key string, mode TGMode, gridData interface{}) *GridData {
-	if gridData == nil {
+func CreateGridData(key string, mode TGMode, gridData interface{}) (g *GridData) {
+	if gridData != nil {
+		g = gridData.(*GridData)
+	} else {
 		g := &GridData{GameStat: EGROOM_STAT_NONE, Mode: mode}
 		g.lock = new(sync.RWMutex)
 		g.tick = time.NewTicker(procTimer)
-		return g
 	}
 
-	return gridData.(*GridData)
-}
-
-func (g *GridData) SetPlayer(userID TUserID) (*Player, error) {
-	if g.p1 == nil {
-		g.p1 = newPlayer(userID, 1)
-		return g.p1, nil
-	}
-
-	if g.p1.userID == userID {
-		return g.p1, nil
-	}
-
-	if g.p2 == nil {
-		g.p2 = newPlayer(userID, 2)
-		return g.p2, nil
-	}
-
-	if g.p2.userID == userID {
-		return g.p2, nil
-	}
-
-	return nil, IssueErrorf("UserID is not matched")
-}
-
-func (g *GridData) GetPlayer(userID TUserID) (*Player, error) {
-	if g.p1 != nil && g.p1.userID == userID {
-		return g.p1, nil
-	}
-
-	if g.p2 != nil && g.p2.userID == userID {
-		return g.p2, nil
-	}
-
-	return nil, IssueErrorf("Not found Player")
-}
-
-func (g *GridData) SetPlayerStatus(userID TUserID, status int) error {
-	if p, err := g.GetPlayer(userID); err != nil {
-		return err
-	} else {
-		p.stat = status
-		return nil
-	}
-}
-
-func (g *GridData) RemovePlayer(userID TUserID) {
-	if g.p1 != nil && g.p1.userID == userID {
-		g.p1 = nil
-		g.GameStat = EGROOM_STAT_END
-		if g.p2 != nil {
-			g.p2.stat = EPSTAT_STOP
-		}
-
-	} else if g.p2 != nil && g.p2.userID == userID {
-		g.p2 = nil
-		g.GameStat = EGROOM_STAT_END
-		if g.p1 != nil {
-			g.p1.stat = EPSTAT_STOP
-		}
-	}
-
-	if g.p1 == nil && g.p2 == nil {
-		g.Final()
-	}
-}
-
-func (g *GridData) TryStart() {
-	if g.Mode == EGMODE_SP && g.p1.stat == EPSTAT_READY {
-		g.initGame()
-		go goPlay(g, time.Now())
-	} else if g.Mode == EGMODE_PE && g.p1.stat == EPSTAT_READY {
-		g.initGame()
-		go goPlay(g, time.Now())
-	} else if g.p1.stat == EPSTAT_READY && g.p2 != nil && g.p2.stat == EPSTAT_READY {
-		g.initGame()
-		go goPlay(g, time.Now())
-	}
-}
-
-func (g *GridData) initGame() {
 	g.opt = &GameOption{
 		responseDelayTimeMs: 0,
 		xsize:               7,
@@ -223,31 +143,114 @@ func (g *GridData) initGame() {
 	// Padding Full Same Set
 	g.opt.cnsts = append(g.opt.cnsts, g.opt.cnsts...)
 
-	g.p1.Init(g.opt.xsize, g.opt.ysize, g.p2)
-	g.p1.SetCnstList(g.opt.cnsts)
-	if g.Mode == EGMODE_PP {
-		g.p2.Init(g.opt.xsize, g.opt.ysize, g.p1)
-		g.p2.SetCnstList(g.opt.cnsts)
+	g.GameStat = EGROOM_STAT_INIT
+}
+
+func (g *GridData) SetPlayer(userID TUserID) (*Player, error) {
+	if g.p1 == nil {
+		g.p1 = newPlayer(userID, 1)
+		return g.p1, nil
 	}
 
-	g.GameStat = EGROOM_STAT_READY
+	if g.p1.userID == userID {
+		return g.p1, nil
+	}
+
+	if g.p2 == nil {
+		g.p2 = newPlayer(userID, 2)
+		g.p1.other = g.p2
+		g.p2.other = g.p1
+		return g.p2, nil
+	}
+
+	if g.p2.userID == userID {
+		g.p1.other = g.p2
+		g.p2.other = g.p1
+		return g.p2, nil
+	}
+
+	return nil, IssueErrorf("UserID is not matched")
+}
+
+func (g *GridData) GetPlayer(userID TUserID) (*Player, error) {
+	if g.p1 != nil && g.p1.userID == userID {
+		return g.p1, nil
+	}
+
+	if g.p2 != nil && g.p2.userID == userID {
+		return g.p2, nil
+	}
+
+	return nil, IssueErrorf("Not found Player")
+}
+
+func (g *GridData) PlayReady(userID TUserID) error {
+	p, err := g.GetPlayer(userID)
+	if err != nil {
+		return err
+	}
+	p.Init(g.opt.xsize, g.opt.ysize)
+	p.SetCnstList(g.opt.cnsts)
+
+	return nil
+}
+
+func (g *GridData) RemovePlayer(userID TUserID) {
+	if g.p1 != nil && g.p1.userID == userID {
+		g.p1 = nil
+		g.GameStat = EGROOM_STAT_END
+		if g.p2 != nil {
+			g.p2.stat = EPSTAT_STOP
+		}
+
+	} else if g.p2 != nil && g.p2.userID == userID {
+		g.p2 = nil
+		g.GameStat = EGROOM_STAT_END
+		if g.p1 != nil {
+			g.p1.stat = EPSTAT_STOP
+		}
+	}
+
+	if g.p1 == nil && g.p2 == nil {
+		g.Final()
+	}
+}
+
+func (g *GridData) IsNull() bool {
+	if g.p1 == nil && g.p2 == nil && g.tick == nil {
+		return true
+	}
+	return false
+}
+
+func (g *GridData) TryStart() bool {
+	if g.Mode == EGMODE_SP && g.p1.stat == EPSTAT_READY {
+		go goPlay(g, time.Now())
+		return true
+	} else if g.Mode == EGMODE_PE && g.p1.stat == EPSTAT_READY {
+		go goPlay(g, time.Now())
+		return true
+	} else if g.p1.stat == EPSTAT_READY && g.p2 != nil && g.p2.stat == EPSTAT_READY {
+		go goPlay(g, time.Now())
+		return true
+	}
+	return false
 }
 
 func (g *GridData) Final() {
 	g.tick.Stop()
+	g.tick = nil
 }
 
 func goPlay(g *GridData, beforeT time.Time) {
 	g.GameStat = EGROOM_STAT_PLAY_READY
 
 	if g.Mode == EGMODE_PP {
-		//	SendPlayStart(g.p1.userID)
-		//	SendPlayStart(g.p2.userID)
-		SendShapeList(g.p1.userID, g.p1, g.p1.cnstList)
-		SendShapeList(g.p2.userID, g.p2, g.p2.cnstList)
+		SendPlayStart(g.p1.userID)
+		SendPlayStart(g.p2.userID)
+
 	} else {
-		//	SendPlayStart(g.p1.userID)
-		SendShapeList(g.p1.userID, g.p1, g.p1.cnstList)
+		SendPlayStart(g.p1.userID)
 	}
 
 	//beforeT := time.Now()

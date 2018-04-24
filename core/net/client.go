@@ -101,7 +101,6 @@ func (cli *client) SendReqDirect(spn string, gateEid string, eid string, api str
 
 	txnNo := cli.newTxnNo()
 
-	//header := ReqHeader{Spn: cli.gateSpn, ToEid: app.App.Eid, Api: api, TxnNo: txnNo}
 	header := ReqHeader{Spn: spn, ToGateEid: gateEid, ToEid: eid, Api: api, TxnNo: txnNo}
 	out, neterr := BuildMsgPack(header, body)
 	if neterr != nil {

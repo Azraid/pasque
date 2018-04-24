@@ -93,8 +93,8 @@ func (p *Player) PrintSvrMatrix() {
 	}
 }
 
-func (p *Player) Init(width int, height int, other *Player) {
-	p.stat = EPSTAT_INIT
+func (p *Player) Init(width int, height int) {
+	p.stat = EPSTAT_READY
 	p.hp = DEFAULT_HP
 	p.comboCnt = 0
 	p.xsize = width
@@ -109,7 +109,6 @@ func (p *Player) Init(width int, height int, other *Player) {
 	p.groupIdx = 0
 	p.blockInfoCnt = 0
 	p.playTimeMs = 0
-	p.other = other
 
 	p.svrGroups = make([]*ServerGroup, _playerOption.grpSize)
 	p.blockInfos = make([]*SingleInfo, _playerOption.blockInfoSize)

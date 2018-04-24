@@ -31,6 +31,10 @@ func ToUserID(v string) TUserID {
 	return TUserID(v)
 }
 
+func (userID TUserID) IsZero() bool {
+	return len(userID) == 0
+}
+
 func (t TimeNZone) MarshalJSON() ([]byte, error) {
 	b := make([]byte, 0, len(TIME_LAYOUT)+2)
 	b = append(b, '"')

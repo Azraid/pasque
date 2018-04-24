@@ -15,7 +15,7 @@ var g_auto bool = false
 func main() {
 
 	if len(os.Args) < 2 {
-		fmt.Println("ex) julivonoblitz.exe server:port eid spn")
+		fmt.Println("ex) juli.exe server:port eid spn")
 		os.Exit(1)
 	}
 
@@ -41,7 +41,7 @@ func main() {
 	g_cli.RegisterRandHandler("CGroupResultFirm", OnCGroupResultFirm)
 	g_cli.RegisterRandHandler("CBlocksFirm", OnCBlocksFirm)
 	g_cli.RegisterRandHandler("CLinesClear", OnCLinesClear)
-	g_cli.RegisterRandHandler("CGameEnd", OnCGameEnd)
+	g_cli.RegisterRandHandler("CPlayEnd", OnCPlayEnd)
 
 	for !g_cli.rw.IsConnected() {
 		time.Sleep(1 * time.Second)

@@ -79,14 +79,14 @@ func DoJoinGame(roomID string) {
 	}
 }
 
-func DoPlayReady() {
-	req := juli.PlayReadyMsg{}
+func DoGameReady() {
+	req := juli.GameReadyMsg{}
 
-	if res, err := g_cli.SendReq("JuliUser", "PlayReady", req); err == nil {
-		var rbody juli.PlayReadyMsgR
+	if res, err := g_cli.SendReq("JuliUser", "GameReady", req); err == nil {
+		var rbody juli.GameReadyMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err != nil {
-			fmt.Println("Send PlayReady fail", err.Error())
+			fmt.Println("Send GameReady fail", err.Error())
 		}
 	}
 }
@@ -187,7 +187,7 @@ func DoDrawGroup() {
 	if res, err := g_cli.SendReq("JuliUser", "DrawGroup", req); err == nil {
 
 		if g_auto {
-			if res.Header.ErrCode == juli.NErrorJulivonoblitzNotEmptySpace {
+			if res.Header.ErrCode == juli.NErrorjuliNotEmptySpace {
 				os.Exit(1)
 			}
 		}
@@ -312,7 +312,7 @@ func OnCLinesClear(cli *client, req *n.RequestMsg) {
 	g_cli.SendRes(req, juli.CLinesClearMsgR{})
 }
 
-func OnCGameEnd(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CGameEndMsgR{})
+func OnCPlayEnd(cli *client, req *n.RequestMsg) {
+	g_cli.SendRes(req, juli.CPlayEndMsgR{})
 	os.Exit(1)
 }

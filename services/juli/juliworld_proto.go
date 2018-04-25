@@ -139,6 +139,7 @@ type CMatchUpMsg struct {
 		UserID TUserID
 		Nick   string
 		Grade  int
+		PlNo   int
 	}
 }
 type CMatchUpMsgR struct {

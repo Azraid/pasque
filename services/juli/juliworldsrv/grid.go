@@ -92,7 +92,7 @@ func CreateGridData(key string, mode TGMode, gridData interface{}) (g *GridData)
 	if gridData != nil {
 		g = gridData.(*GridData)
 	} else {
-		g := &GridData{GameStat: EGROOM_STAT_NONE, Mode: mode}
+		g = &GridData{GameStat: EGROOM_STAT_INIT, Mode: mode}
 		g.lock = new(sync.RWMutex)
 		g.tick = time.NewTicker(procTimer)
 	}
@@ -144,6 +144,7 @@ func CreateGridData(key string, mode TGMode, gridData interface{}) (g *GridData)
 	g.opt.cnsts = append(g.opt.cnsts, g.opt.cnsts...)
 
 	g.GameStat = EGROOM_STAT_INIT
+	return g
 }
 
 func (g *GridData) SetPlayer(userID TUserID) (*Player, error) {
@@ -243,14 +244,14 @@ func (g *GridData) Final() {
 }
 
 func goPlay(g *GridData, beforeT time.Time) {
-	g.GameStat = EGROOM_STAT_PLAY_READY
+	g.GameStat = EGROOM_STAT_READY
 
 	if g.Mode == EGMODE_PP {
-		SendPlayStart(g.p1.userID)
-		SendPlayStart(g.p2.userID)
+		SendPlayStart(g.p1.userID, g.p1)
+		SendPlayStart(g.p2.userID, g.p2)
 
 	} else {
-		SendPlayStart(g.p1.userID)
+		SendPlayStart(g.p1.userID, g.p1)
 	}
 
 	//beforeT := time.Now()
@@ -280,7 +281,7 @@ func (g *GridData) Go(elapsedTimeMs int) {
 		}
 	}()
 
-	if g.GameStat != EGROOM_STAT_PLAY_READY {
+	if g.GameStat != EGROOM_STAT_READY {
 		return
 	}
 
@@ -299,7 +300,7 @@ func (g *GridData) Go(elapsedTimeMs int) {
 		}
 	}
 
-	g.GameStat = EGROOM_STAT_PLAY_READY
+	g.GameStat = EGROOM_STAT_READY
 }
 
 func (g *GridData) Lock() {

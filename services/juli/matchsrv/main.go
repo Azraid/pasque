@@ -9,7 +9,7 @@ import (
 	. "github.com/Azraid/pasque/services/juli"
 )
 
-var g_cli n.Client
+var rpcx n.Client
 
 func main() {
 
@@ -27,13 +27,13 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	g_cli = n.NewClient(eid)
-	g_cli.RegisterRandHandler(n.GetNameOfApiMsg(MatchPlayMsg{}), OnMatchPlay)
-	g_cli.RegisterRandHandler(n.GetNameOfApiMsg(LeaveWaitingMsg{}), OnLeaveWaiting)
+	rpcx = n.NewClient(eid)
+	rpcx.RegisterRandHandler(n.GetNameOfApiMsg(MatchPlayMsg{}), OnMatchPlay)
+	rpcx.RegisterRandHandler(n.GetNameOfApiMsg(LeaveWaitingMsg{}), OnLeaveWaiting)
 
 	toplgy := n.Topology{Spn: app.Config.Spn}
 
-	g_cli.Dial(toplgy)
+	rpcx.Dial(toplgy)
 
 	app.WaitForShutdown()
 	return

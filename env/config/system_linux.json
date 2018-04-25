@@ -15,74 +15,74 @@
     },
 
     "Routers" : [
-                    {   "Eid" : "Router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
+                    {   "Eid" : "router.1",             "ListenAddr": "127.0.0.1:auto",         "ConsolePort":"auto"     }
                    
     ],
         
     "SNodes" : [   
-            {   "Spn" : "Session", 
+            {   "Spn" : "session", 
                 "Gates" : [
-                    {   "Eid" : "Session.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "session.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "SessionSrv.1",           "Exec": "sesssrv",  			 "ConsolePort":"auto"                                            }
+                    {   "Eid" : "sessionsrv.1",           "Exec": "sesssrv",  			 "ConsolePort":"auto"                                            }
                 ]
             },
  
-            {   "Spn" : "ChatRoom", 
+            {   "Spn" : "chatroom", 
                 "Gates" : [
-                    {   "Eid" : "ChatRoom.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "chatroom.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "ChatRoomSrv.1",           "Exec": "chatroomsrv",	  	 "ConsolePort":"auto"                                            }
+                    {   "Eid" : "chatroomsrv.1",           "Exec": "chatroomsrv",	  	 "ConsolePort":"auto"                                            }
                 ]
             },
 
-	    {   "Spn" : "ChatUser", 
+	    {   "Spn" : "chatuser", 
                 "Gates" : [
-                    {   "Eid" : "ChatUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "chatuser.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "ChatUserSrv.1",           "Exec" : "chatusersrv",   		"ConsolePort":"auto"                                            }
+                    {   "Eid" : "chatusersrv.1",           "Exec" : "chatusersrv",   		"ConsolePort":"auto"                                            }
                 ]
            },
-	   {   "Spn" : "JuliUser", 
+	   {   "Spn" : "juliuser", 
                 "Gates" : [
-                    {   "Eid" : "JuliUser.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "juliuser.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "JuliUserSrv.1",           "Exec" : "juliusersrv",   		"ConsolePort":"auto"                                            }
+                    {   "Eid" : "juliusersrv.1",           "Exec" : "juliusersrv",   		"ConsolePort":"auto"                                            }
                 ]
            },
-	   {   "Spn" : "JuliWorld", 
+	   {   "Spn" : "juliworld", 
                 "Gates" : [
-                    {   "Eid" : "JuliWorld.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "juliworld.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "JuliWorldSrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"auto"                                            }
+                    {   "Eid" : "juliworldsrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"auto"                                            }
                 ]
            },
-	   {   "Spn" : "Match", 
+	   {   "Spn" : "match", 
                 "Gates" : [
-                    {   "Eid" : "Match.Gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
+                    {   "Eid" : "match.gate.1",         "ListenAddr": "127.0.0.1:auto",        "ConsolePort":"auto"     }
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "MatchSrv.1",          "Exec" : "match",    		"ConsolePort":"auto"                                            }
+                    {   "Eid" : "matchsrv.1",          "Exec" : "matchsrv",    		"ConsolePort":"auto"                                            }
                 ]
            }
 
     ],
         
     "TcNodes" : [
-            {   "Spn" : "Juli.Tcgate", 
+            {   "Spn" : "juli.tcgate", 
                 "Gates" : [
-                    {   "Eid" : "Juli.Tcgate.1", "ListenAddr": "127.0.0.1:8815",     "ConsolePort":"26698"    }
+                    {   "Eid" : "juli.tcgate.1", "ListenAddr": "127.0.0.1:8815",     "ConsolePort":"26698"    }
                 ]
             }
     ]

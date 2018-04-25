@@ -10,12 +10,10 @@ import (
 	. "github.com/Azraid/pasque/services/juli"
 )
 
-const GameSpn = "Julivonoblitz.Tcgate"
+func doGetUserLocation(userID TUserID) (string, string, string, string, error) {
+	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameTcGateSpn}
 
-func getUserLocation(userID TUserID) (string, string, string, string, error) {
-	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameSpn}
-
-	res, err := g_cli.SendReq("Session", n.GetNameOfApiMsg(req), req)
+	res, err := rpcx.SendReq(SpnSession, n.GetNameOfApiMsg(req), req)
 	if err != nil {
 		return "", "", "", "", err
 	}
@@ -25,13 +23,13 @@ func getUserLocation(userID TUserID) (string, string, string, string, error) {
 		return "", "", "", "", err
 	}
 
-	return GameSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
+	return GameTcGateSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
 }
 
 func SendPlayStart(targetUserID TUserID, p *Player) {
 	req := CPlayStartMsg{UserID: p.userID}
 
-	g_cli.SendReq("JuliUser", n.GetNameOfApiMsg(req), req)
+	rpcx.SendReq(SpnJuliUser, n.GetNameOfApiMsg(req), req)
 }
 
 func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []POS, count int, grpID int) {
@@ -50,8 +48,8 @@ func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []P
 		req.ObjIDs[k] = v.objID
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -71,8 +69,8 @@ func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []P
 		Count:   count,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -91,8 +89,8 @@ func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) 
 		DrawPos: pos,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -111,8 +109,8 @@ func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) 
 		DrawPos: pos,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -131,8 +129,8 @@ func SendLinesClear(targetUserID TUserID, p *Player) {
 		Count:       len(p.burstLines),
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -158,8 +156,8 @@ func SendBlocksFirm(targetUserID TUserID, p *Player, blocks []*SingleInfo, count
 		req.ObjIDs[i] = blocks[i].objID
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -179,8 +177,8 @@ func SendDamaged(targetUserID TUserID, p *Player, damages []int) {
 		HP:     p.hp,
 	}
 
-	if spn, gateEid, eid, _, err := getUserLocation(targetUserID); err == nil {
-		if res, err := g_cli.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
+		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
 			app.ErrorLog(err.Error())
 		} else if res.Header.ErrCode != n.NErrorSucess {
 			app.ErrorLog(PrintNError(res.Header.ErrCode))
@@ -198,5 +196,5 @@ func SendCPlayEnd(targetUserID TUserID, p *Player, status TEnd) {
 		Status: status.String(),
 	}
 
-	g_cli.SendNoti("JuliUser", n.GetNameOfApiMsg(req), req)
+	rpcx.SendNoti(SpnJuliUser, n.GetNameOfApiMsg(req), req)
 }

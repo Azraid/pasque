@@ -10,6 +10,20 @@ import (
 	. "github.com/Azraid/pasque/services/juli"
 )
 
+func doCPlayEnd(cli n.Client, userID TUserID, status TEnd) n.NError {
+	req := CPlayEndMsg{
+		UserID: userID,
+		Status: status.String(),
+	}
+
+	err := cli.SendNoti(SpnJuliUser, n.GetNameOfApiMsg(req), req)
+	if err != nil {
+		return RaiseNError(n.NErrorInternal, err.Error())
+	}
+
+	return RaiseNError(n.NErrorSucess)
+}
+
 func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body JoinRoomMsg
 
@@ -75,20 +89,6 @@ func OnGetRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{
 	}
 
 	return gridData
-}
-
-func doCPlayEnd(cli n.Client, userID TUserID, status TEnd) n.NError {
-	req := CPlayEndMsg{
-		UserID: userID,
-		Status: status.String(),
-	}
-
-	err := cli.SendNoti("JuliUser", n.GetNameOfApiMsg(req), req)
-	if err != nil {
-		return RaiseNError(n.NErrorInternal, err.Error())
-	}
-
-	return RaiseNError(n.NErrorSucess)
 }
 
 func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
@@ -158,7 +158,7 @@ func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	}
 
 	res := PlayReadyMsgR{}
-	res.Count = p.cnstList
+	res.Count = len(p.cnstList)
 	res.Shapes = make([]string, len(p.cnstList))
 	for k, v := range p.cnstList {
 		res.Shapes[k] = v.String()
@@ -201,7 +201,7 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	g := gridData.(*GridData)
 
-	if g.GameStat != EGROOM_STAT_PLAY_READY && g.GameStat != EGROOM_STAT_PLAYING {
+	if g.GameStat != EGROOM_STAT_READY && g.GameStat != EGROOM_STAT_PLAYING {
 		cli.SendResWithError(req, RaiseNError(NErrorjuliNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
 
 		return g
@@ -304,7 +304,7 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 
 	g := gridData.(*GridData)
 
-	if g.GameStat != EGROOM_STAT_PLAY_READY && g.GameStat != EGROOM_STAT_PLAYING {
+	if g.GameStat != EGROOM_STAT_READY && g.GameStat != EGROOM_STAT_PLAYING {
 		cli.SendResWithError(req, RaiseNError(NErrorjuliNotPlaying, fmt.Sprintf("game stat %s", g.GameStat.String())), nil)
 
 		return g

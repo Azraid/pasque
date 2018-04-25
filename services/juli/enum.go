@@ -7,6 +7,7 @@ import (
 const DEFAULT_TICK_MS = 40
 const DEFAULT_HP = 1000
 
+
 const (
 	EGMODE_SP = iota
 	EGMODE_PP
@@ -49,7 +50,7 @@ const (
 
 const (
 	EGROOM_STAT_INIT = iota
-	EGROOM_STAT_PLAY_READY
+	EGROOM_STAT_READY
 	EGROOM_STAT_PLAYING
 	EGROOM_STAT_END
 )
@@ -60,8 +61,8 @@ func (v TGStat) String() string {
 	switch v {
 	case EGROOM_STAT_INIT:
 		return "INIT"
-	case EGROOM_STAT_PLAY_READY:
-		return "PLAY_READY"
+	case EGROOM_STAT_READY:
+		return "READY"
 	case EGROOM_STAT_PLAYING:
 		return "PLAYING"
 	case EGROOM_STAT_END:
@@ -76,9 +77,9 @@ func ParseTGStat(s string) TGStat {
 	case "INIT":
 		return EGROOM_STAT_INIT
 	case "PLAY_READY":
-		return EGROOM_STAT_PLAY_READY
+		return EGROOM_STAT_READY
 	case "PLAYING":
-		return EGROOM_STAT_PLAY_READY
+		return EGROOM_STAT_READY
 	case "END":
 		return EGROOM_STAT_END
 	default:

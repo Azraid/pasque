@@ -272,7 +272,7 @@ func goStubHandle(stb *stub) {
 				h.FromEids = n.PushToEids(stb.remoteEid, h.FromEids)
 
 				loginTxn := false
-				if h.Spn == "Session" && h.Api == "LoginToken" {
+				if h.Spn == co.SpnSession && h.Api == "LoginToken" {
 					loginTxn = true
 				}
 

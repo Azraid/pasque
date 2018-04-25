@@ -9,6 +9,7 @@ const (
 	NErrorChatNotFoundRoomID = 3000
 )
 
+
 func ErrorName(code int) string {
 	if code < 100 {
 		return n.CoErrorName(code)

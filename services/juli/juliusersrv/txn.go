@@ -11,9 +11,9 @@ import (
 )
 
 func doGetUserLocation(cli n.Client, userID TUserID) (string, string, string, string, error) {
-	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameSpn}
+	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameTcGateSpn}
 
-	res, err := cli.SendReq("Session", n.GetNameOfApiMsg(req), req)
+	res, err := cli.SendReq(SpnSession, n.GetNameOfApiMsg(req), req)
 	if err != nil {
 		return "", "", "", "", err
 	}
@@ -23,14 +23,14 @@ func doGetUserLocation(cli n.Client, userID TUserID) (string, string, string, st
 		return "", "", "", "", err
 	}
 
-	return GameSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
+	return GameTcGateSpn, rbody.GateEid, rbody.Eid, rbody.SessionID, nil
 }
 
 func doJoinRoom(cli n.Client, roomID string, userID TUserID, mode TGMode) (int, n.NError) {
 	req := JoinRoomMsg{RoomID: roomID,
 		UserID: userID,
 		Mode:   mode.String()}
-	r, err := cli.SendReq("JuliWorld", n.GetNameOfApiMsg(req), req)
+	r, err := cli.SendReq(SpnJuliWorld, n.GetNameOfApiMsg(req), req)
 
 	if err != nil {
 		return 0, RaiseNError(n.NErrorInternal, err.Error())
@@ -46,7 +46,7 @@ func doJoinRoom(cli n.Client, roomID string, userID TUserID, mode TGMode) (int, 
 	return rbody.PlNo, RaiseNError(n.NErrorSucess)
 }
 
-func doMatchUp(cli n.Client, roomID string, userID TUserID, plNo int, oppUserID TUserID) n.NError {
+func doMatchUp(cli n.Client, roomID string, userID TUserID, plNo int, oppUserID TUserID, oppPlNo int) n.NError {
 	req := CMatchUpMsg{
 		RoomID: roomID,
 		UserID: userID,
@@ -56,8 +56,9 @@ func doMatchUp(cli n.Client, roomID string, userID TUserID, plNo int, oppUserID 
 		req.Opponent.UserID = oppUserID
 		req.Opponent.Nick = `수지`
 		req.Opponent.Grade = 1
+		req.Opponent.PlNo = oppPlNo
 	}
-	err := cli.SendNoti("JuliUser", n.GetNameOfApiMsg(req), req)
+	err := cli.SendNoti(SpnJuliUser, n.GetNameOfApiMsg(req), req)
 	if err != nil {
 		return RaiseNError(n.NErrorInternal, err.Error())
 	}
@@ -71,7 +72,7 @@ func doLeaveRoom(cli n.Client, roomID string, userID TUserID) n.NError {
 		UserID: userID,
 	}
 
-	err := cli.SendNoti("JuliWorld", n.GetNameOfApiMsg(req), req)
+	err := cli.SendNoti(SpnJuliWorld, n.GetNameOfApiMsg(req), req)
 	if err != nil {
 		return RaiseNError(n.NErrorInternal, err.Error())
 	}
@@ -97,7 +98,7 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 	if len(gd.RoomID) > 0 {
 		doLeaveRoom(cli, gd.RoomID, gd.UserID)
 		emreq := LeaveWaitingMsg{UserID: body.UserID}
-		cli.SendReq("Match", n.GetNameOfApiMsg(emreq), emreq)
+		cli.SendReq(SpnMatch, n.GetNameOfApiMsg(emreq), emreq)
 		cli.SendResWithError(req, RaiseNError(NErrorjuliGameRunning), nil)
 		gd.ClearRoom()
 		return gd
@@ -107,7 +108,7 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 
 	if gmode == EGMODE_PP {
 		_matchPlay := MatchPlayMsg{UserID: gd.UserID, Grade: 1}
-		res, err := cli.SendReq("Match", n.GetNameOfApiMsg(_matchPlay), _matchPlay)
+		res, err := cli.SendReq(SpnMatch, n.GetNameOfApiMsg(_matchPlay), _matchPlay)
 		if err != nil {
 			cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 			return gd
@@ -136,10 +137,10 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 				return gd
 			}
 
-			cli.SendRes(req, PlayReadyMsgR{})
+			cli.SendRes(req, JoinInMsgR{Nick:`송혜교`, Grade:1})
 
-			doMatchUp(cli, roomID, rbody.OwnerID, ownerPlNo, rbody.GuestID)
-			doMatchUp(cli, roomID, rbody.GuestID, guestPlNo, rbody.OwnerID)
+			doMatchUp(cli, roomID, rbody.OwnerID, ownerPlNo, rbody.GuestID, guestPlNo)
+			doMatchUp(cli, roomID, rbody.GuestID, guestPlNo, rbody.OwnerID, ownerPlNo)
 
 			return gd
 		}
@@ -150,12 +151,51 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 			return gd
 		}
 
-		doMatchUp(cli, roomID, gd.UserID, plNo, TUserID(""))
+		doMatchUp(cli, roomID, gd.UserID, plNo, TUserID(""), 0)
 	}
 
-	cli.SendRes(req, PlayReadyMsgR{})
+	cli.SendRes(req, JoinInMsgR{Nick:`송혜교`, Grade:1})
 	return gd
 }
+
+
+func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
+	var body PlayReadyMsg
+
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		app.ErrorLog(err.Error())
+		cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
+		return gridData
+	}
+
+	if gridData == nil {
+		cli.SendResWithError(req, RaiseNError(NErrorjuliNotFoundRoomID, "not join room yet"), nil)
+		return gridData
+	}
+
+	gd := gridData.(*GridData)
+	body.RoomID = gd.RoomID
+
+	if r, err := cli.SendReq(SpnJuliWorld, n.GetNameOfApiMsg(body), body); err != nil {
+		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
+		return gd
+	} else if r.Header.ErrCode != n.NErrorSucess {
+		cli.SendResWithError(req, r.Header.GetError(), nil)
+		return gd
+	} else {
+		var rbody PlayReadyMsgR
+		if err := json.Unmarshal(r.Body, &rbody); err != nil {
+			app.ErrorLog(err.Error())
+			cli.SendResWithError(req, RaiseNError(n.NErrorParsingError), nil)
+			return gd
+		}
+
+		cli.SendRes(req, rbody)
+	}
+
+	return gd
+}
+
 
 func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body LeaveRoomMsg
@@ -167,7 +207,7 @@ func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	}
 
 	emreq := LeaveWaitingMsg{UserID: body.UserID}
-	cli.SendReq("Match", n.GetNameOfApiMsg(emreq), emreq)
+	cli.SendReq(SpnMatch, n.GetNameOfApiMsg(emreq), emreq)
 
 	if gridData != nil {
 		gd := gridData.(*GridData)
@@ -198,7 +238,7 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 	gd := gridData.(*GridData)
 	body.RoomID = gd.RoomID
 
-	if r, err := cli.SendReq("JuliWorld", "DrawGroup", body); err != nil {
+	if r, err := cli.SendReq(SpnJuliWorld, "DrawGroup", body); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gd
 	} else if r.Header.ErrCode != n.NErrorSucess {
@@ -235,7 +275,7 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	gd := gridData.(*GridData)
 	body.RoomID = gd.RoomID
 
-	if r, err := cli.SendReq("JuliWorld", "DrawSingle", body); err != nil {
+	if r, err := cli.SendReq(SpnJuliWorld, "DrawSingle", body); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gd
 	} else if r.Header.ErrCode != n.NErrorSucess {

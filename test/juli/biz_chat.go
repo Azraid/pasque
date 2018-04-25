@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	. "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/app"
 	n "github.com/Azraid/pasque/core/net"
 	"github.com/Azraid/pasque/services/chat"
@@ -14,7 +15,7 @@ var g_roomID string
 func DoCreateChatRoom() {
 
 	req := chat.CreateRoomMsg{}
-	if res, err := g_cli.SendReq("ChatUser", "CreateRoom", req); err == nil {
+	if res, err := rpcx.SendReq(SpnChatUser, "CreateRoom", req); err == nil {
 		var rbody chat.CreateRoomMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err == nil {
@@ -28,7 +29,7 @@ func DoCreateChatRoom() {
 func DoListMyRooms() {
 
 	req := chat.ListMyRoomsMsg{}
-	if res, err := g_cli.SendReq("ChatUser", "ListMyRooms", req); err == nil {
+	if res, err := rpcx.SendReq(SpnChatUser, "ListMyRooms", req); err == nil {
 		var rbody chat.ListMyRoomsMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err == nil {
@@ -42,7 +43,7 @@ func DoListMyRooms() {
 func DoSendChat(data string) {
 	req := chat.SendChatMsg{RoomID: g_roomID, ChatType: 1, Msg: data}
 
-	if res, err := g_cli.SendReq("ChatUser", "SendChat", req); err == nil {
+	if res, err := rpcx.SendReq(SpnChatUser, "SendChat", req); err == nil {
 		var rbody chat.SendChatMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err != nil {
@@ -55,7 +56,7 @@ func DoJoinRoom(roomID string) {
 	g_roomID = roomID
 	req := chat.JoinRoomMsg{RoomID: g_roomID}
 
-	if res, err := g_cli.SendReq("ChatUser", "JoinRoom", req); err == nil {
+	if res, err := rpcx.SendReq(SpnChatUser, "JoinRoom", req); err == nil {
 		var rbody chat.JoinRoomMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err != nil {
@@ -73,5 +74,5 @@ func OnRecvChat(cli *client, req *n.RequestMsg) {
 	}
 
 	var rbody chat.RecvChatMsgR
-	g_cli.SendRes(req, rbody)
+	rpcx.SendRes(req, rbody)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 	n "github.com/Azraid/pasque/core/net"
 	. "github.com/Azraid/pasque/services/auth"
 	juli "github.com/Azraid/pasque/services/juli"
@@ -48,7 +49,7 @@ func OnCreateSession(cli n.Client, req *n.RequestMsg, gridData interface{}) inte
 		g = GetGridData(gridData)
 		if !g.Validate(body.GateSpn, body.GateEid, body.GateEid) {
 			//TODO Kick()....
-			cli.SendReq("JuliUser", "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
+			cli.SendReq(SpnJuliUser, "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
 			app.DebugLog("shoud be kick. different from %s, %v", g, req.Header)
 			//우선 update
 			g.ResetSession(body.GateSpn, body.GateEid, body.Eid)
@@ -123,7 +124,7 @@ func OnLogout(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 
 	if g := GetGridData(gridData); g != nil {
 		//TODO: pub/sub으로 구현해야 함.
-		cli.SendReq("JuliUser", "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
+		cli.SendReq(SpnJuliUser, "LeaveRoom", juli.LeaveRoomMsg{UserID: g.UserID})
 		g.DeleteSession(body.GateSpn)
 	}
 

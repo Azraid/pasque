@@ -236,7 +236,6 @@ func (p *Player) ClearSvrBlock(pos POS) bool {
 	p.svrMatrix[pos.X][pos.Y].dolKind = EDOL_NORMAL_MAX
 	p.svrMatrix[pos.X][pos.Y].dolStat = EDSTAT_NONE
 	p.svrMatrix[pos.X][pos.Y].posY = float32(0.0)
-	//p.svrMatrix[pos.X][pos.Y].atTimeMs = 0
 	p.svrMatrix[pos.X][pos.Y].fallWaitTimeMs = 0
 
 	return true
@@ -649,9 +648,9 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 
 	// TODO: Check KO
 	if p.CheckNoRoom() {
-		SendGameEnd(p.userID, p, TEnd(EEND_LKO).String())
+		SendCPlayEnd(p.userID, p, EEND_LKO)
 		if p.other != nil {
-			SendGameEnd(p.other.userID, p, TEnd(EEND_LKO).String())
+			SendCPlayEnd(p.other.userID, p, EEND_LKO)
 		}
 	}
 }

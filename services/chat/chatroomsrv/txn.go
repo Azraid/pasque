@@ -84,7 +84,7 @@ func OnSendChat(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 			Msg:        body.Msg,
 		}
 
-		cli.SendNoti("ChatUser", "RecvChat", chatuserReq)
+		cli.SendNoti(SpnChatUser, "RecvChat", chatuserReq)
 	}
 
 	return gd

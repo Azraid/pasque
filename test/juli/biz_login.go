@@ -15,7 +15,7 @@ func DoLoginToken(token string) {
 	fmt.Println("logintoken-", token)
 
 	req := auth.LoginTokenMsg{Token: token}
-	res, err := g_cli.SendReq("Session", "LoginToken", req)
+	res, err := rpcx.SendReq(SpnSession, "LoginToken", req)
 	if err == nil && res.Header.ErrCode == n.NErrorSucess {
 		fmt.Println("login ok!")
 

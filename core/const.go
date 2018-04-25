@@ -22,3 +22,11 @@ const (
 	GridContextCleanTimeoutSec = 300
 	GridCtxSize                = 64
 )
+
+const SpnChatRoom = "chatroom"
+const SpnChatUser = "chatuser"
+const GameTcGateSpn = "juli.tcgate"
+const SpnJuliUser = "juliuser"
+const SpnJuliWorld = "juliworld"
+const SpnMatch = "match"
+const SpnSession = "session"

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	. "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/app"
 	n "github.com/Azraid/pasque/core/net"
 	juli "github.com/Azraid/pasque/services/juli"
@@ -36,7 +37,6 @@ func (p *CnstMngr) ShiftCnstQ() {
 	}
 
 	p.cnstOff = 0
-
 }
 
 func (p CnstMngr) GetCurrentCnst() juli.TCnst {
@@ -51,43 +51,43 @@ var g_plNo int
 var g_gameRoomID string
 var g_cnst CnstMngr
 
-func DoCreateGameRoom(mode string) {
-	req := juli.CreateRoomMsg{Mode: strings.ToUpper(mode)}
-	if res, err := g_cli.SendReq("JuliUser", "CreateRoom", req); err == nil {
-		var rbody juli.CreateRoomMsgR
-
-		if err := json.Unmarshal(res.Body, &rbody); err == nil {
-			g_gameRoomID = rbody.RoomID
-			g_plNo = rbody.PlNo
-		} else {
-			fmt.Println("CreateGameRoom fail", err.Error())
-		}
-	}
-}
-
-func DoJoinGame(roomID string) {
-	req := juli.JoinRoomMsg{RoomID: roomID, Mode: strings.ToUpper("PP")}
-	if res, err := g_cli.SendReq("JuliUser", "JoinRoom", req); err == nil {
-		var rbody juli.JoinRoomMsgR
-
-		if err := json.Unmarshal(res.Body, &rbody); err == nil {
-			g_gameRoomID = roomID
-			g_plNo = rbody.PlNo
-		} else {
-			fmt.Println("CreateGameRoom fail", err.Error())
-		}
-	}
-}
-
-func DoGameReady() {
-	req := juli.GameReadyMsg{}
-
-	if res, err := g_cli.SendReq("JuliUser", "GameReady", req); err == nil {
-		var rbody juli.GameReadyMsgR
+func DoJoinIn(mode string) {
+	req := juli.JoinInMsg{Mode: strings.ToUpper(mode)}
+	if res, err := rpcx.SendReq(SpnJuliUser, "JoinIn", req); err == nil {
+		var rbody juli.JoinInMsgR
 
 		if err := json.Unmarshal(res.Body, &rbody); err != nil {
-			fmt.Println("Send GameReady fail", err.Error())
+			fmt.Println("CreateGameRoom fail", err.Error())
+			return
 		}
+
+		<-matchUpC
+	}
+}
+
+func DoPlayReady() {
+	req := juli.PlayReadyMsg{}
+
+	if res, err := rpcx.SendReq(SpnJuliUser, "PlayReady", req); err == nil {
+		var rbody juli.PlayReadyMsgR
+
+		if err := json.Unmarshal(res.Body, &rbody); err != nil {
+			fmt.Println("Send PlayReady fail", err.Error())
+			return
+		}
+
+		g_cnst.cnstList = make([]juli.TCnst, rbody.Count)
+		var err error
+		for k, v := range rbody.Shapes {
+			if g_cnst.cnstList[k], err = juli.ParseTCnst(v); err != nil {
+				return
+			}
+		}
+		g_cnst.cnstIdx = 0
+		g_cnst.cnstOff = 0
+		g_cnst.cnstSize = rbody.Count
+
+		<-playStartC
 	}
 }
 
@@ -184,7 +184,7 @@ func DoDrawGroup() {
 	req.Routes = getDolRoutes(dol)
 	req.Count = len(req.Routes)
 
-	if res, err := g_cli.SendReq("JuliUser", "DrawGroup", req); err == nil {
+	if res, err := rpcx.SendReq(SpnJuliUser, "DrawGroup", req); err == nil {
 
 		if g_auto {
 			if res.Header.ErrCode == juli.NErrorjuliNotEmptySpace {
@@ -200,53 +200,36 @@ func DoDrawGroup() {
 	}
 }
 
-func OnCShapeList(cli *client, req *n.RequestMsg) {
-	var body juli.CShapeListMsg
+func OnCMatchUp(cli *client, req *n.RequestMsg) {
+	var body juli.CMatchUpMsg
 	if err := json.Unmarshal(req.Body, &body); err != nil {
 		app.ErrorLog(err.Error())
 		cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
 		return
 	}
 
-	if g_plNo != body.PlNo {
-		g_cli.SendRes(req, juli.CShapeListMsgR{})
-		return
-	}
+	g_gameRoomID = body.RoomID
+	g_userID = body.UserID
+	g_plNo = body.PlNo
 
-	g_cnst.cnstList = make([]juli.TCnst, body.Count)
-	var err error
-	for k, v := range body.Shapes {
-		if g_cnst.cnstList[k], err = juli.ParseTCnst(v); err != nil {
-			cli.SendResWithError(req, RaiseNError(NErrorGameClientError), nil)
-			return
-		}
-	}
-	g_cnst.cnstIdx = 0
-	g_cnst.cnstOff = 0
-	g_cnst.cnstSize = body.Count
+	cli.SendRes(req, juli.CMatchUpMsgR{})
+	matchUpC <- true
+}
 
-	var rbody juli.CShapeListMsgR
-	g_cli.SendRes(req, rbody)
-
+func OnCPlayStart(cli *client, req *n.RequestMsg) {
+	rpcx.SendRes(req, juli.CPlayStartMsgR{})
+	playStartC <- true
 	if g_auto {
 		go DoDrawGroup()
 	}
 }
 
-func OnCPlayStart(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CPlayStartMsgR{})
-}
-
-func OnCPlayEnd(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CPlayEndMsgR{})
-}
-
 func OnCGroupResultFall(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CGroupResultFallMsgR{})
+	rpcx.SendRes(req, juli.CGroupResultFallMsgR{})
 }
 
 func OnCSingleResultFall(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CSingleResultFallMsgR{})
+	rpcx.SendRes(req, juli.CSingleResultFallMsgR{})
 }
 
 func OnCSingleResultFirm(cli *client, req *n.RequestMsg) {
@@ -258,11 +241,11 @@ func OnCSingleResultFirm(cli *client, req *n.RequestMsg) {
 	}
 
 	if g_plNo != body.PlNo {
-		g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
+		rpcx.SendRes(req, juli.CSingleResultFirmMsgR{})
 		return
 	}
 
-	g_cli.SendRes(req, juli.CSingleResultFirmMsgR{})
+	rpcx.SendRes(req, juli.CSingleResultFirmMsgR{})
 
 	if g_auto {
 		go DoDrawGroup()
@@ -278,11 +261,11 @@ func OnCGroupResultFirm(cli *client, req *n.RequestMsg) {
 	}
 
 	if g_plNo != body.PlNo {
-		g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
+		rpcx.SendRes(req, juli.CGroupResultFirmMsgR{})
 		return
 	}
 
-	g_cli.SendRes(req, juli.CGroupResultFirmMsgR{})
+	rpcx.SendRes(req, juli.CGroupResultFirmMsgR{})
 	if g_auto {
 		go DoDrawGroup()
 	}
@@ -297,11 +280,11 @@ func OnCBlocksFirm(cli *client, req *n.RequestMsg) {
 	}
 
 	if g_plNo != body.PlNo {
-		g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
+		rpcx.SendRes(req, juli.CBlocksFirmMsgR{})
 		return
 	}
 
-	g_cli.SendRes(req, juli.CBlocksFirmMsgR{})
+	rpcx.SendRes(req, juli.CBlocksFirmMsgR{})
 
 	if g_auto {
 		go DoDrawGroup()
@@ -309,10 +292,10 @@ func OnCBlocksFirm(cli *client, req *n.RequestMsg) {
 }
 
 func OnCLinesClear(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CLinesClearMsgR{})
+	rpcx.SendRes(req, juli.CLinesClearMsgR{})
 }
 
 func OnCPlayEnd(cli *client, req *n.RequestMsg) {
-	g_cli.SendRes(req, juli.CPlayEndMsgR{})
+	rpcx.SendRes(req, juli.CPlayEndMsgR{})
 	os.Exit(1)
 }

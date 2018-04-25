@@ -14,7 +14,7 @@
             "host": "127.0.0.1",
             "program": "${fileDirname}",
             "env": {},
-            "args": ["JuliWorldSrv.1", "$GOPATH/bin/pasque/linux"],
+            "args": ["juliworldsrv.1", "$GOPATH/bin/pasque/linux"],
             "showLog": true
         }
     ]

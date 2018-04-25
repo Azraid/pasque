@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/Azraid/pasque/app"
+
 	co "github.com/Azraid/pasque/core"
 )
 
@@ -23,9 +25,10 @@ type WaitingRoom struct {
 	closeC  chan bool
 }
 
-var wr WaitingRoom
+var wr *WaitingRoom
 
 func init() {
+	wr = &WaitingRoom{}
 	wr.players = make(map[co.TUserID]*Player)
 	wr.reqC = make(chan ChannelMessage)
 	wr.closeC = make(chan bool)
@@ -99,8 +102,10 @@ func MatchPlayer(player *Player) (co.TUserID, bool) {
 
 			if !userID.IsZero() {
 				delete(oo.players, userID)
+				app.DebugLog("match found %s vs %s", pl.userID, userID)
 			} else { //there is no matching oppertunity
 				oo.players[pl.userID] = pl
+				app.DebugLog("match not found %s", pl.userID)
 			}
 
 			Result <- userID
@@ -109,5 +114,5 @@ func MatchPlayer(player *Player) (co.TUserID, bool) {
 	}
 	opp := <-result
 
-	return opp.(co.TUserID), opp.(co.TUserID).IsZero()
+	return opp.(co.TUserID), !opp.(co.TUserID).IsZero()
 }

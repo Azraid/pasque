@@ -1,30 +1,16 @@
 #!/bin/bash
-if ["$1" = "bg" ]; then
-	nohup ./router Router.1 > router.1.out & 
-	nohup ./sgate Session.Gate.1 > session.sgate.1.out &
-	nohup ./sgate ChatRoom.Gate.1 > chatroom.sgate.1.out &
-	nohup ./sgate ChatUser.Gate.1 > chatuser.sgate.1.out &
-	nohup ./sgate JuliWorld.Gate.1 > juliworld.sgate.1.out &
-	nohup ./sgate JuliUser.Gate.1 > juliuser.sgate.1.out &
-	nohup ./tcgate juli.Tcgate.1 > juli.tcgate.1.out &
-	nohup ./sesssrv SessionSrv.1 > sessionsrv.1.out &
-	nohup ./chatroomsrv ChatRoomSrv.1 > ChatRoomSrv.1.out &
-	nohup ./chatusersrv CharUserSrv.1 > ChatUserSrv.1.out &
-	nohup ./juliworldsrv JuliWorldSrv.1 > JuliWorldSrv.1.out &
-	nohup ./juliusersrv JuliUserSrv.1 > JuliUserSrv.1.out &
-	xterm -e ./juli 127.0.0.1:37701 juli juli.Tcgate &
 
-else
-	xterm -T Router.1 -e ./router Router.1 &
-	xterm -T Session.Gate.1 -e ./sgate Session.Gate.1 &
-	xterm -T Chatroom.Gate.1 -e ./sgate ChatRoom.Gate.1 &
-	xterm -T CharUser.Gate.1 -e ./sgate ChatUser.Gate.1 &
-	xterm -T JuliWorld.Gate.1 -e ./sgate JuliWorld.Gate.1 &
-	xterm -T JUliUser.Gate.1 -e ./sgate JuliUser.Gate.1 &
-	xterm -T juli.TcGate.1 -e ./tcgate juli.Tcgate.1 &
-	xterm -T SessionSrv.1 -e ./sesssrv SessionSrv.1 &
-	xterm -T ChatRoomSrv.1 -e ./chatroomsrv ChatRoomSrv.1 &
-	xterm -T ChatUserSrv.1 -e ./chatusersrv ChatUserSrv.1 &
-	xterm -T JuliWorldSrv.1 -e ./juliworldsrv JuliWorldSrv.1 &
-	xterm -T JuliJUserSrv.1 -e ./juliusersrv JuliUserSrv.1 &
-fi 
+	xterm -T router.1 -e ./router router.1 &
+	xterm -T session.gate.1 -e ./sgate session.gate.1 &
+	xterm -T chatroom.gate.1 -e ./sgate chatroom.gate.1 &
+	xterm -T charuser.gate.1 -e ./sgate chatuser.gate.1 &
+	xterm -T juliworld.gate.1 -e ./sgate juliworld.gate.1 &
+	xterm -T juliuser.gate.1 -e ./sgate juliuser.gate.1 &
+	xterm -T match.gate.1 -e ./sgate match.gate.1 &
+	xterm -T juli.tcgate.1 -e ./tcgate juli.tcgate.1 &
+	xterm -T sessionsrv.1 -e ./sesssrv sessionsrv.1 &
+	xterm -T chatroomsrv.1 -e ./chatroomsrv chatroomsrv.1 &
+	xterm -T chatusersrv.1 -e ./chatusersrv chatusersrv.1 &
+	xterm -T juliworldsrv.1 -e ./juliworldsrv juliworldsrv.1 &
+	xterm -T julijusersrv.1 -e ./juliusersrv juliusersrv.1 &
+	xterm -T matchsrv.1 -e ./matchsrv matchsrv.1 &

@@ -32,7 +32,7 @@ func newGate(listenAddr string) *Gate {
 }
 
 func (srv *Gate) SendLogout(userID co.TUserID, gateSpn string) error {
-	header := n.ReqHeader{Spn: "Session", Api: "Logout"}
+	header := n.ReqHeader{Spn: co.SpnSession, Api: "Logout"}
 	body := auth.LogoutMsg{UserID: userID, GateSpn: gateSpn}
 	out, neterr := n.BuildMsgPack(header, body)
 	if neterr != nil {
@@ -97,7 +97,7 @@ func (srv *Gate) getNewEid() string {
 func (srv *Gate) close(eid string) {
 	if v, ok := srv.stbs.Load(eid); ok {
 		stb := v.(GateStub)
-	//	srv.SendLogout(stb.GetUserID(), app.Config.Spn)
+		//	srv.SendLogout(stb.GetUserID(), app.Config.Spn)
 		stb.Close()
 		srv.stbs.Delete(eid)
 	}

@@ -5,13 +5,15 @@ import (
 	"time"
 )
 
+var matchUpC chan bool
+var playStartC chan bool
+
 func printUsage() {
 
 	fmt.Println("<usage>>>>>>>>>>>>>>>>>>>")
 	fmt.Println("help")
 	fmt.Println("login [user01-token]")
-	fmt.Println("game [SP/PP/PE]")
-	fmt.Println("joingame [roomID]")
+	fmt.Println("join [SP/PP/PE]")
 	fmt.Println("play")
 	fmt.Println("d/draw")
 	fmt.Println("createroom")
@@ -25,8 +27,8 @@ func printUsage() {
 func autoCommand(token string) {
 
 	DoLoginToken(token)
-	DoCreateGameRoom("SP")
-	DoGameReady()
+	DoJoinIn("SP")
+	DoPlayReady()
 }
 
 func command(args ...string) bool {
@@ -64,22 +66,16 @@ func command(args ...string) bool {
 			return true
 		}
 
-	case "game":
+	case "join":
 		if len(args) == 2 {
-			DoCreateGameRoom(args[1])
+			DoJoinIn(args[1])
 		} else {
-			DoCreateGameRoom("SP")
+			DoJoinIn("SP")
 		}
 		return true
 
-	case "joingame":
-		if len(args) == 2 {
-			DoJoinGame(args[1])
-			return true
-		}
-
 	case "play":
-		DoGameReady()
+		DoPlayReady()
 
 	case "d":
 		fallthrough
@@ -94,6 +90,9 @@ func consoleCommand() {
 
 	time.Sleep(time.Second)
 	printUsage()
+
+	matchUpC = make(chan bool)
+	playStartC = make(chan bool)
 
 	for {
 		var cmd, data string

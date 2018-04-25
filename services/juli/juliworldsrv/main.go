@@ -9,7 +9,7 @@ import (
 	. "github.com/Azraid/pasque/services/juli"
 )
 
-var g_cli n.Client
+var rpcx n.Client
 
 func main() {
 
@@ -27,20 +27,20 @@ func main() {
 
 	app.InitApp(eid, "", workPath)
 
-	g_cli = n.NewClient(eid)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(GameReadyMsg{}), OnGameReady)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
-	g_cli.RegisterGridHandler(n.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
+	rpcx = n.NewClient(eid)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(JoinRoomMsg{}), OnJoinRoom)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(GetRoomMsg{}), OnGetRoom)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(LeaveRoomMsg{}), OnLeaveRoom)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(PlayReadyMsg{}), OnPlayReady)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(DrawGroupMsg{}), OnDrawGroup)
+	rpcx.RegisterGridHandler(n.GetNameOfApiMsg(DrawSingleMsg{}), OnDrawSingle)
 
 	toplgy := n.Topology{
 		Spn:           app.Config.Spn,
 		FederatedKey:  "RoomID",
-		FederatedApis: g_cli.ListGridApis()}
+		FederatedApis: rpcx.ListGridApis()}
 
-	g_cli.Dial(toplgy)
+	rpcx.Dial(toplgy)
 
 	app.WaitForShutdown()
 	return

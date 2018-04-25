@@ -22,7 +22,7 @@ func OnCreateRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 	}
 
 	roomID := GenerateGuid().String()
-	if r, err := cli.SendReq("ChatRoom", "JoinRoom", JoinRoomMsg{RoomID: roomID, UserID: body.UserID}); err != nil {
+	if r, err := cli.SendReq(SpnChatRoom, "JoinRoom", JoinRoomMsg{RoomID: roomID, UserID: body.UserID}); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gridData
 	} else if r.Header.ErrCode != n.NErrorSucess {
@@ -46,7 +46,7 @@ func OnJoinRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		return gridData
 	}
 
-	if r, err := cli.SendReq("ChatRoom", "JoinRoom", JoinRoomMsg{RoomID: body.RoomID, UserID: body.UserID}); err != nil {
+	if r, err := cli.SendReq(SpnChatRoom, "JoinRoom", JoinRoomMsg{RoomID: body.RoomID, UserID: body.UserID}); err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gridData
 	} else if r.Header.ErrCode != n.NErrorSucess {
@@ -115,7 +115,7 @@ func OnSendChat(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 
 	chatroomReq := SendChatMsg{UserID: userID, RoomID: body.RoomID, ChatType: 1, Msg: body.Msg}
 
-	res, err := cli.SendReq("ChatRoom", "SendChat", chatroomReq)
+	res, err := cli.SendReq(SpnChatRoom, "SendChat", chatroomReq)
 	if err != nil {
 		cli.SendResWithError(req, RaiseNError(n.NErrorInternal), nil)
 		return gd
@@ -147,7 +147,7 @@ func OnRecvChat(cli n.Client, req *n.RequestMsg, gridData interface{}) interface
 		v.Lasted = time.Now()
 	}
 
-	res, err := cli.SendReq("Session", "GetUserLocation", auth.GetUserLocationMsg{UserID: userID,
+	res, err := cli.SendReq(SpnSession, "GetUserLocation", auth.GetUserLocationMsg{UserID: userID,
 		Spn: GameSpn})
 	if err != nil {
 		app.DebugLog("no user session at OnRecvChat")

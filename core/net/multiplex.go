@@ -137,12 +137,7 @@ func newNetIO(muxio *multiplexerIO, toplgy *Topology, rnode app.Node) *netIO {
 }
 
 func goNetRead(muxio *multiplexerIO, nio *netIO) {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-			//	nio.rw.Close()
-		}
-	}()
+	defer app.DumpRecover()
 
 	for {
 		var mpck msgPack
@@ -163,6 +158,8 @@ func goNetRead(muxio *multiplexerIO, nio *netIO) {
 }
 
 func goDispatch(muxio *multiplexerIO) {
+	defer app.DumpRecover()
+	
 	for msg := range muxio.msgC {
 		var err error
 		switch msg.MsgType() {

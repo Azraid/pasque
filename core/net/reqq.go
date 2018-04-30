@@ -88,6 +88,8 @@ func (q *reqQ) RegisterRandHandler(api string, handler func(cli Client, msg *Req
 }
 
 func goReqRandHandle(q *reqQ, msg *RequestMsg) {
+	defer app.DumpRecover()
+
 	PerfAdd(PerfRandTxnProcs)
 	defer func() {
 		PerfSub(PerfRandTxnProcs)
@@ -104,6 +106,8 @@ func goReqRandHandle(q *reqQ, msg *RequestMsg) {
 }
 
 func goReqGridHandle(q *reqQ, ctx *gridContext) {
+	defer app.DumpRecover()
+	
 	PerfAdd(PerfGridTxnProcs)
 	defer func() {
 		PerfSub(PerfGridTxnProcs)

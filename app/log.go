@@ -159,3 +159,11 @@ func Dump(r interface{}) {
 
 	}
 }
+
+func DumpRecover() {
+	if Config.Global.DumpRecover {
+		if r := recover(); r != nil {
+			Dump(r)
+		}
+	}
+}

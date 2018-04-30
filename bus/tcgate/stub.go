@@ -13,9 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/Azraid/pasque/services/auth"
 
@@ -46,9 +44,11 @@ type outContexts struct {
 type OnClose func(userID co.TUserID)
 
 type stub struct {
-	rw         n.NetIO
-	remoteEid  string
-	lastUsed   unsafe.Pointer
+	rw        n.NetIO
+	remoteEid string
+	//lastUsed   unsafe.Pointer
+	lastUsed time.Time
+
 	unsentQ    n.UnsentQ
 	dlver      n.Deliverer
 	unsentTick *time.Ticker
@@ -75,13 +75,18 @@ func NewStub(eid string, dlver n.Deliverer, onClose OnClose) GateStub {
 }
 
 func (stb *stub) SetLastUsed() {
-	t := time.Now()
-	atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
+	// t := new(time.Time)
+	// *t = time.Now()
+	// atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(t))
+
+	stb.lastUsed = time.Now()
+	app.DebugLog("%s;Update LastUsed[%s]%s", string(stb.GetUserID()), time.Now().Format("2006-01-02T15:04:05.000+09:00"), stb.GetLastUsed().Format("2006-01-02T15:04:05.000+09:00"))
 }
 
 func (stb *stub) GetLastUsed() time.Time {
-	t := atomic.LoadPointer(&stb.lastUsed)
-	return *(*time.Time)(t)
+	//	t := atomic.LoadPointer(&stb.lastUsed)
+	//	return *(*time.Time)(t)
+	return stb.lastUsed
 }
 
 func (stb stub) GetUserID() co.TUserID {
@@ -222,12 +227,7 @@ func (stb *stub) SendAll() {
 }
 
 func goStubHandle(stb *stub) {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-			//		stb.rw.Close()
-		}
-	}()
+	defer app.DumpRecover()
 
 	if stb == nil || stb.rw == nil {
 		return
@@ -252,7 +252,7 @@ func goStubHandle(stb *stub) {
 		switch msgType {
 		case n.MsgTypePing:
 			pingMsgPack := n.BuildPingMsgPack("")
-			if err := stb.rw.Write(pingMsgPack.Bytes(), true); err != nil {
+			if err := stb.rw.Write(pingMsgPack.Bytes(), false); err != nil {
 				app.ErrorLog("send pong error, %v", err)
 			}
 

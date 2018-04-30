@@ -52,10 +52,11 @@ type SvcGateGroup struct {
 }
 
 type globalConfig struct {
-	UseStdIn  bool
-	UseStdOut bool
-	LogDAddr  string
-	Log       struct {
+	UseStdIn    bool
+	UseStdOut   bool
+	LogDAddr    string
+	DumpRecover bool
+	Log         struct {
 		Path      string
 		Error     bool
 		Info      bool

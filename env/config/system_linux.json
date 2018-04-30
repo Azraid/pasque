@@ -2,6 +2,7 @@
     "UseStdIn":false,
     "UseStdOut":true,
     "LogDAddr" : "127.0.0.1:10001",
+    "DumpRecover": false,
     "ListenPortRange":  "16600-16699",
     "ConsolePortRange":  "26600-26699",
     
@@ -10,7 +11,7 @@
         "Immediate" : true,
         "Error":true,
         "Info":true,
-        "Debug":false,
+        "Debug":true,
         "Packet":true
     },
 

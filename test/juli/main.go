@@ -42,6 +42,7 @@ func main() {
 	rpcx.RegisterRandHandler("CBlocksFirm", OnCBlocksFirm)
 	rpcx.RegisterRandHandler("CLinesClear", OnCLinesClear)
 	rpcx.RegisterRandHandler("CPlayEnd", OnCPlayEnd)
+	rpcx.RegisterRandHandler("CDamaged", OnCDamaged)
 
 	for !rpcx.rw.IsConnected() {
 		time.Sleep(1 * time.Second)

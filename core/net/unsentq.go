@@ -48,11 +48,7 @@ func (q *unsentQ) Add(b []byte) {
 }
 
 func (q *unsentQ) SendAll() {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-		}
-	}()
+	defer app.DumpRecover()
 
 	q.unsentLock.Lock()
 	defer q.unsentLock.Unlock()

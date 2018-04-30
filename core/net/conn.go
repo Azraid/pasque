@@ -194,7 +194,6 @@ InitRead:
 		}
 
 		if msgType == MsgTypePing {
-			//app.PacketLog("<-%s\r\n", string(data[:offset+1]))
 			return msgType, sdata[:l], nil, nil
 		}
 

@@ -10,18 +10,17 @@ package net
 import (
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
 )
 
 type stub struct {
-	rw         NetIO
-	remoteEid  string
-	lastUsed   unsafe.Pointer
+	rw        NetIO
+	remoteEid string
+	//lastUsed   unsafe.Pointer
+	lastUsed   time.Time
 	unsentQ    UnsentQ
 	dlver      Deliverer
 	unsentTick *time.Ticker
@@ -39,13 +38,15 @@ func NewStub(eid string, dlver Deliverer) Stub {
 }
 
 func (stb *stub) SetLastUsed() {
-	t := time.Now()
-	atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
+	// t := time.Now()
+	// atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
+	stb.lastUsed = time.Now()
 }
 
 func (stb *stub) GetLastUsed() time.Time {
-	t := atomic.LoadPointer(&stb.lastUsed)
-	return *(*time.Time)(t)
+	// t := atomic.LoadPointer(&stb.lastUsed)
+	// return *(*time.Time)(t)
+	return stb.lastUsed
 }
 
 func (stb stub) String() string {
@@ -132,12 +133,7 @@ func (stb *stub) SendAll() {
 }
 
 func goStubHandle(stb *stub) {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-			//	stb.rw.Close()
-		}
-	}()
+	defer app.DumpRecover()
 
 	if stb == nil {
 		return
@@ -162,7 +158,7 @@ func goStubHandle(stb *stub) {
 		switch msgType {
 		case MsgTypePing:
 			pingMsgPack := BuildPingMsgPack(app.App.Eid)
-			if err := stb.rw.Write(pingMsgPack.Bytes(), true); err != nil {
+			if err := stb.rw.Write(pingMsgPack.Bytes(), false); err != nil {
 				app.ErrorLog("send pong error, %v", err)
 			}
 

@@ -244,6 +244,8 @@ func (g *GridData) Final() {
 }
 
 func goPlay(g *GridData, beforeT time.Time) {
+	defer app.DumpRecover()
+	
 	g.GameStat = EGROOM_STAT_READY
 
 	if g.Mode == EGMODE_PP {
@@ -274,11 +276,8 @@ func (g *GridData) Go(elapsedTimeMs int) {
 	g.Lock()
 
 	defer func() {
+		app.DumpRecover()
 		g.Unlock()
-
-		if r := recover(); r != nil {
-			app.Dump(r)
-		}
 	}()
 
 	if g.GameStat != EGROOM_STAT_READY {

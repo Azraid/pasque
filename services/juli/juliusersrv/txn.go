@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Azraid/pasque/app"
 	. "github.com/Azraid/pasque/core"
@@ -54,7 +55,7 @@ func doMatchUp(cli n.Client, roomID string, userID TUserID, plNo int, oppUserID 
 	}
 	if !oppUserID.IsZero() {
 		req.Opponent.UserID = oppUserID
-		req.Opponent.Nick = `수지`
+		req.Opponent.Nick = fmt.Sprintf("수지%02d", oppPlNo)
 		req.Opponent.Grade = 1
 		req.Opponent.PlNo = oppPlNo
 	}
@@ -137,7 +138,8 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 				return gd
 			}
 
-			cli.SendRes(req, JoinInMsgR{Nick:`송혜교`, Grade:1})
+			
+			cli.SendRes(req, JoinInMsgR{Nick: `송혜교`, Grade: 1})
 
 			doMatchUp(cli, roomID, rbody.OwnerID, ownerPlNo, rbody.GuestID, guestPlNo)
 			doMatchUp(cli, roomID, rbody.GuestID, guestPlNo, rbody.OwnerID, ownerPlNo)
@@ -154,10 +156,9 @@ func OnJoinIn(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{}
 		doMatchUp(cli, roomID, gd.UserID, plNo, TUserID(""), 0)
 	}
 
-	cli.SendRes(req, JoinInMsgR{Nick:`송혜교`, Grade:1})
+	cli.SendRes(req, JoinInMsgR{Nick: `송혜교`, Grade: 1})
 	return gd
 }
-
 
 func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body PlayReadyMsg
@@ -195,7 +196,6 @@ func OnPlayReady(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	return gd
 }
-
 
 func OnLeaveRoom(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {
 	var body LeaveRoomMsg

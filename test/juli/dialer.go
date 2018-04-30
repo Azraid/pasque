@@ -73,11 +73,15 @@ func (dial *dialer) dial() error {
 }
 
 func goDial(dial *dialer) {
+	defer app.DumpRecover()
+
 	time.Sleep(RedialSec * time.Second)
 	dial.dial()
 }
 
 func goPing(dial *dialer) {
+	defer app.DumpRecover()
+	
 	for _ = range dial.pingTick.C {
 		if !dial.rw.IsConnected() {
 			dial.CheckAndRedial()

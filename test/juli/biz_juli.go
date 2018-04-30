@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	. "github.com/Azraid/pasque/core"
 	"github.com/Azraid/pasque/app"
+	. "github.com/Azraid/pasque/core"
 	n "github.com/Azraid/pasque/core/net"
 	juli "github.com/Azraid/pasque/services/juli"
 )
@@ -298,4 +298,8 @@ func OnCLinesClear(cli *client, req *n.RequestMsg) {
 func OnCPlayEnd(cli *client, req *n.RequestMsg) {
 	rpcx.SendRes(req, juli.CPlayEndMsgR{})
 	os.Exit(1)
+}
+
+func OnCDamaged(cli *client, req *n.RequestMsg) {
+	rpcx.SendRes(req, juli.CDamagedMsgR{})
 }

@@ -132,11 +132,7 @@ func (q *resQ) Dispatch(rawHeader []byte, rawBody []byte) error {
 }
 
 func goRoundTripTimeout(q *resQ) {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-		}
-	}()
+	defer app.DumpRecover()
 
 	for _ = range q.rtTick.C {
 		var fires []uint64

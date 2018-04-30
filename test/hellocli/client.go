@@ -1,7 +1,7 @@
 /********************************************************************************
 * client.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -87,10 +87,7 @@ func newClient(remoteAddr string, spn string) *client {
 
 func goNetRead(cli *client) {
 	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-		//	cli.rw.Close()
-		}
+		app.DumpRecover()
 
 		cli.dial.CheckAndRedial()
 	}()
@@ -113,6 +110,8 @@ func goNetRead(cli *client) {
 }
 
 func goDispatch(cli *client) {
+	defer app.DumpRecover()
+	
 	for msg := range cli.msgC {
 		var err error
 		switch msg.MsgType() {

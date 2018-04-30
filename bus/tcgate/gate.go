@@ -129,6 +129,8 @@ func (srv *Gate) Shutdown() bool {
 }
 
 func goPingMonitor(srv *Gate) {
+	defer app.DumpRecover()
+
 	for _ = range srv.pingMonitorTick.C {
 		var disused []string
 		now := time.Now()
@@ -138,6 +140,7 @@ func goPingMonitor(srv *Gate) {
 				stb := v.(GateStub)
 				if stb.IsConnected() &&
 					uint32(now.Sub(stb.GetLastUsed()).Seconds()) > co.PingTimeoutSec {
+					app.DebugLog("client will be closed, lastUsed %s sec", uint32(now.Sub(stb.GetLastUsed()).Seconds()))
 					disused = append(disused, k.(string))
 				}
 
@@ -193,6 +196,8 @@ func (srv *Gate) serve() error {
 }
 
 func goServe(srv *Gate) {
+	defer app.DumpRecover()
+
 	if err := srv.serve(); err != nil {
 		app.Shutdown()
 	}

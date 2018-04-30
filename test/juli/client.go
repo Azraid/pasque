@@ -108,12 +108,9 @@ func newClient(remoteAddr string, spn string) *client {
 }
 
 func goNetRead(cli *client) {
-	defer func() {
-		if r := recover(); r != nil {
-			app.Dump(r)
-	//		cli.rw.Close()
-		}
+	defer app.DumpRecover()
 
+	defer func() {
 		cli.dial.CheckAndRedial()
 	}()
 

@@ -221,6 +221,8 @@ func (srv *Server) Shutdown() bool {
 }
 
 func goPingMonitor(srv *Server) {
+	defer app.DumpRecover()
+
 	for _ = range srv.pingMonitorTick.C {
 		var disused []string
 		now := time.Now()
@@ -246,12 +248,16 @@ func goPingMonitor(srv *Server) {
 }
 
 func goServe(srv *Server) {
+	defer app.DumpRecover()
+	
 	if err := srv.serve(); err != nil {
 		app.Shutdown()
 	}
 }
 
 func goAccept(srv *Server, rwc net.Conn) {
+	defer app.DumpRecover()
+
 	conn := NewNetIO()
 	conn.Register(rwc)
 

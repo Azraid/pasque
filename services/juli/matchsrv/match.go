@@ -47,6 +47,8 @@ func AbsInt(x int) int {
 }
 
 func goproc() {
+	defer app.DumpRecover()
+	
 	for {
 		select {
 		case req := <-wr.reqC:

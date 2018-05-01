@@ -21,6 +21,7 @@ const (
 	GridTxnRelaxedCount        = 2
 	GridContextCleanTimeoutSec = 300
 	GridCtxSize                = 64
+	Iso8601Format              = "2006-01-02T15:04:05.000+09:00"
 )
 
 const SpnChatRoom = "chatroom"

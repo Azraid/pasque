@@ -50,16 +50,14 @@ func (srv *gate) ListenAndServe() error {
 	return srv.Server.ListenAndServe()
 }
 
-func (srv *gate) adjustKey(header *ReqHeader, body []byte) bool {
+func (srv *gate) adjustKey(header *ReqHeader, body []byte) (bool, error) {
 	if ok := srv.fedapi.Find(header.Api); !ok {
-		return false
+		return false, nil
 	}
 
 	var jsbody map[string]interface{}
-
 	if err := json.Unmarshal(body, &jsbody); err != nil {
-		app.ErrorLog("adjustKey fail %v", err)
-		return false
+		return false, fmt.Errorf("adjustKey fail %v", err)
 	}
 
 	for k, v := range jsbody {
@@ -69,11 +67,16 @@ func (srv *gate) adjustKey(header *ReqHeader, body []byte) bool {
 			} else {
 				header.Key = fmt.Sprint(v)
 			}
-			return true
+
+			if len(header.Key) > 0 {
+				return true, nil
+			} else {
+				return false, fmt.Errorf("adjustKey not found key[%] in body", k)
+			}
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 //Router로 보내는 메세지
@@ -91,7 +94,11 @@ func (srv *gate) LocalRequest(header *ReqHeader, msg MsgPack) error {
 	}
 
 	//key값으로 rebuild 하여.
-	if ok := srv.adjustKey(header, msg.Body()); ok {
+	ok, err := srv.adjustKey(header, msg.Body())
+	if err != nil {
+		return IssueErrorf("addjustKey error %s", err.Error())
+	}
+	if ok {
 		msg.ResetHeader(*header)
 	}
 

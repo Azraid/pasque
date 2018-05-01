@@ -145,7 +145,7 @@ func PacketLog(a string, v ...interface{}) {
 	}
 
 	if logDConn != nil {
-		msg := "[" + App.Eid + "]" + time.Now().Format("2006/01/02 15:30:30.000 ") + fmt.Sprintf(a, v...) + "\r\n"
+		msg := "[" + App.Eid + "]" + time.Now().Format(Iso8601Format) + " " + fmt.Sprintf(a, v...) + "\r\n"
 		logDConn.Write([]byte(msg))
 	}
 }

@@ -44,11 +44,9 @@ type outContexts struct {
 type OnClose func(userID co.TUserID)
 
 type stub struct {
-	rw        n.NetIO
-	remoteEid string
-	//lastUsed   unsafe.Pointer
-	lastUsed time.Time
-
+	rw         n.NetIO
+	remoteEid  string
+	lastUsed   time.Time
 	unsentQ    n.UnsentQ
 	dlver      n.Deliverer
 	unsentTick *time.Ticker
@@ -75,17 +73,16 @@ func NewStub(eid string, dlver n.Deliverer, onClose OnClose) GateStub {
 }
 
 func (stb *stub) SetLastUsed() {
-	// t := new(time.Time)
-	// *t = time.Now()
-	// atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(t))
+	stb.lock.Lock()
+	defer stb.lock.Unlock()
 
 	stb.lastUsed = time.Now()
-	app.DebugLog("%s;Update LastUsed[%s]%s", string(stb.GetUserID()), time.Now().Format("2006-01-02T15:04:05.000+09:00"), stb.GetLastUsed().Format("2006-01-02T15:04:05.000+09:00"))
 }
 
 func (stb *stub) GetLastUsed() time.Time {
-	//	t := atomic.LoadPointer(&stb.lastUsed)
-	//	return *(*time.Time)(t)
+	stb.lock.RLock()
+	defer stb.lock.RUnlock()
+
 	return stb.lastUsed
 }
 
@@ -94,6 +91,9 @@ func (stb stub) GetUserID() co.TUserID {
 }
 
 func (stb *stub) newTxnNo() uint64 {
+	stb.lock.Lock()
+	defer stb.lock.Unlock()
+
 	stb.lastTxnNo++
 	return stb.lastTxnNo //이건  atomic으로 안써도 될 듯..
 }
@@ -135,7 +135,7 @@ func (stb *stub) ResetConn(rw n.NetIO) {
 
 		stb.rw = rw
 		stb.unsentQ.Register(rw)
-		stb.SetLastUsed()
+		stb.lastUsed = time.Now()
 		stb.appStatus = n.AppStatusRunning
 
 		stb.rw.AddCloseEvent(func() {

@@ -38,14 +38,14 @@ func NewStub(eid string, dlver Deliverer) Stub {
 }
 
 func (stb *stub) SetLastUsed() {
-	// t := time.Now()
-	// atomic.StorePointer(&stb.lastUsed, unsafe.Pointer(&t))
+	stb.lock.Lock()
+	defer stb.lock.Unlock()
 	stb.lastUsed = time.Now()
 }
 
 func (stb *stub) GetLastUsed() time.Time {
-	// t := atomic.LoadPointer(&stb.lastUsed)
-	// return *(*time.Time)(t)
+	stb.lock.RLock()
+	defer stb.lock.RUnlock()
 	return stb.lastUsed
 }
 
@@ -86,7 +86,7 @@ func (stb *stub) ResetConn(rw NetIO) {
 
 		stb.rw = rw
 		stb.unsentQ.Register(rw)
-		stb.SetLastUsed()
+		stb.lastUsed = time.Now()
 		stb.appStatus = AppStatusRunning
 	}
 }

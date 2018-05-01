@@ -75,7 +75,7 @@ func newPlayer(userID co.TUserID, plNo int) *Player {
 }
 
 func (p *Player) PrintSvrMatrix() {
-	app.DebugLog("---------------------------------------")
+	app.DebugLog("[plno:%d]--------------------------------", p.plNo)
 
 	for y := p.ymax; y >= 0; y-- {
 		l := ""

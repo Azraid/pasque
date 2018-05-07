@@ -88,6 +88,7 @@ type Client interface {
 	SendReq(spn string, api string, body interface{}) (res *ResponseMsg, err error)
 	SendNoti(spn string, api string, body interface{}) (err error)
 	SendReqDirect(spn string, gateEid string, eid string, api string, body interface{}) (res *ResponseMsg, err error)
+	SendNotiDirect(spn string, gateEid string, eid string, api string, body interface{}) (err error)
 	SendRes(req *RequestMsg, body interface{}) (err error)
 	SendResWithError(req *RequestMsg, nerr NError, body interface{}) (err error)
 

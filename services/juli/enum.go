@@ -7,7 +7,6 @@ import (
 const DEFAULT_TICK_MS = 40
 const DEFAULT_HP = 1000
 
-
 const (
 	EGMODE_SP = iota
 	EGMODE_PP
@@ -45,7 +44,7 @@ func ParseTGMode(s string) (TGMode, error) {
 const (
 	EPSTAT_INIT = iota
 	EPSTAT_READY
-	EPSTAT_STOP
+	EPSTAT_RUNNING
 )
 
 const (

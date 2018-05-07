@@ -158,6 +158,20 @@ func (cli *client) SendNoti(spn string, api string, body interface{}) (err error
 	return cli.muxio.Write(out.Bytes(), true)
 }
 
+func (cli *client) SendNotiDirect(spn string, gateEid string, eid string, api string, body interface{}) (err error) {
+	if app.IsStopping() {
+		return CoRaiseNError(NErrorAppStopping, 1, "Application stopping")
+	}
+
+	header := ReqHeader{Spn: spn, ToGateEid: gateEid, ToEid: eid, Api: api}
+	out, neterr := BuildMsgPack(header, body)
+	if neterr != nil {
+		return neterr
+	}
+
+	return cli.muxio.Write(out.Bytes(), true)
+}
+
 func (cli *client) LoopbackNoti(api string, body interface{}) (err error) {
 	if app.IsStopping() {
 		return CoRaiseNError(NErrorAppStopping, 1, "Application stopping")

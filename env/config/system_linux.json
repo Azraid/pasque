@@ -65,7 +65,7 @@
                 ],
                 
                 "Providers" : [
-                    {   "Eid" : "juliworldsrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"auto"                                            }
+                    {   "Eid" : "juliworldsrv.1",          "Exec" : "juliworldsrv",    		"ConsolePort":"37777"                                            }
                 ]
            },
 	   {   "Spn" : "match", 

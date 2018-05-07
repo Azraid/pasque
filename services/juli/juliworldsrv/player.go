@@ -16,11 +16,10 @@ type playerOption struct {
 	grpMax         int
 	blockInfoSize  int
 	checkNoRoomCnt int
-	posHalf        float32
-	posCheckHalf   float32
+	posHalf        float64
+	posCheckHalf   float64
 	tmFallWaitMs   int64
-	fallingTimeMs  int64
-	fallingSpeed   float32
+	fallingTimeMs  float64
 }
 
 var _playerOption = playerOption{
@@ -31,9 +30,7 @@ var _playerOption = playerOption{
 	posHalf:        0.5,
 	posCheckHalf:   0.55,
 	tmFallWaitMs:   50,
-	fallingTimeMs:  800,
-	fallingSpeed:   1000 / 800, //1초에 떨어지는 스피드.
-
+	fallingTimeMs:  800.0, //한칸 떨어지는 시간
 }
 
 type Player struct {
@@ -235,7 +232,7 @@ func (p *Player) ClearSvrBlock(pos POS) bool {
 	p.svrMatrix[pos.X][pos.Y].grpID = -1
 	p.svrMatrix[pos.X][pos.Y].dolKind = EDOL_NORMAL_MAX
 	p.svrMatrix[pos.X][pos.Y].dolStat = EDSTAT_NONE
-	p.svrMatrix[pos.X][pos.Y].posY = float32(0.0)
+	p.svrMatrix[pos.X][pos.Y].posY = float64(0.0)
 	p.svrMatrix[pos.X][pos.Y].fallWaitTimeMs = 0
 
 	return true
@@ -262,7 +259,7 @@ func (p *Player) ActivateSvrBlock(pos POS, grpID int, dolKind TDol, firm bool) b
 }
 
 func (p *Player) MoveSvrCellDown(dpos POS, spos POS) {
-	p.svrMatrix[spos.X][spos.Y].posY += float32(1.0)
+	p.svrMatrix[spos.X][spos.Y].posY += float64(1.0)
 	p.svrMatrix[dpos.X][dpos.Y].drawPos, p.svrMatrix[spos.X][spos.Y].drawPos = p.svrMatrix[spos.X][spos.Y].drawPos, p.svrMatrix[dpos.X][dpos.Y].drawPos
 	p.svrMatrix[dpos.X][dpos.Y], p.svrMatrix[spos.X][spos.Y] = p.svrMatrix[spos.X][spos.Y], p.svrMatrix[dpos.X][dpos.Y]
 
@@ -464,11 +461,11 @@ func (p *Player) attack(burstCnt int) {
 		case 1:
 			return 0
 		case 2:
-			return int(float32(p.attackDmg) * 0.1)
+			return int(float64(p.attackDmg) * 0.1)
 		case 3:
-			return int(float32(p.attackDmg) * 0.2)
+			return int(float64(p.attackDmg) * 0.2)
 		default:
-			return int(float32(p.attackDmg) * float32(p.comboCnt) * 0.1)
+			return int(float64(p.attackDmg) * float64(p.comboCnt) * 0.1)
 		}
 	}()
 
@@ -571,7 +568,11 @@ func (p *Player) CheckNoRoom() bool {
 //---------------------------------------------------------------------------------------------------
 // Update Frame
 // 서버가 너무 느려 1프레임에 1셀을 넘어가는 속도는 고려되지 않았음!!!
-func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
+func (p *Player) Play(elapsedTimeMs int64, mode TGMode) bool {
+	if p.stat != EPSTAT_RUNNING {
+		return false
+	}
+
 	if int(p.playTimeMs/1000) != int((p.playTimeMs+elapsedTimeMs)/1000) {
 		p.PrintSvrMatrix()
 	}
@@ -596,11 +597,10 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 					burst = false
 					continue
 				}
-
-				cell.posY -= _playerOption.fallingSpeed * float32(elapsedTimeMs) / float32(1000)
+				cell.posY -= float64(elapsedTimeMs) / _playerOption.fallingTimeMs
 
 				// Move Next Cell
-				if cell.posY < float32(0.0) {
+				if cell.posY < float64(0.0) {
 					if y < 1 {
 						p.ProcessBlocksFirm(POS{X: x, Y: y})
 						continue
@@ -648,9 +648,8 @@ func (p *Player) Play(elapsedTimeMs int64, mode TGMode) {
 
 	// TODO: Check KO
 	if p.CheckNoRoom() {
-		SendCPlayEnd(p.userID, p, EEND_LKO)
-		if p.other != nil {
-			SendCPlayEnd(p.other.userID, p, EEND_LKO)
-		}
+		p.stat = EPSTAT_READY
 	}
+
+	return true
 }

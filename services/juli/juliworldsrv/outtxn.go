@@ -10,6 +10,8 @@ import (
 	. "github.com/Azraid/pasque/services/juli"
 )
 
+const CAsyncSend = true
+
 func doGetUserLocation(userID TUserID) (string, string, string, string, error) {
 	req := auth.GetUserLocationMsg{UserID: userID, Spn: GameTcGateSpn}
 
@@ -49,12 +51,18 @@ func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []P
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
 		}
-
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
+		}
 	} else {
 		app.ErrorLog(err.Error())
 	}
@@ -70,12 +78,19 @@ func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []P
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
 		}
 
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
+		}
 	} else {
 		app.ErrorLog(err.Error())
 	}
@@ -90,12 +105,19 @@ func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) 
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
 		}
 
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
+		}
 	} else {
 		app.ErrorLog(err.Error())
 	}
@@ -110,10 +132,18 @@ func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) 
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
+		}
+
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
 		}
 
 	} else {
@@ -130,10 +160,18 @@ func SendLinesClear(targetUserID TUserID, p *Player) {
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
+		}
+
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
 		}
 
 	} else {
@@ -157,10 +195,18 @@ func SendBlocksFirm(targetUserID TUserID, p *Player, blocks []*SingleInfo, count
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
+		}
+
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
 		}
 
 	} else {
@@ -178,10 +224,17 @@ func SendDamaged(targetUserID TUserID, p *Player, damages []int) {
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
-		if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
-			app.ErrorLog(err.Error())
-		} else if res.Header.ErrCode != n.NErrorSucess {
-			app.ErrorLog(PrintNError(res.Header.ErrCode))
+		sendMsg := func() {
+			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
+				app.ErrorLog(err.Error())
+			} else if res.Header.ErrCode != n.NErrorSucess {
+				app.ErrorLog(PrintNError(res.Header.ErrCode))
+			}
+		}
+		if CAsyncSend {
+			go sendMsg()
+		} else {
+			sendMsg()
 		}
 
 	} else {

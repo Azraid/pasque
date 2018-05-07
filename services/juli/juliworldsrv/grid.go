@@ -25,7 +25,7 @@ type ServerBlock struct {
 	SingleInfo
 	grpID          int
 	dolStat        TDStat
-	posY           float32
+	posY           float64
 	fallWaitTimeMs int64
 }
 
@@ -201,14 +201,14 @@ func (g *GridData) RemovePlayer(userID TUserID) {
 		g.p1 = nil
 		g.GameStat = EGROOM_STAT_END
 		if g.p2 != nil {
-			g.p2.stat = EPSTAT_STOP
+			g.p2.stat = EPSTAT_INIT
 		}
 
 	} else if g.p2 != nil && g.p2.userID == userID {
 		g.p2 = nil
 		g.GameStat = EGROOM_STAT_END
 		if g.p1 != nil {
-			g.p1.stat = EPSTAT_STOP
+			g.p1.stat = EPSTAT_INIT
 		}
 	}
 
@@ -245,18 +245,19 @@ func (g *GridData) Final() {
 
 func goPlay(g *GridData, beforeT time.Time) {
 	defer app.DumpRecover()
-	
+
 	g.GameStat = EGROOM_STAT_READY
 
 	if g.Mode == EGMODE_PP {
 		SendPlayStart(g.p1.userID, g.p1)
 		SendPlayStart(g.p2.userID, g.p2)
-
+		g.p1.stat = EPSTAT_RUNNING
+		g.p2.stat = EPSTAT_RUNNING
 	} else {
 		SendPlayStart(g.p1.userID, g.p1)
+		g.p1.stat = EPSTAT_RUNNING
 	}
 
-	//beforeT := time.Now()
 	for _ = range g.tick.C {
 		elapsed := time.Now().Sub(beforeT)
 		if elapsed.Nanoseconds() > procTimer.Nanoseconds() {
@@ -267,7 +268,6 @@ func goPlay(g *GridData, beforeT time.Time) {
 
 		elapsedTimeMs := int(elapsed.Nanoseconds() / int64(time.Millisecond))
 		g.Go(elapsedTimeMs)
-
 		beforeT = time.Now()
 	}
 }
@@ -286,20 +286,32 @@ func (g *GridData) Go(elapsedTimeMs int) {
 
 	g.GameStat = EGROOM_STAT_PLAYING
 
-	if g.Mode == EGMODE_PP {
-		if g.p1 != nil {
-			g.p1.Play(int64(elapsedTimeMs), g.Mode)
-		}
-		if g.p2 != nil {
-			g.p2.Play(int64(elapsedTimeMs), g.Mode)
-		}
-	} else {
-		if g.p1 != nil {
-			g.p1.Play(int64(elapsedTimeMs), g.Mode)
+	var loser *Player
+	if g.p1 != nil {
+		if ok := g.p1.Play(int64(elapsedTimeMs), g.Mode); !ok {
+			loser = g.p1
 		}
 	}
 
+	if g.Mode == EGMODE_PP && g.p2 != nil {
+		if ok := g.p2.Play(int64(elapsedTimeMs), g.Mode); !ok {
+			loser = g.p2
+		}
+	}
+
+	if loser != nil {
+		SendCPlayEnd(loser.userID, loser, EEND_LKO)
+		if loser.other != nil {
+			SendCPlayEnd(loser.other.userID, loser, EEND_LKO)
+		}
+
+		g.GameStat = EGROOM_STAT_END
+		g.Final()
+		return
+	}
+
 	g.GameStat = EGROOM_STAT_READY
+
 }
 
 func (g *GridData) Lock() {

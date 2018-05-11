@@ -14,6 +14,8 @@ go build  -race --o $GOPATH/bin/pasque/linux/router $GOPATH/src/github.com/Azrai
 go build  -race --o $GOPATH/bin/pasque/linux/sgate $GOPATH/src/github.com/Azraid/pasque/bus/sgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/sgate/gate.go
 go build -race -o $GOPATH/bin/pasque/linux/tcgate $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/main.go $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/gate.go $GOPATH/src/github.com/Azraid/pasque/bus/tcgate/stub.go
 
+go build --o $GOPATH/bin/pasque/linux/logsrv $GOPATH/src/github.com/Azraid/pasque/bus/logsrv/main.go 
+
 go build  -race --o $GOPATH/bin/pasque/linux/sesssrv $GOPATH/src/github.com/Azraid/pasque/services/auth/sesssrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/auth/sesssrv/db.go  $GOPATH/src/github.com/Azraid/pasque/services/auth/sesssrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/auth/sesssrv/txn.go 
 
 go build  -race --o $GOPATH/bin/pasque/linux/chatroomsrv $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroomsrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroomsrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/chat/chatroomsrv/txn.go
@@ -25,8 +27,6 @@ go build -race -o $GOPATH/bin/pasque/linux/juliworldsrv $GOPATH/src/github.com/A
 go build  -race --o $GOPATH/bin/pasque/linux/juliusersrv $GOPATH/src/github.com/Azraid/pasque/services/juli/juliusersrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/juli/juliusersrv/grid.go  $GOPATH/src/github.com/Azraid/pasque/services/juli/juliusersrv/txn.go
 
 go build  -race --o $GOPATH/bin/pasque/linux/matchsrv $GOPATH/src/github.com/Azraid/pasque/services/juli/matchsrv/main.go $GOPATH/src/github.com/Azraid/pasque/services/juli/matchsrv/match.go $GOPATH/src/github.com/Azraid/pasque/services/juli/matchsrv/txn.go 
-
-
 
 go build -o $GOPATH/bin/pasque/linux/juli $GOPATH/src/github.com/Azraid/pasque/test/juli/main.go $GOPATH/src/github.com/Azraid/pasque/test/juli/biz_chat.go $GOPATH/src/github.com/Azraid/pasque/test/juli/conn.go $GOPATH/src/github.com/Azraid/pasque/test/juli/dialer.go $GOPATH/src/github.com/Azraid/pasque/test/juli/resq.go $GOPATH/src/github.com/Azraid/pasque/test/juli/client.go $GOPATH/src/github.com/Azraid/pasque/test/juli/biz_login.go  $GOPATH/src/github.com/Azraid/pasque/test/juli/biz_juli.go  $GOPATH/src/github.com/Azraid/pasque/test/juli/cmd.go 
 

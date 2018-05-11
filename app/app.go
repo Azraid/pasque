@@ -1,7 +1,7 @@
 /********************************************************************************
 * App.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -70,7 +70,7 @@ func InitApp(eid string, spn string, workPath string) {
 		go goWinConsole()
 	}
 
-	if p, err := strconv.Atoi(Config.MyNode.ConsolePort); err == nil {
+	if p, err := strconv.Atoi(Config.MyNode.ConsolePort); err == nil && p != 0 {
 		initWebConsole(p)
 	}
 

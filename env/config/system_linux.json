@@ -2,6 +2,8 @@
     "UseStdIn":false,
     "UseStdOut":true,
     "LogDAddr" : "127.0.0.1:10001",
+    "LogDCacheSize" : 1000,
+    "LogDConsolePort" : 8088,
     "DumpRecover": false,
     "ListenPortRange":  "16600-16699",
     "ConsolePortRange":  "26600-26699",

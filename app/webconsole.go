@@ -1,7 +1,7 @@
 /********************************************************************************
 * webconsole.go
 *
-* Written by azraid@gmail.com 
+* Written by azraid@gmail.com
 * Owned by azraid@gmail.com
 ********************************************************************************/
 
@@ -56,6 +56,8 @@ func initWebConsole(port int) {
 	if port == 0 {
 		return
 	}
+
+	fmt.Printf("console port %d\r\n", port)
 
 	http.HandleFunc("/", aboutHandler)
 	http.HandleFunc("/exit", shutdownHandler)

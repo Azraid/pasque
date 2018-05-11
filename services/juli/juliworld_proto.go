@@ -170,6 +170,7 @@ type CSingleResultFallMsg struct {
 	PlNo    int
 	DolKind string
 	DrawPos POS
+	ObjID   int
 }
 
 type CSingleResultFallMsgR struct {
@@ -180,6 +181,7 @@ type CSingleResultFirmMsg struct {
 	PlNo    int
 	DolKind string
 	DrawPos POS
+	ObjID   int
 }
 
 type CSingleResultFirmMsgR struct {

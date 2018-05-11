@@ -177,6 +177,10 @@ func (p *Player) GetFreeGroupID() int {
 	return -1
 }
 
+func (p *Player) GetObjID(pos POS) int {
+	return p.svrMatrix[pos.X][pos.Y].objID
+}
+
 func (p Player) GetGroupBlocks(grpId int) []SingleInfo {
 	si := make([]SingleInfo, len(p.svrGroups[grpId].blocks))
 	for k, v := range p.svrGroups[grpId].blocks {

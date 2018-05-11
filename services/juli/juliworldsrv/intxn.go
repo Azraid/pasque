@@ -251,9 +251,8 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 
 	//success reply
 	cli.SendRes(req, DrawGroupMsgR{})
-
+	p.ShiftCnstQ()
 	if !firm {
-		p.ShiftCnstQ()
 		SendGroupResultFall(p.userID, p, body.DolKind, body.Routes, body.Count, grpID)
 		if p.other != nil {
 			SendGroupResultFall(p.other.userID, p, body.DolKind, body.Routes, body.Count, grpID)
@@ -261,12 +260,12 @@ func OnDrawGroup(cli n.Client, req *n.RequestMsg, gridData interface{}) interfac
 		return g
 	}
 
-	p.ReleaseGroup(grpID)
-	p.ShiftCnstQ()
-	SendGroupResultFirm(p.userID, p, body.DolKind, body.Routes, body.Count)
+	SendGroupResultFirm(p.userID, p, body.DolKind, body.Routes, body.Count, grpID)
 	if p.other != nil {
-		SendGroupResultFirm(p.other.userID, p, body.DolKind, body.Routes, body.Count)
+		SendGroupResultFirm(p.other.userID, p, body.DolKind, body.Routes, body.Count, grpID)
 	}
+
+	p.ReleaseGroup(grpID)
 	p.GetSvrBlockBurstCnt(body.Routes, body.Count)
 
 	if p.HasBurstLine() {
@@ -336,21 +335,21 @@ func OnDrawSingle(cli n.Client, req *n.RequestMsg, gridData interface{}) interfa
 
 	//reply sucess
 	cli.SendRes(req, DrawSingleMsgR{})
+	p.ShiftCnstQ()
+	firm := p.IsBlockFirm(POS{X: body.DrawPos.X, Y: body.DrawPos.Y - 1})
+	p.ActivateSvrBlock(body.DrawPos, -1, dol, firm)
 
-	if !p.IsBlockFirm(POS{X: body.DrawPos.X, Y: body.DrawPos.Y - 1}) {
-		p.ActivateSvrBlock(body.DrawPos, -1, dol, false)
-		p.ShiftCnstQ()
-		SendSingleResultFall(p.userID, p, body.DolKind, body.DrawPos)
+	if !firm {
+		SendSingleResultFall(p.userID, p, body.DolKind, body.DrawPos, p.GetObjID(body.DrawPos))
 		if p.other != nil {
-			SendSingleResultFall(p.other.userID, p, body.DolKind, body.DrawPos)
+			SendSingleResultFall(p.other.userID, p, body.DolKind, body.DrawPos, p.GetObjID(body.DrawPos))
 		}
 		return g
 	}
 
-	p.ShiftCnstQ()
-	SendSingleResultFirm(p.userID, p, body.DolKind, body.DrawPos)
+	SendSingleResultFirm(p.userID, p, body.DolKind, body.DrawPos, p.GetObjID(body.DrawPos))
 	if p.other != nil {
-		SendSingleResultFirm(p.other.userID, p, body.DolKind, body.DrawPos)
+		SendSingleResultFirm(p.other.userID, p, body.DolKind, body.DrawPos, p.GetObjID(body.DrawPos))
 	}
 
 	if p.TestOneLineClear(body.DrawPos.Y) {

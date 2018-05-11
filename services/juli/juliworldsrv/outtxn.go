@@ -68,7 +68,7 @@ func SendGroupResultFall(targetUserID TUserID, p *Player, dol string, routes []P
 	}
 }
 
-func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []POS, count int) {
+func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []POS, count int, grpID int) {
 	req := CGroupResultFirmMsg{
 		UserID:  p.userID,
 		PlNo:    p.plNo,
@@ -77,6 +77,12 @@ func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []P
 		Count:   count,
 	}
 
+	blocks := p.GetGroupBlocks(grpID)
+	req.ObjIDs = make([]int, len(blocks))
+	for k, v := range blocks {
+		req.ObjIDs[k] = v.objID
+	}
+
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
 		sendMsg := func() {
 			if res, err := rpcx.SendReqDirect(spn, gateEid, eid, n.GetNameOfApiMsg(req), req); err != nil {
@@ -96,12 +102,13 @@ func SendGroupResultFirm(targetUserID TUserID, p *Player, dol string, routes []P
 	}
 }
 
-func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) {
+func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS, objID int) {
 	req := CSingleResultFallMsg{
 		UserID:  p.userID,
 		PlNo:    p.plNo,
 		DolKind: dol,
 		DrawPos: pos,
+		ObjID:   objID,
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {
@@ -123,12 +130,13 @@ func SendSingleResultFall(targetUserID TUserID, p *Player, dol string, pos POS) 
 	}
 }
 
-func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS) {
+func SendSingleResultFirm(targetUserID TUserID, p *Player, dol string, pos POS, objID int) {
 	req := CSingleResultFirmMsg{
 		UserID:  p.userID,
 		PlNo:    p.plNo,
 		DolKind: dol,
 		DrawPos: pos,
+		ObjID:   objID,
 	}
 
 	if spn, gateEid, eid, _, err := doGetUserLocation(targetUserID); err == nil {

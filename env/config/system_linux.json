@@ -14,7 +14,7 @@
         "Error":true,
         "Info":true,
         "Debug":true,
-        "Packet":true
+        "Packet":false
     },
 
     "Routers" : [

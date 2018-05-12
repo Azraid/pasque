@@ -8,6 +8,11 @@ import (
 var matchUpC chan bool
 var playStartC chan bool
 
+func init() {
+	matchUpC = make(chan bool)
+	playStartC = make(chan bool)
+}
+
 func printUsage() {
 
 	fmt.Println("<usage>>>>>>>>>>>>>>>>>>>")
@@ -91,9 +96,7 @@ func consoleCommand() {
 	time.Sleep(time.Second)
 	printUsage()
 
-	matchUpC = make(chan bool)
-	playStartC = make(chan bool)
-
+	
 	for {
 		var cmd, data string
 		n, _ := fmt.Scanln(&cmd, &data)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azraid/pasque/app"
+	"github.com/azraid/pasque/app"
 )
 
 func main() {

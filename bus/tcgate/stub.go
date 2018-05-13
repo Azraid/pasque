@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Azraid/pasque/services/auth"
+	"github.com/azraid/pasque/services/auth"
 
-	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
-	n "github.com/Azraid/pasque/core/net"
+	"github.com/azraid/pasque/app"
+	co "github.com/azraid/pasque/core"
+	n "github.com/azraid/pasque/core/net"
 )
 
 type GateStub interface {

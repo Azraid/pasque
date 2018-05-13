@@ -1,8 +1,8 @@
 package auth
 
 import (
-	. "github.com/Azraid/pasque/core"
-	n "github.com/Azraid/pasque/core/net"
+	. "github.com/azraid/pasque/core"
+	n "github.com/azraid/pasque/core/net"
 )
 
 const (

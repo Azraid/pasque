@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/Azraid/pasque/app"
-	. "github.com/Azraid/pasque/core"
+	"github.com/azraid/pasque/app"
+	. "github.com/azraid/pasque/core"
 )
 
 type UserAuthDB struct {

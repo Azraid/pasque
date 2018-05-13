@@ -9,7 +9,7 @@ package net
 
 import (
 	"container/list"
-	"github.com/Azraid/pasque/app"
+	"github.com/azraid/pasque/app"
 	"sync"
 	"time"
 )

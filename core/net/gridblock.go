@@ -11,8 +11,8 @@ import (
 	"math/rand"
 	"sync"
 
-	. "github.com/Azraid/pasque/core"
-	"github.com/Azraid/pasque/util"
+	. "github.com/azraid/pasque/core"
+	"github.com/azraid/pasque/util"
 )
 
 type FederatedApi struct {

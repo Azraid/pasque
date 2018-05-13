@@ -14,7 +14,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Azraid/pasque/app"
+	"github.com/azraid/pasque/app"
 )
 
 const (

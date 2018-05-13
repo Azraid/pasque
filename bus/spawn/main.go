@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Azraid/pasque/app"
+	"github.com/azraid/pasque/app"
 )
 
 func execmd(cmd string, wg *sync.WaitGroup) {

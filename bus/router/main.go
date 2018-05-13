@@ -5,7 +5,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	app "github.com/Azraid/pasque/app"
+	app "github.com/azraid/pasque/app"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	. "github.com/Azraid/pasque/core"
-	"github.com/Azraid/pasque/util"
+	. "github.com/azraid/pasque/core"
+	"github.com/azraid/pasque/util"
 )
 
 type TDbConn struct {

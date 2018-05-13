@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Azraid/pasque/app"
-	. "github.com/Azraid/pasque/core"
-	"github.com/Azraid/pasque/util"
+	"github.com/azraid/pasque/app"
+	. "github.com/azraid/pasque/core"
+	"github.com/azraid/pasque/util"
 )
 
 type routeTable struct {

@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/Azraid/pasque/app"
-	. "github.com/Azraid/pasque/core"
-	n "github.com/Azraid/pasque/core/net"
-	. "github.com/Azraid/pasque/services/auth"
-	juli "github.com/Azraid/pasque/services/juli"
+	juli "github.com/azraid/blitz/services/juli"
+	"github.com/azraid/pasque/app"
+	. "github.com/azraid/pasque/core"
+	n "github.com/azraid/pasque/core/net"
+	. "github.com/azraid/pasque/services/auth"
 )
 
 func OnGetUserLocation(cli n.Client, req *n.RequestMsg, gridData interface{}) interface{} {

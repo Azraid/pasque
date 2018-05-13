@@ -13,7 +13,7 @@ package main
 import (
 	"time"
 
-	co "github.com/Azraid/pasque/core"
+	co "github.com/azraid/pasque/core"
 )
 
 type Location struct {

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"reflect"
 
-	. "github.com/Azraid/pasque/core"
+	. "github.com/azraid/pasque/core"
 )
 
 const (

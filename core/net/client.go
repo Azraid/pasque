@@ -10,8 +10,8 @@ package net
 import (
 	"sync/atomic"
 
-	"github.com/Azraid/pasque/app"
-	. "github.com/Azraid/pasque/core"
+	"github.com/azraid/pasque/app"
+	. "github.com/azraid/pasque/core"
 )
 
 //client는 Client 인터페이스를 구현한 객체이다.

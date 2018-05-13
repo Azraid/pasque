@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	"github.com/azraid/pasque/app"
+	co "github.com/azraid/pasque/core"
 )
 
 type HelloReqMsg struct {
@@ -48,5 +48,5 @@ func DoHelloAnyOne(cli *client, req *co.RequestMsg) {
 		return
 	}
 
-	cli.SendRes(req, HelloResMsg{UserID: "Azraid@gmail.com", Reply: "anybody hi"})
+	cli.SendRes(req, HelloResMsg{UserID: "azraid@gmail.com", Reply: "anybody hi"})
 }

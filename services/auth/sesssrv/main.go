@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azraid/pasque/app"
-	n "github.com/Azraid/pasque/core/net"
-	. "github.com/Azraid/pasque/services/auth"
+	"github.com/azraid/pasque/app"
+	n "github.com/azraid/pasque/core/net"
+	. "github.com/azraid/pasque/services/auth"
 )
 
 func main() {

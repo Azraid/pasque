@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Azraid/pasque/app"
-	co "github.com/Azraid/pasque/core"
+	"github.com/azraid/pasque/app"
+	co "github.com/azraid/pasque/core"
 )
 
 type dialer struct {

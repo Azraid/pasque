@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"time"
 
-	. "github.com/Azraid/pasque/core"
+	. "github.com/azraid/pasque/core"
 )
 
 type logWriteCloser struct {
